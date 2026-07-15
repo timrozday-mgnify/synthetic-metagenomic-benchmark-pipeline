@@ -5,8 +5,9 @@
 #   docker build -f containers/genome-blender/Dockerfile -t smb-genome-blender .
 FROM python:3.11-slim-bookworm
 
+# procps provides `ps`, required by Nextflow to collect task metrics.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        libcurl4 zlib1g libbz2-1.0 liblzma5 \
+        libcurl4 zlib1g libbz2-1.0 liblzma5 procps \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /opt
