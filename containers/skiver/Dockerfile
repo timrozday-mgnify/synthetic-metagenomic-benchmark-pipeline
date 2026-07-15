@@ -36,6 +36,6 @@ COPY vendor/skiver/scripts/ ${SKIVER_SCRIPTS}/
 # declared in skiver's requirements.txt (which is gitignored, so pinned here).
 RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
     && pip install --no-cache-dir \
-        numpy scipy pandas h5py pyyaml matplotlib "pyro-ppl>=1.9"
+        numpy scipy pandas h5py pyyaml matplotlib rich "pyro-ppl>=1.9"
 
 RUN skiver --version
