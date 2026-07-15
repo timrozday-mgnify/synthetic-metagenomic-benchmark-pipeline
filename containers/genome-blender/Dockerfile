@@ -20,8 +20,10 @@ COPY vendor/skiver/scripts/ /opt/skiver/scripts/
 RUN pip install --no-cache-dir /opt/skiver/scripts
 
 # genome-blender itself (pure-python; provides `generate-reads`).
+# cli.py imports `click` directly, so pin typer + click explicitly.
 COPY vendor/genome-blender/ /opt/genome-blender/
-RUN pip install --no-cache-dir /opt/genome-blender
+RUN pip install --no-cache-dir "typer>=0.9" click \
+    && pip install --no-cache-dir /opt/genome-blender
 
 RUN generate-reads --help >/dev/null && skiver-generate --help >/dev/null \
     && python -c "import pysam; print('pysam', pysam.__version__)"

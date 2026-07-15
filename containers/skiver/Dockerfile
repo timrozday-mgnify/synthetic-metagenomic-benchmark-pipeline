@@ -6,9 +6,11 @@
 FROM rust:1-bookworm AS builder
 
 # rust-htslib links the system htslib and uses libclang for bindgen.
+# libhts-dev pulls the curl dev package it needs (gnutls variant) itself, so we
+# don't pin libcurl*-dev here (avoids the gnutls/openssl conflict).
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        clang libclang-dev pkg-config \
-        libhts-dev zlib1g-dev libbz2-dev liblzma-dev libcurl4-openssl-dev libssl-dev \
+        clang libclang-dev pkg-config cmake make \
+        libhts-dev zlib1g-dev libbz2-dev liblzma-dev libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build
@@ -18,11 +20,11 @@ RUN cargo build --release --bin skiver && cp target/release/skiver /usr/local/bi
 # ---- stage 2: runtime -----------------------------------------------------
 FROM python:3.11-slim-bookworm
 
-# htslib shared library (+ its runtime deps) for the dynamically linked binary.
+# htslib shared library for the dynamically linked binary; apt resolves the
+# matching libcurl runtime dependency automatically.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        libhts3 libcurl4 \
-    && rm -rf /var/lib/apt/lists/* \
-    || (apt-get update && apt-get install -y --no-install-recommends libhts-dev libcurl4 && rm -rf /var/lib/apt/lists/*)
+        libhts3 \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /usr/local/bin/skiver /usr/local/bin/skiver
 

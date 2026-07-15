@@ -111,7 +111,10 @@ docker build -f containers/skiver/Dockerfile         -t ghcr.io/timrozday-mgnify
 docker build -f containers/genome-blender/Dockerfile -t ghcr.io/timrozday-mgnify/smb-genome-blender:latest .
 ```
 
-The `.github/workflows/build-images.yml` workflow builds and pushes them to GHCR.
+The `.github/workflows/build-images.yml` workflow builds and pushes them to GHCR
+on `main`/tags. GHCR packages are created **private** on first push — set each
+package's visibility to **public** once in its GitHub *Package settings* so HPC
+pulls need no authentication (or keep them private and pull with a token).
 
 ### HPC / Singularity
 
