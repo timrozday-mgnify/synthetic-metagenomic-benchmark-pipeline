@@ -1,0 +1,27 @@
+# Keep the Docker build context small: exclude VCS, Rust build artifacts,
+# vendored heavy/unused trees, rendered notebooks, and pipeline run dirs.
+**/.git
+**/target
+**/*.tar
+**/*.html
+**/__pycache__
+**/*.egg-info
+
+# genome-blender: only the pure-python package is installed; drop the rest.
+vendor/genome-blender/scripts
+vendor/genome-blender/bin
+vendor/genome-blender/containers
+vendor/genome-blender/genome_blender_core
+
+# skiver: only src/ + Cargo + scripts are needed.
+vendor/skiver/notebooks
+vendor/skiver/example
+vendor/skiver/examples
+vendor/skiver/docs
+vendor/skiver/tests
+
+# Pipeline run/output dirs
+work
+.nf-test
+results
+tests

@@ -1,0 +1,34 @@
+nextflow_process {
+    name "Test Process SKIVER_TRAIN"
+    script "../main.nf"
+    process "SKIVER_TRAIN"
+
+    tag "modules"
+    tag "skiver"
+    tag "skiver/train"
+
+    test("train context error model - stub") {
+        tag "stub"
+        options "-stub"
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'natA', platform:'hq-illumina' ],
+                    file(params.test_data_base + 'genomeA.fasta', checkIfExists: true)
+                ]
+                """
+            }
+        }
+        then {
+            assertAll(
+                { assert process.success },
+                { assert process.out.model.size() == 1 },
+                { assert process.out.calibration.size() == 1 },
+                { assert snapshot(
+                    process.out.findAll { key, val -> key.startsWith("versions") }
+                ).match() }
+            )
+        }
+    }
+}

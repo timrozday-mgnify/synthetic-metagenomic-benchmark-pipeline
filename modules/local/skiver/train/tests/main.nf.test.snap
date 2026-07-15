@@ -1,0 +1,16 @@
+{
+    "train context error model - stub": {
+        "content": [
+            {
+                "versions": [
+                    "versions.yml:md5,cac061c008c03677b14fdf89d9db0fc2"
+                ]
+            }
+        ],
+        "timestamp": "2026-07-15T09:27:28.793025",
+        "meta": {
+            "nf-test": "0.9.4",
+            "nextflow": "26.04.1"
+        }
+    }
+}

@@ -1,0 +1,6 @@
+[submodule "vendor/skiver"]
+	path = vendor/skiver
+	url = git@github.com:timrozday-mgnify/skiver.git
+[submodule "vendor/genome-blender"]
+	path = vendor/genome-blender
+	url = git@github.com:timrozday-mgnify/genome-blender.git

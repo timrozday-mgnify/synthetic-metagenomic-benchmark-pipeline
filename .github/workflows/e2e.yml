@@ -1,0 +1,72 @@
+name: End-to-end (build images + real pipeline)
+
+# Builds both images locally (no registry push) and runs the full pipeline
+# against the tiny fixtures. Heavy (torch + rust builds), so main-only + manual.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: docker/setup-buildx-action@v3
+
+      # Build locally and tag as the GHCR refs the modules use, so Nextflow
+      # finds them in the local daemon and does not try to pull.
+      - name: Build smb-skiver
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: containers/skiver/Dockerfile
+          load: true
+          tags: ghcr.io/timrozday-mgnify/smb-skiver:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build smb-genome-blender
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: containers/genome-blender/Dockerfile
+          load: true
+          tags: ghcr.io/timrozday-mgnify/smb-genome-blender:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: temurin
+
+      - name: Install Nextflow
+        uses: nf-core/setup-nextflow@v2
+        with:
+          version: latest-stable
+
+      - name: Setup nf-test
+        uses: nf-core/setup-nf-test@v1.3.6
+        with:
+          version: "0.9.4"
+
+      - name: Run full pipeline test
+        run: >
+          nf-test test tests/default.nf.test --ci --profile docker --tag e2e
+          --junitxml=e2e-test-results.xml
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: "*-test-results.xml"

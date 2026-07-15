@@ -1,0 +1,32 @@
+nextflow_process {
+    name "Test Process GROUND_TRUTH"
+    script "../main.nf"
+    process "GROUND_TRUTH"
+
+    tag "modules"
+    tag "ground_truth"
+
+    test("derive ground-truth profile - stub") {
+        tag "stub"
+        options "-stub"
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'S1' ],
+                    file(params.test_data_base + 'genomeA.fasta', checkIfExists: true),
+                    file(params.test_data_base + 'genomes_S1.csv', checkIfExists: true)
+                ]
+                """
+            }
+        }
+        then {
+            assertAll(
+                { assert process.success },
+                { assert process.out.truth.size() == 1 },
+                { assert process.out.bam.size() == 1 },
+                { assert process.out.bai.size() == 1 }
+            )
+        }
+    }
+}

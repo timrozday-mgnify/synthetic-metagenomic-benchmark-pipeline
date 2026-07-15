@@ -1,0 +1,60 @@
+nextflow_pipeline {
+    name "Test Pipeline SYNTHETIC_METAGENOMIC_BENCHMARK"
+    script "main.nf"
+
+    tag "pipeline"
+
+    test("two synthetic samples - stub") {
+        tag "stub"
+        options "-stub"
+        when {
+            params {
+                input  = "${projectDir}/tests/samplesheets/test.csv"
+                outdir = "$outputDir"
+            }
+        }
+        then {
+            assertAll(
+                { assert workflow.success },
+                // 2 samples share train_id natA -> train once:
+                // 1 SKIVER_DUMP + 1 SKIVER_TRAIN + 2 GENOME_BLENDER_GENERATE + 2 GROUND_TRUTH = 6
+                { assert workflow.trace.succeeded().size() == 6 }
+            )
+        }
+    }
+
+    test("two synthetic samples") {
+        tag "e2e"
+        when {
+            params {
+                input  = "${projectDir}/tests/samplesheets/test.csv"
+                outdir = "$outputDir"
+            }
+        }
+        then {
+            assertAll(
+                { assert workflow.success },
+
+                // Reads (paired) per sample
+                { assert path("${params.outdir}/S1/S1_R1.fastq.gz").exists() },
+                { assert path("${params.outdir}/S1/S1_R2.fastq.gz").exists() },
+                { assert path("${params.outdir}/S2/S2_R1.fastq.gz").exists() },
+
+                // Ground-truth BAM + index
+                { assert path("${params.outdir}/S1/S1.sorted.bam").exists() },
+                { assert path("${params.outdir}/S1/S1.sorted.bam.bai").exists() },
+
+                // Ground-truth profile with both genomes + 4 columns
+                { assert path("${params.outdir}/S1/S1.truth.tsv").exists() },
+                { assert path("${params.outdir}/S1/S1.truth.tsv").text.contains("genomeA") },
+                { assert path("${params.outdir}/S1/S1.truth.tsv").text.contains("genomeB") },
+                { assert path("${params.outdir}/S1/S1.truth.tsv").readLines().get(0)
+                    == "genome_id\ttarget_rel_abundance\trealized_n_reads\trealized_rel_abundance" },
+
+                // Trained model shared by both samples (train once)
+                { assert path("${params.outdir}/error_models/natA/natA.model.pt").exists() },
+                { assert path("${params.outdir}/error_models/natA/natA.phred_calibration.json").exists() }
+            )
+        }
+    }
+}

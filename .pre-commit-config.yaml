@@ -1,0 +1,28 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '\.(snap|pt|bam|bai|fastq\.gz)$'
+      - id: end-of-file-fixer
+        exclude: '\.(snap|pt|bam|bai|fastq\.gz)$'
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        # 5 MB ceiling — blocks accidental large binary/model/read blobs.
+        args: ['--maxkb=5000']
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+        exclude: '\.(snap|pt|bam|bai|fastq\.gz)$'
+
+  # Nextflow DSL parse — compiles the workflow DAG without executing tasks.
+  # Requires nextflow on PATH.
+  - repo: local
+    hooks:
+      - id: nextflow-syntax
+        name: Nextflow pipeline syntax
+        entry: nextflow run main.nf -preview --input tests/samplesheets/test.csv --outdir /tmp/nf-precommit
+        language: system
+        files: '\.(nf|config)$'
+        pass_filenames: false

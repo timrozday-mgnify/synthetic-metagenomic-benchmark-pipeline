@@ -1,0 +1,59 @@
+nextflow_process {
+    name "Test Process SKIVER_DUMP"
+    script "../main.nf"
+    process "SKIVER_DUMP"
+
+    tag "modules"
+    tag "skiver"
+    tag "skiver/dump"
+
+    test("natural paired reads [fastq]") {
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'natA', platform:'hq-illumina' ],
+                    [
+                        file(params.test_data_base + 'natural_R1.fastq.gz', checkIfExists: true),
+                        file(params.test_data_base + 'natural_R2.fastq.gz', checkIfExists: true)
+                    ]
+                ]
+                """
+            }
+        }
+        then {
+            assertAll(
+                { assert process.success },
+                { assert process.out.base.size() == 1 },
+                { assert path(process.out.base.get(0).get(1)).exists() },
+                { assert path(process.out.base.get(0).get(1)).readLines().size() > 1 }
+            )
+        }
+    }
+
+    test("natural paired reads [fastq] - stub") {
+        tag "stub"
+        options "-stub"
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'natA', platform:'hq-illumina' ],
+                    [
+                        file(params.test_data_base + 'natural_R1.fastq.gz', checkIfExists: true),
+                        file(params.test_data_base + 'natural_R2.fastq.gz', checkIfExists: true)
+                    ]
+                ]
+                """
+            }
+        }
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(
+                    process.out.findAll { key, val -> key.startsWith("versions") }
+                ).match() }
+            )
+        }
+    }
+}

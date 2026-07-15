@@ -1,0 +1,37 @@
+nextflow_process {
+    name "Test Process GENOME_BLENDER_GENERATE"
+    script "../main.nf"
+    process "GENOME_BLENDER_GENERATE"
+
+    tag "modules"
+    tag "genome_blender"
+    tag "genome_blender/generate"
+
+    test("generate paired reads - stub") {
+        tag "stub"
+        options "-stub"
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'S1', train_id:'natA', platform:'hq-illumina', mode:'paired', num_reads:2000 ],
+                    file(params.test_data_base + 'genomes_S1.csv', checkIfExists: true),
+                    [
+                        file(params.test_data_base + 'genomeA.fasta', checkIfExists: true),
+                        file(params.test_data_base + 'genomeB.fasta', checkIfExists: true)
+                    ],
+                    file(params.test_data_base + 'natural_R1.fastq.gz'),
+                    file(params.test_data_base + 'natural_R2.fastq.gz')
+                ]
+                """
+            }
+        }
+        then {
+            assertAll(
+                { assert process.success },
+                { assert process.out.reads.get(0).get(1).size() == 2 },
+                { assert process.out.bam.size() == 1 }
+            )
+        }
+    }
+}
