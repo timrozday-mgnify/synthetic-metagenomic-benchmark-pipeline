@@ -30,6 +30,9 @@ nextflow run main.nf \
 
 Requires Nextflow (>=25) and a container engine (Docker / Singularity / Apptainer).
 
+On a laptop, cap resources so process requests fit your machine (the defaults
+target HPC), e.g. `--max_memory 8.GB --max_cpus 4`.
+
 ## Samplesheet
 
 One row per synthetic sample (`tests/samplesheets/test.csv` is a working example):
