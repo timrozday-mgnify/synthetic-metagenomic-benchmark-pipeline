@@ -41,7 +41,7 @@ workflow {
 
     if (params.step in ['all', 'generate']) {
         // Generate samplesheet columns:
-        //   sample,train_id,train_fastq_1,train_fastq_2,platform,genomes_csv,num_reads,mode,profiler,database
+        //   sample,train_id,train_fastq_1,train_fastq_2,platform,genomes_csv,num_reads,mode,profiler,database,chunks
         ch_samples = ch_rows.map { row ->
             def meta = [
                 id:        row.sample,
@@ -52,6 +52,7 @@ workflow {
                 read_length_mean:     (row.read_length_mean     ?: params.read_length_mean) as double,
                 read_length_variance: (row.read_length_variance ?: params.read_length_variance) as double,
                 num_reads: (row.num_reads as long),
+                chunks:    ((row.chunks ?: params.chunks) as int),
                 profiler:  (row.profiler ?: ''),
                 database:  (row.database ?: ''),
                 subsamples: parseSubsamples(row.subsample),

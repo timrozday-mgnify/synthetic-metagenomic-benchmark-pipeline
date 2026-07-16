@@ -86,6 +86,7 @@ working example):
 | `profiler` | Optional. `sylph` (WGS) or `aap` (amplicon). Blank = generate only, no profiling. |
 | `database` | Sylph only: a key in `params.sylph_databases`, or `self` to build the DB from this sample's reference genomes. |
 | `subsample` | Optional list of read depths to sweep (absolute read/pair counts). The full draw is generated once, then subsampled to each depth — each gets its own `subsample_<N>/` output dir with its own reads + ground truth + profile. `none`/`null`/empty/omitted → a single full-depth run in `<sample>/`. |
+| `chunks` | Optional. Split generation of `num_reads` across N parallel `generate-reads` calls (merged back into one reads-set + BAM before subsampling/ground truth), useful for large `num_reads`. Blank → `params.chunks` (default `1`, no chunking). |
 
 Relative `genomes_csv` / FASTA / FASTQ paths resolve against the pipeline
 directory; absolute paths and `scheme://` URLs pass through.
@@ -181,8 +182,14 @@ Published under `results/<sample>/`:
 | `<sample>.sylph_profile.tsv` | Predicted profile (sylph), when `profiler=sylph`. |
 | `<sample>/profiling/` | Raw profiler outputs (`sylph/`, `aap/`). |
 
-And under `results/error_models/<train_id>/`: the trained `<train_id>.model.pt`,
-`<train_id>.phred_calibration.json`, and `<train_id>.context_model_aic.csv`.
+And under `results/error_models/<train_id>/`:
+
+| File | Description |
+|------|-------------|
+| `<train_id>.error_model_report.html` | Human-readable summary — **open this first**. Model-selection table (AIC/BIC/AICc vs context length), winning model's parameters with uncertainty, per-base error-rate/Weibull survival curve. |
+| `<train_id>.model.pt` | The serialized model actually consumed by `genome-blender`/`skiver-generate` to apply the error profile; not human-readable. |
+| `<train_id>.context_model_aic.csv` | Full candidate comparison. Check the `aic` column (`maximum_likelihood` rows) across candidates — lower is better; compare `train_log_likelihood` vs `test_log_likelihood` for the same model as a quick overfitting check. |
+| `<train_id>.phred_calibration.json` | Empirical `P(Q \| error_type)` counts/probs. Compare the empirical error rate per reported Q against the Phred-implied rate (`10^(-Q/10)`) to sanity-check the sequencer's quality scores. |
 
 `target_rel_abundance` is the normalised requested abundance; `realized_*` come
 from `samtools idxstats` on the true BAM (what was actually generated).
@@ -195,6 +202,7 @@ from `samtools idxstats` on the true BAM (what was actually generated).
 | `--outdir` | `./results` | Output directory. |
 | `--step` | `all` | `all` (generate + profile) \| `generate` \| `profile`. |
 | `--seed` | `42` | Global RNG seed (training + generation). |
+| `--chunks` | `1` | Default number of chunks to split generation into (per-sample override via samplesheet `chunks`). |
 | `--sylph_databases` | `[:]` | Named sylph databases (see Profiling). |
 | `--aap_revision` | `main` | Revision of the amplicon-analysis-pipeline for the nested run. |
 | `--aap_profile` | `docker` | `-profile` for the nested AAP run. |

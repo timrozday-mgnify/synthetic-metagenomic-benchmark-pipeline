@@ -13,8 +13,10 @@ vendor/genome-blender/bin
 vendor/genome-blender/containers
 vendor/genome-blender/genome_blender_core
 
-# skiver: only src/ + Cargo + scripts are needed.
+# skiver: only src/ + Cargo + scripts (+ the report notebooks below) are needed.
 vendor/skiver/notebooks
+!vendor/skiver/notebooks/context_error_model_*.qmd
+!vendor/skiver/notebooks/_context_error_model_body.qmd
 vendor/skiver/example
 vendor/skiver/examples
 vendor/skiver/docs

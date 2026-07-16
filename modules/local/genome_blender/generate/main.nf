@@ -31,6 +31,9 @@ process GENOME_BLENDER_GENERATE {
     def pair_flag = paired ? '--paired-end' : '--single-end'
     // Drop read SEQ/QUAL from the ground-truth BAM; truth tables don't read them.
     def slim_flag = params.slim_bam ? '--minimal-bam' : ''
+    // Chunked runs (workflow-level fan-out) carry a distinct per-chunk seed so
+    // chunks don't emit identical reads; falls back to the global seed otherwise.
+    def seed = meta.seed ?: params.seed
     """
     # Point the genomes CSV at the locally staged FASTA basenames.
     rewrite_genomes_csv.py ${genomes_csv} genomes.local.csv
@@ -41,7 +44,7 @@ process GENOME_BLENDER_GENERATE {
         --output-prefix ${prefix} \\
         --skiver-model ${model_pt} \\
         --skiver-phred-calibration ${phred_cal} \\
-        --seed ${params.seed} \\
+        --seed ${seed} \\
         ${mode_flag} \\
         ${pair_flag} \\
         ${slim_flag} \\

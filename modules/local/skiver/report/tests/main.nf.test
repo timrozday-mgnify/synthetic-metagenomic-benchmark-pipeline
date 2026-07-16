@@ -1,0 +1,34 @@
+nextflow_process {
+    name "Test Process SKIVER_REPORT"
+    script "../main.nf"
+    process "SKIVER_REPORT"
+
+    tag "modules"
+    tag "skiver"
+    tag "skiver/report"
+
+    test("render error model report - stub") {
+        tag "stub"
+        options "-stub"
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'natA', platform:'hq-illumina' ],
+                    file(params.test_data_base + 'genomeA.fasta', checkIfExists: true),
+                    file(params.test_data_base + 'genomeB.fasta', checkIfExists: true)
+                ]
+                """
+            }
+        }
+        then {
+            assertAll(
+                { assert process.success },
+                { assert process.out.report.size() == 1 },
+                { assert snapshot(
+                    process.out.findAll { key, val -> key.startsWith("versions") }
+                ).match() }
+            )
+        }
+    }
+}

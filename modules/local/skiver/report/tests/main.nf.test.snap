@@ -1,0 +1,16 @@
+{
+    "render error model report - stub": {
+        "content": [
+            {
+                "versions": [
+                    "versions.yml:md5,25be744354d14de1305419b9d7dfda71"
+                ]
+            }
+        ],
+        "timestamp": "2026-07-16T13:37:03.223393",
+        "meta": {
+            "nf-test": "0.9.4",
+            "nextflow": "26.04.1"
+        }
+    }
+}

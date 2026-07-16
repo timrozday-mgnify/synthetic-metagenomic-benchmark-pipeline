@@ -1,0 +1,40 @@
+nextflow_process {
+    name "Test Process MERGE_GENOME_BLENDER_CHUNKS"
+    script "../main.nf"
+    process "MERGE_GENOME_BLENDER_CHUNKS"
+
+    tag "modules"
+    tag "genome_blender"
+    tag "genome_blender/merge_chunks"
+
+    test("merge paired chunks - stub") {
+        tag "stub"
+        options "-stub"
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'S1', paired_end:true, num_reads:2000 ],
+                    [
+                        file(params.test_data_base + 'natural_R1.fastq.gz'),
+                        file(params.test_data_base + 'natural_R2.fastq.gz'),
+                        file(params.test_data_base + 'genomeA.fasta'),
+                        file(params.test_data_base + 'genomeB.fasta')
+                    ],
+                    [
+                        file(params.test_data_base + 'genomes_S1.csv'),
+                        file(params.test_data_base + 'genomes_S2.csv')
+                    ]
+                ]
+                """
+            }
+        }
+        then {
+            assertAll(
+                { assert process.success },
+                { assert process.out.reads.get(0).get(1).size() == 2 },
+                { assert process.out.bam.size() == 1 }
+            )
+        }
+    }
+}
