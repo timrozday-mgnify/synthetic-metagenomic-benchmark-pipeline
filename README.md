@@ -42,9 +42,9 @@ target HPC), e.g. `--max_memory 8.GB --max_cpus 4`.
 One row per synthetic sample (`tests/samplesheets/test.csv` is a working example):
 
 ```csv
-sample,train_id,train_fastq_1,train_fastq_2,platform,genomes_csv,num_reads,mode,profiler,database
-S1,natA,natural_R1.fastq.gz,natural_R2.fastq.gz,hq-illumina,genomes_S1.csv,1000000,paired,sylph,self
-S2,natA,natural_R1.fastq.gz,natural_R2.fastq.gz,hq-illumina,genomes_S2.csv,1000000,paired,,
+sample,train_id,train_fastq_1,train_fastq_2,platform,genomes_csv,num_reads,mode,paired_end,read_length_mean,read_length_variance,profiler,database
+S1,natA,natural_R1.fastq.gz,natural_R2.fastq.gz,hq-illumina,genomes_S1.csv,1000000,shotgun,true,150,10,sylph,self
+S2,natA,natural_R1.fastq.gz,natural_R2.fastq.gz,hq-illumina,genomes_S2.csv,1000000,shotgun,true,150,10,,
 ```
 
 | Column | Description |
@@ -56,7 +56,10 @@ S2,natA,natural_R1.fastq.gz,natural_R2.fastq.gz,hq-illumina,genomes_S2.csv,10000
 | `platform` | `hq-illumina` \| `lq-illumina` \| `ont` \| `pacbio`. |
 | `genomes_csv` | A genome-blender input CSV: `genome_id,fasta_path,abundance`. |
 | `num_reads` | Sequencing depth as total reads (read pairs × 2 for paired mode). |
-| `mode` | `paired` \| `single` \| `long` \| `amplicon`. |
+| `mode` | Read structure: `shotgun` \| `amplicon` (also `long`). Default `shotgun`. |
+| `paired_end` | Optional. `true` \| `false`. Blank → `params.paired_end` (default `true`). Forced single-end when `mode=long`. |
+| `read_length_mean` | Optional. Mean read length. Blank → `params.read_length_mean` (default `150`). |
+| `read_length_variance` | Optional. Read-length variance. Blank → `params.read_length_variance` (default `10`). |
 | `profiler` | Optional. `sylph` (WGS) or `aap` (amplicon). Blank = generate only, no profiling. |
 | `database` | Sylph only: a key in `params.sylph_databases`, or `self` to build the DB from this sample's reference genomes. |
 

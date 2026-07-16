@@ -93,12 +93,13 @@ def main():
 
         sample = f"S{i:02d}_minor{minor:.0e}".replace("-0", "-").replace("+0", "")
         rows.append([sample, TRAIN_ID, TRAIN_FASTQ_1, TRAIN_FASTQ_2, PLATFORM,
-                     str(csv_path), NUM_READS, "amplicon"])
+                     str(csv_path), NUM_READS, "amplicon", "true", 300, 0])
 
     with open(HERE / "samplesheet.csv", "w", newline="") as fh:
         w = csv.writer(fh)
         w.writerow(["sample", "train_id", "train_fastq_1", "train_fastq_2",
-                    "platform", "genomes_csv", "num_reads", "mode"])
+                    "platform", "genomes_csv", "num_reads", "mode",
+                    "paired_end", "read_length_mean", "read_length_variance"])
         w.writerows(rows)
 
     print(f"Wrote samplesheet.csv ({len(rows)} samples) and genomes/sample_01..{N_SAMPLES:02d}.csv")

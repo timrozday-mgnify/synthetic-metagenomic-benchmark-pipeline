@@ -19,14 +19,16 @@ process GENOME_BLENDER_GENERATE {
     def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     def mode_flag = [
-        paired:   '--paired-end',
-        single:   '--single-end',
-        long:     '--long-read',
+        shotgun:  '',
         amplicon: '--amplicon',
-    ][meta.mode ?: 'single']
+        long:     '--long-read',
+    ][meta.mode ?: 'shotgun']
     if (mode_flag == null) {
-        error "Unknown generation mode '${meta.mode}' for sample ${meta.id} (expected paired|single|long|amplicon)"
+        error "Unknown generation mode '${meta.mode}' for sample ${meta.id} (expected shotgun|amplicon|long)"
     }
+    // ponytail: --long-read is single-end only (mutually exclusive with --paired-end in the CLI).
+    def paired = (meta.mode == 'long') ? false : meta.paired_end
+    def pair_flag = paired ? '--paired-end' : '--single-end'
     """
     # Point the genomes CSV at the locally staged FASTA basenames.
     rewrite_genomes_csv.py ${genomes_csv} genomes.local.csv
@@ -39,6 +41,9 @@ process GENOME_BLENDER_GENERATE {
         --skiver-phred-calibration ${phred_cal} \\
         --seed ${params.seed} \\
         ${mode_flag} \\
+        ${pair_flag} \\
+        --read-length-mean ${meta.read_length_mean} \\
+        --read-length-variance ${meta.read_length_variance} \\
         $args
 
     cat <<-END_VERSIONS > versions.yml
@@ -50,8 +55,8 @@ process GENOME_BLENDER_GENERATE {
 
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def r2 = (meta.mode == 'paired') ? "echo stub | gzip > ${prefix}_R2.fastq.gz" : ""
-    def r1 = (meta.mode == 'paired') ? "${prefix}_R1.fastq.gz" : "${prefix}.fastq.gz"
+    def r2 = meta.paired_end ? "echo stub | gzip > ${prefix}_R2.fastq.gz" : ""
+    def r1 = meta.paired_end ? "${prefix}_R1.fastq.gz" : "${prefix}.fastq.gz"
     """
     echo stub | gzip > ${r1}
     ${r2}

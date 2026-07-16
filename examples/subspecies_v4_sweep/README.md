@@ -31,5 +31,5 @@ Or by hand: `python generate_sweep.py`, then
 - `num_reads = 1_000_000` = 500k pairs (pipeline counts paired reads as pairs×2). Halve if
   genome-blender counts pairs directly.
 - `platform = hq-illumina`; 2×300 MiSeq amplicon tails may fit `lq-illumina` — one word in the script.
-- Paired 2×300 read geometry lives in `benchmark.config` (`ext.args`), not in the samplesheet,
-  because amplicon mode is single-end/150 bp by default.
+- Paired 2×300 read geometry lives in the samplesheet columns (`mode=amplicon`, `paired_end=true`,
+  `read_length_mean=300`, `read_length_variance=0`), written by `generate_sweep.py` — no `ext.args`.

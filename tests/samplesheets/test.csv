@@ -1,3 +1,3 @@
-sample,train_id,train_fastq_1,train_fastq_2,platform,genomes_csv,num_reads,mode
-S1,natA,tests/data/natural_R1.fastq.gz,tests/data/natural_R2.fastq.gz,hq-illumina,tests/data/genomes_S1.csv,2000,paired
-S2,natA,tests/data/natural_R1.fastq.gz,tests/data/natural_R2.fastq.gz,hq-illumina,tests/data/genomes_S2.csv,2000,paired
+sample,train_id,train_fastq_1,train_fastq_2,platform,genomes_csv,num_reads,mode,paired_end
+S1,natA,tests/data/natural_R1.fastq.gz,tests/data/natural_R2.fastq.gz,hq-illumina,tests/data/genomes_S1.csv,2000,shotgun,true
+S2,natA,tests/data/natural_R1.fastq.gz,tests/data/natural_R2.fastq.gz,hq-illumina,tests/data/genomes_S2.csv,2000,shotgun,true

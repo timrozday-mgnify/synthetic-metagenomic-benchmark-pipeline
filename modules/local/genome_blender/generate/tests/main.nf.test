@@ -14,7 +14,7 @@ nextflow_process {
             process {
                 """
                 input[0] = [
-                    [ id:'S1', train_id:'natA', platform:'hq-illumina', mode:'paired', num_reads:2000 ],
+                    [ id:'S1', train_id:'natA', platform:'hq-illumina', mode:'shotgun', paired_end:true, read_length_mean:150, read_length_variance:10, num_reads:2000 ],
                     file(params.test_data_base + 'genomes_S1.csv', checkIfExists: true),
                     [
                         file(params.test_data_base + 'genomeA.fasta', checkIfExists: true),
