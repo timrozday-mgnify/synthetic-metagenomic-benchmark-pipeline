@@ -29,6 +29,8 @@ process GENOME_BLENDER_GENERATE {
     // ponytail: --long-read is single-end only (mutually exclusive with --paired-end in the CLI).
     def paired = (meta.mode == 'long') ? false : meta.paired_end
     def pair_flag = paired ? '--paired-end' : '--single-end'
+    // Drop read SEQ/QUAL from the ground-truth BAM; truth tables don't read them.
+    def slim_flag = params.slim_bam ? '--minimal-bam' : ''
     """
     # Point the genomes CSV at the locally staged FASTA basenames.
     rewrite_genomes_csv.py ${genomes_csv} genomes.local.csv
@@ -42,6 +44,7 @@ process GENOME_BLENDER_GENERATE {
         --seed ${params.seed} \\
         ${mode_flag} \\
         ${pair_flag} \\
+        ${slim_flag} \\
         --read-length-mean ${meta.read_length_mean} \\
         --read-length-variance ${meta.read_length_variance} \\
         $args
