@@ -1,0 +1,4 @@
+- sample: P1
+  profiler: sylph
+  benchmark_dir: tests/data
+  database: refdb

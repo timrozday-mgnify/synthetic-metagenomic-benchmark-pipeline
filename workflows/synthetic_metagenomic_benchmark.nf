@@ -12,8 +12,20 @@
 
 include { TRAIN_ERROR_MODEL        } from '../subworkflows/local/train_error_model/main'
 include { GENOME_BLENDER_GENERATE  } from '../modules/local/genome_blender/generate/main'
+include { SEQKIT_SUBSAMPLE         } from '../modules/local/seqkit/subsample/main'
 include { GROUND_TRUTH             } from '../modules/local/ground_truth/main'
 include { PROFILE                  } from '../subworkflows/local/profile/main'
+
+// Derive a run-specific meta for one subsample depth (scalar null = full-depth
+// passthrough). Keeps the original sample id in meta.sample for joins/publishing.
+def runMeta(meta, n) {
+    meta + [
+        sample:         meta.id,
+        subsample:      n,
+        id:             n != null ? "${meta.id}.sub${n}" : meta.id,
+        publish_subdir: n != null ? "subsample_${n}" : '',
+    ]
+}
 
 workflow SYNTHETIC_METAGENOMIC_BENCHMARK {
     take:
@@ -51,19 +63,34 @@ workflow SYNTHETIC_METAGENOMIC_BENCHMARK {
         ch_versions = ch_versions.mix(GENOME_BLENDER_GENERATE.out.versions.first())
 
         //
-        // Ground truth: sort/index the BAM and derive target + realized profiles.
+        // Subsampling: fan each generated draw out over its requested depths.
+        // Each run keeps the original sample id in meta.sample (for joins/publish)
+        // and gets a unique meta.id. SEQKIT_SUBSAMPLE emits the (sub)reads plus a
+        // names.txt so the ground-truth BAM is filtered to the same reads.
+        //
+        ch_sub_in = GENOME_BLENDER_GENERATE.out.reads.flatMap { meta, reads ->
+            meta.subsamples.collect { n -> [ runMeta(meta, n), reads ] }
+        }
+        SEQKIT_SUBSAMPLE(ch_sub_in)
+        ch_versions = ch_versions.mix(SEQKIT_SUBSAMPLE.out.versions.first())
+
+        //
+        // Ground truth per run: filter the full BAM (keyed by sample) to this
+        // run's reads (names.txt), then derive target + realized profiles.
         //
         ch_csv_by_id = ch_samples.map { meta, csv, fastas -> [ meta.id, csv ] }
-        ch_truth_in  = GENOME_BLENDER_GENERATE.out.bam
-            .map { meta, bam -> [ meta.id, meta, bam ] }
+        ch_full_bam  = GENOME_BLENDER_GENERATE.out.bam.map { meta, bam -> [ meta.id, bam ] }
+        ch_truth_in  = SEQKIT_SUBSAMPLE.out.names
+            .map { meta, names -> [ meta.sample, meta, names ] }
+            .combine(ch_full_bam,  by: 0)
             .combine(ch_csv_by_id, by: 0)
-            .map { id, meta, bam, csv -> [ meta, bam, csv ] }
+            .map { sample, meta, names, bam, csv -> [ meta, bam, csv, names ] }
 
         GROUND_TRUTH(ch_truth_in)
         ch_versions = ch_versions.mix(GROUND_TRUTH.out.versions.first())
 
-        // Feed generated reads (+ reference genomes for database='self') to profiling.
-        ch_reads = GENOME_BLENDER_GENERATE.out.reads
+        // Feed subsampled reads (+ reference genomes for database='self') to profiling.
+        ch_reads = SEQKIT_SUBSAMPLE.out.reads
         ch_aux   = ch_samples.map { meta, csv, fastas -> [ meta.id, csv, fastas ] }
     }
     else {

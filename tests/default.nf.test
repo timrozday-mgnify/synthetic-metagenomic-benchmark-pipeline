@@ -9,16 +9,18 @@ nextflow_pipeline {
         options "-stub"
         when {
             params {
-                input  = "${projectDir}/tests/samplesheets/test.csv"
+                input  = "${projectDir}/tests/samplesheets/test.yaml"
                 outdir = "$outputDir"
             }
         }
         then {
             assertAll(
                 { assert workflow.success },
-                // 2 samples share train_id natA -> train once:
-                // 1 SKIVER_DUMP + 1 SKIVER_TRAIN + 2 GENOME_BLENDER_GENERATE + 2 GROUND_TRUTH = 6
-                { assert workflow.trace.succeeded().size() == 6 }
+                // 2 samples share train_id natA -> train once. S1 fans out over
+                // 2 subsample runs (none + 500), S2 over 1 (none). So:
+                // 1 SKIVER_DUMP + 1 SKIVER_TRAIN + 2 GENOME_BLENDER_GENERATE
+                // + 3 SEQKIT_SUBSAMPLE + 3 GROUND_TRUTH = 10
+                { assert workflow.trace.succeeded().size() == 10 }
             )
         }
     }
@@ -28,16 +30,17 @@ nextflow_pipeline {
         options "-stub"
         when {
             params {
-                input  = "${projectDir}/tests/samplesheets/profiling.csv"
+                input  = "${projectDir}/tests/samplesheets/profiling.yaml"
                 outdir = "$outputDir"
             }
         }
         then {
             assertAll(
                 { assert workflow.success },
-                // 6 generation tasks (as above) + per sample: SYLPH_BUILD_DB +
-                // SYLPH_PROFILE + NORMALIZE_SYLPH = 3*2 = 6 profiling tasks = 12.
-                { assert workflow.trace.succeeded().size() == 12 },
+                // 8 generation tasks (dump + train + 2 gen + 2 subsample + 2 truth)
+                // + per sample: SYLPH_BUILD_DB + SYLPH_PROFILE + NORMALIZE_SYLPH
+                // = 3*2 = 6 profiling tasks = 14.
+                { assert workflow.trace.succeeded().size() == 14 },
                 { assert path("${params.outdir}/S1/S1.sylph_profile.tsv").exists() },
                 { assert path("${params.outdir}/S2/S2.sylph_profile.tsv").exists() }
             )
@@ -49,7 +52,7 @@ nextflow_pipeline {
         options "-stub"
         when {
             params {
-                input  = "${projectDir}/tests/samplesheets/profile.csv"
+                input  = "${projectDir}/tests/samplesheets/profile.yaml"
                 outdir = "$outputDir"
                 step   = "profile"
             }
@@ -67,7 +70,7 @@ nextflow_pipeline {
         tag "e2e"
         when {
             params {
-                input  = "${projectDir}/tests/samplesheets/test.csv"
+                input  = "${projectDir}/tests/samplesheets/test.yaml"
                 outdir = "$outputDir"
             }
         }
@@ -79,6 +82,10 @@ nextflow_pipeline {
                 { assert path("${params.outdir}/S1/S1_R1.fastq.gz").exists() },
                 { assert path("${params.outdir}/S1/S1_R2.fastq.gz").exists() },
                 { assert path("${params.outdir}/S2/S2_R1.fastq.gz").exists() },
+
+                // S1's 500-read subsample gets its own dir with its own reads + truth
+                { assert path("${params.outdir}/S1/subsample_500/S1_R1.fastq.gz").exists() },
+                { assert path("${params.outdir}/S1/subsample_500/S1.sub500.truth.tsv").exists() },
 
                 // Ground-truth BAM + index
                 { assert path("${params.outdir}/S1/S1.sorted.bam").exists() },
@@ -102,7 +109,7 @@ nextflow_pipeline {
         tag "e2e"
         when {
             params {
-                input  = "${projectDir}/tests/samplesheets/profiling.csv"
+                input  = "${projectDir}/tests/samplesheets/profiling.yaml"
                 outdir = "$outputDir"
             }
         }
@@ -133,7 +140,7 @@ nextflow_pipeline {
         // (non-self) database, exercising the step=profile + params.sylph_databases path.
         when {
             params {
-                input           = "${projectDir}/tests/samplesheets/profile_sylph.csv"
+                input           = "${projectDir}/tests/samplesheets/profile_sylph.yaml"
                 outdir          = "$outputDir"
                 step            = "profile"
                 sylph_databases = [ refdb: [ syldb: "${projectDir}/tests/data/refdb.syldb", label: "refdb" ] ]

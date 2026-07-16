@@ -7,7 +7,7 @@ process GROUND_TRUTH {
     container "ghcr.io/timrozday-mgnify/smb-genome-blender:${params.smb_genome_blender_tag}"
 
     input:
-    tuple val(meta), path(bam), path(genomes_csv)
+    tuple val(meta), path(bam), path(genomes_csv), path(names)
 
     output:
     tuple val(meta), path("${meta.id}.sorted.bam"),     emit: bam
@@ -24,6 +24,7 @@ process GROUND_TRUTH {
     build_truth.py \\
         --bam ${bam} \\
         --genomes-csv ${genomes_csv} \\
+        --keep-names ${names} \\
         --sorted-bam ${prefix}.sorted.bam \\
         --truth-tsv ${prefix}.truth.tsv
 

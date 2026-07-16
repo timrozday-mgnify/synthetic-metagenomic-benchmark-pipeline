@@ -24,7 +24,7 @@ Edit `generate_sweep.py`:
 ```
 
 Or by hand: `python generate_sweep.py`, then
-`nextflow run ../../main.nf -profile docker -c benchmark.config --input samplesheet.csv --outdir <out>`.
+`nextflow run ../../main.nf -profile docker -c benchmark.config --input samplesheet.yaml --outdir <out>`.
 
 ## Notes
 

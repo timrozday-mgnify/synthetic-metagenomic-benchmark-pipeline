@@ -1,0 +1,22 @@
+# S1 exercises the subsample fan-out (full-depth + a 500-read subsample);
+# S2 has no `subsample` field -> a single full-depth run.
+- sample: S1
+  train_id: natA
+  train_fastq_1: tests/data/natural_R1.fastq.gz
+  train_fastq_2: tests/data/natural_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: tests/data/genomes_S1.csv
+  num_reads: 2000
+  mode: shotgun
+  paired_end: true
+  subsample: [none, 500]
+
+- sample: S2
+  train_id: natA
+  train_fastq_1: tests/data/natural_R1.fastq.gz
+  train_fastq_2: tests/data/natural_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: tests/data/genomes_S2.csv
+  num_reads: 2000
+  mode: shotgun
+  paired_end: true

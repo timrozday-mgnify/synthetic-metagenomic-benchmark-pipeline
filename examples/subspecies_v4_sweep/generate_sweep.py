@@ -9,7 +9,7 @@ once from the real SC2200627 Illumina reads.
 
 Fill in the PANEL paths (V4 amplicon FASTAs) and TRAIN_FASTQ_* below, then run:
     python generate_sweep.py
-Writes samplesheet.csv and genomes/sample_01..20.csv next to this script.
+Writes samplesheet.yaml and genomes/sample_01..20.csv next to this script.
 """
 import csv
 import math
@@ -92,17 +92,27 @@ def main():
         assert all(abs(x - per[0]) < 1e-9 for x in per), f"sample {i}: species not equal-weight"
 
         sample = f"S{i:02d}_minor{minor:.0e}".replace("-0", "-").replace("+0", "")
-        rows.append([sample, TRAIN_ID, TRAIN_FASTQ_1, TRAIN_FASTQ_2, PLATFORM,
-                     str(csv_path), NUM_READS, "amplicon", "true", 300, 0])
+        rows.append({
+            "sample": sample, "train_id": TRAIN_ID,
+            "train_fastq_1": TRAIN_FASTQ_1, "train_fastq_2": TRAIN_FASTQ_2,
+            "platform": PLATFORM, "genomes_csv": str(csv_path),
+            "num_reads": NUM_READS, "mode": "amplicon", "paired_end": "true",
+            "read_length_mean": 300, "read_length_variance": 0,
+        })
 
-    with open(HERE / "samplesheet.csv", "w", newline="") as fh:
-        w = csv.writer(fh)
-        w.writerow(["sample", "train_id", "train_fastq_1", "train_fastq_2",
-                    "platform", "genomes_csv", "num_reads", "mode",
-                    "paired_end", "read_length_mean", "read_length_variance"])
-        w.writerows(rows)
+    # Hand-written YAML (no pyyaml dependency): a list of flat sample maps. Add a
+    # `subsample: [none, N, ...]` line per sample to sweep read depths.
+    fields = ["train_id", "train_fastq_1", "train_fastq_2", "platform",
+              "genomes_csv", "num_reads", "mode", "paired_end",
+              "read_length_mean", "read_length_variance"]
+    with open(HERE / "samplesheet.yaml", "w") as fh:
+        for r in rows:
+            fh.write(f"- sample: {r['sample']}\n")
+            for k in fields:
+                fh.write(f"  {k}: {r[k]}\n")
+            fh.write("\n")
 
-    print(f"Wrote samplesheet.csv ({len(rows)} samples) and genomes/sample_01..{N_SAMPLES:02d}.csv")
+    print(f"Wrote samplesheet.yaml ({len(rows)} samples) and genomes/sample_01..{N_SAMPLES:02d}.csv")
     print(f"Swept species: {dup} ({major_id} : {minor_id}), minor frac "
           f"{1/(1+sweep_ratios(N_SAMPLES)[0]):.3g} -> {1/(1+sweep_ratios(N_SAMPLES)[-1]):.3g}")
 

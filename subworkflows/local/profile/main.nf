@@ -35,9 +35,11 @@ workflow PROFILE {
     // genomes_csv + fastas from ch_aux (only present in the generate/all step), so
     // we inner-join by id — a 'self' row without reference genomes (profile-only)
     // simply has nothing to join and is dropped (see README).
+    // ponytail: self DB is rebuilt per run (keyed by unique meta.id) even though
+    // it depends only on the genomes; dedupe by meta.sample if it ever matters.
     ch_self = ch_by_prof.sylph
         .filter { it[0].database == 'self' }
-        .map { meta, reads -> [ meta.id, meta, reads ] }
+        .map { meta, reads -> [ meta.sample ?: meta.id, meta, reads ] }
         .join(ch_aux, by: 0)
         .map { id, meta, reads, csv, fastas -> [ meta, reads, csv, fastas ] }
     SYLPH_BUILD_DB( ch_self.map { meta, reads, csv, fastas -> [ meta, fastas ] } )

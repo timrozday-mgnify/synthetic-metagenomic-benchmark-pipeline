@@ -21,13 +21,33 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--genomes-csv", required=True, help="genome_id,fasta_path,abundance CSV.")
     p.add_argument("--sorted-bam", required=True, help="Output coordinate-sorted BAM.")
     p.add_argument("--truth-tsv", required=True, help="Output ground-truth profile TSV.")
+    p.add_argument(
+        "--keep-names",
+        help="Optional file of read names (one per line); only these reads are "
+        "kept in the sorted BAM and counted for the realized profile.",
+    )
     return p.parse_args()
+
+
+def filter_bam_by_names(bam: str, names_file: str, out_bam: str) -> str:
+    """Write only reads whose query_name is listed in names_file; return out_bam."""
+    keep = {ln.strip() for ln in open(names_file) if ln.strip()}
+    with pysam.AlignmentFile(bam, "rb", check_sq=False) as inb:
+        with pysam.AlignmentFile(out_bam, "wb", template=inb) as out:
+            for read in inb:
+                if read.query_name in keep:
+                    out.write(read)
+    return out_bam
 
 
 def main() -> int:
     args = parse_args()
 
-    pysam.sort("-o", args.sorted_bam, args.bam)
+    src_bam = args.bam
+    if args.keep_names:
+        src_bam = filter_bam_by_names(args.bam, args.keep_names, args.sorted_bam + ".filtered.bam")
+
+    pysam.sort("-o", args.sorted_bam, src_bam)
     pysam.index(args.sorted_bam)
 
     # Realized read counts per genome_id, from idxstats (ref\tlen\tmapped\tunmapped).
