@@ -153,6 +153,12 @@ column:
 - **`self`** — the pipeline builds a `.syldb` from the sample's own reference
   genomes, so sylph's genome-level profile lines up exactly with the ground truth.
 
+Want a fixed "community" database (all of a sample's genomes, but built once and
+reused across samples/subsamples, unlike `self`) instead of a production DB?
+`examples/subspecies_v4_sweep/scripts/build_profiling_dbs.py` builds one with
+`sylph sketch` run via the same docker image as `modules/local/sylph/build_db` —
+adapt the genome list for your own reference genomes.
+
 Output `<sample>.sylph_profile.tsv` (`genome_id, predicted_rel_abundance,
 predicted_tax_rel_abundance`) is published next to `truth.tsv`; the raw sylph TSV
 goes under `<sample>/profiling/sylph/`.
@@ -165,12 +171,32 @@ supplied through an extra config passed with `--aap_config`, e.g.:
 
 ```groovy
 // aap.config
-params.mapseq_databases = [ /* fasta, tax, otu, mscluster, ... */ ]
+params.mapseq_databases {
+    gtdb_r220 {
+        fasta     = '/dbs/gtdb-r220.fasta'
+        tax       = '/dbs/gtdb-r220-tax.txt'
+        otu       = '/dbs/gtdb-r220.otu'
+        mscluster = '/dbs/gtdb-r220.fasta.mscluster'
+        label     = 'GTDB-r220'
+        run_otu   = true
+        run_asv   = false
+    }
+}
 ```
 
 Outputs land under `<sample>/profiling/aap/`. The wrapper runs on the host
 (`executor local`, no container), so **host `nextflow` and the container engine
 must be available** to the task.
+
+No production MAPseq database (e.g. SILVA) to hand? Build a small one from your
+own reference genomes' full-length 16S rRNA sequences — NOT the amplicon
+fragments used to generate the reads, mapseq needs full-length sequences to
+classify correctly. `examples/subspecies_v4_sweep/scripts/build_profiling_dbs.py`
+does this end-to-end via docker (`mapseq`'s own image, `barrnap` to predict 16S
+for any genome missing a pre-extracted copy): concatenates each genome's 16S
+into one fasta, writes a matching `.tax` file, runs `mapseq` once against itself
+to build the `.fasta.mscluster` clustering cache, then derives the `.otu` table
+from that clustering by majority-voting each cluster's genome-level taxonomy.
 
 ## Outputs
 
