@@ -10,11 +10,15 @@ def resolveFile(String p) {
         : file("${workflow.projectDir}/${p}", checkIfExists: true)
 }
 
+// Absolute read count, or null for none/null/empty/missing (no subsampling).
+def parseSubsampleScalar(v) {
+    (v == null || v.toString().toLowerCase() in ['none', 'null', '']) ? null : (v as long)
+}
+
 // Requested subsample depths for a sample. Absolute read counts; none/null/
 // empty/missing => a single passthrough run (keep all reads, scalar null).
 def parseSubsamples(v) {
-    def scalar = { x -> (x == null || x.toString().toLowerCase() in ['none', 'null', '']) ? null : (x as long) }
-    def list = (v == null) ? [null] : ((v instanceof List) ? v : [v]).collect(scalar).unique()
+    def list = (v == null) ? [null] : ((v instanceof List) ? v : [v]).collect { x -> parseSubsampleScalar(x) }.unique()
     list ?: [null]
 }
 
@@ -41,7 +45,7 @@ workflow {
 
     if (params.step in ['all', 'generate']) {
         // Generate samplesheet columns:
-        //   sample,train_id,train_fastq_1,train_fastq_2,platform,genomes_csv,num_reads,mode,profiler,database,chunks
+        //   sample,train_id,train_fastq_1,train_fastq_2,train_subsample,platform,genomes_csv,num_reads,mode,profiler,database,chunks
         ch_samples = ch_rows.map { row ->
             def meta = [
                 id:        row.sample,
@@ -71,7 +75,7 @@ workflow {
             .map { row ->
                 def reads = [ resolveFile(row.train_fastq_1) ]
                 if (row.train_fastq_2?.trim()) reads << resolveFile(row.train_fastq_2)
-                def meta_train = [ id: row.train_id, platform: row.platform ]
+                def meta_train = [ id: row.train_id, platform: row.platform, subsample: parseSubsampleScalar(row.train_subsample) ]
                 [ row.train_id, meta_train, reads ]
             }
             .unique { it[0] }

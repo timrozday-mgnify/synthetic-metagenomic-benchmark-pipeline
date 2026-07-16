@@ -47,6 +47,7 @@ working example):
   train_id: natA
   train_fastq_1: natural_R1.fastq.gz
   train_fastq_2: natural_R2.fastq.gz
+  train_subsample: 200000   # optional: train on 200k reads instead of the full set
   platform: hq-illumina
   genomes_csv: genomes_S1.csv
   num_reads: 1000000
@@ -76,6 +77,7 @@ working example):
 | `train_id` | Groups error-model training. Rows sharing a `train_id` train the profile **once** and reuse it. |
 | `train_fastq_1` | Natural-metagenome reads to learn the error profile from. |
 | `train_fastq_2` | Optional mate (paired training reads). Leave blank for single-end. |
+| `train_subsample` | Optional read/pair count to subsample the training reads to before training. `none`/`null`/empty/omitted → train on the full read set. Taken from the first row seen for a given `train_id`, same as `train_fastq_1`/`train_fastq_2`. |
 | `platform` | `hq-illumina` \| `lq-illumina` \| `ont` \| `pacbio`. |
 | `genomes_csv` | A genome-blender input CSV: `genome_id,fasta_path,abundance`. |
 | `num_reads` | Sequencing depth as total reads (read pairs × 2 for paired mode). |

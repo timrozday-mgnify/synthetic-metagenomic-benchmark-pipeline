@@ -18,9 +18,9 @@ nextflow_pipeline {
                 { assert workflow.success },
                 // 2 samples share train_id natA -> train once. S1 fans out over
                 // 2 subsample runs (none + 500), S2 over 1 (none). So:
-                // 1 SKIVER_DUMP + 1 SKIVER_TRAIN + 1 SKIVER_REPORT + 2 GENOME_BLENDER_GENERATE
-                // + 3 SEQKIT_SUBSAMPLE + 3 GROUND_TRUTH = 11
-                { assert workflow.trace.succeeded().size() == 11 }
+                // 1 SEQKIT_SUBSAMPLE_TRAIN + 1 SKIVER_DUMP + 1 SKIVER_TRAIN + 1 SKIVER_REPORT
+                // + 2 GENOME_BLENDER_GENERATE + 3 SEQKIT_SUBSAMPLE + 3 GROUND_TRUTH = 12
+                { assert workflow.trace.succeeded().size() == 12 }
             )
         }
     }
@@ -37,10 +37,10 @@ nextflow_pipeline {
         then {
             assertAll(
                 { assert workflow.success },
-                // S1 with chunks:3, no subsample: 1 dump + 1 train + 1 report
+                // S1 with chunks:3, no subsample: 1 subsample_train + 1 dump + 1 train + 1 report
                 // + 3 GENOME_BLENDER_GENERATE + 1 MERGE_GENOME_BLENDER_CHUNKS
-                // + 1 SEQKIT_SUBSAMPLE + 1 GROUND_TRUTH = 9
-                { assert workflow.trace.succeeded().size() == 9 },
+                // + 1 SEQKIT_SUBSAMPLE + 1 GROUND_TRUTH = 10
+                { assert workflow.trace.succeeded().size() == 10 },
                 { assert path("${params.outdir}/S1/S1_R1.fastq.gz").exists() },
                 { assert path("${params.outdir}/S1/S1.truth.tsv").exists() }
             )
@@ -59,10 +59,10 @@ nextflow_pipeline {
         then {
             assertAll(
                 { assert workflow.success },
-                // 9 generation tasks (dump + train + report + 2 gen + 2 subsample + 2 truth)
+                // 10 generation tasks (subsample_train + dump + train + report + 2 gen + 2 subsample + 2 truth)
                 // + per sample: SYLPH_BUILD_DB + SYLPH_PROFILE + NORMALIZE_SYLPH
-                // = 3*2 = 6 profiling tasks = 15.
-                { assert workflow.trace.succeeded().size() == 15 },
+                // = 3*2 = 6 profiling tasks = 16.
+                { assert workflow.trace.succeeded().size() == 16 },
                 { assert path("${params.outdir}/S1/S1.sylph_profile.tsv").exists() },
                 { assert path("${params.outdir}/S2/S2.sylph_profile.tsv").exists() }
             )
@@ -123,7 +123,11 @@ nextflow_pipeline {
                 // Trained model shared by both samples (train once)
                 { assert path("${params.outdir}/error_models/natA/natA.model.pt").exists() },
                 { assert path("${params.outdir}/error_models/natA/natA.phred_calibration.json").exists() },
-                { assert path("${params.outdir}/error_models/natA/natA.error_model_report.html").exists() }
+                { assert path("${params.outdir}/error_models/natA/natA.error_model_report.html").exists() },
+
+                // train_subsample: 1000 -> training reads published at 1000 reads (4000 lines), not the full 6000
+                { assert path("${params.outdir}/error_models/natA/training_reads/natural_R1.fastq.gz").exists() },
+                { assert path("${params.outdir}/error_models/natA/training_reads/natural_R1.fastq.gz").linesGzip.size() == 4000 }
             )
         }
     }

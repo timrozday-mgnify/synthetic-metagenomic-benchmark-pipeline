@@ -14,6 +14,7 @@ include { TRAIN_ERROR_MODEL           } from '../subworkflows/local/train_error_
 include { GENOME_BLENDER_GENERATE     } from '../modules/local/genome_blender/generate/main'
 include { MERGE_GENOME_BLENDER_CHUNKS } from '../modules/local/genome_blender/merge_chunks/main'
 include { SEQKIT_SUBSAMPLE            } from '../modules/local/seqkit/subsample/main'
+include { SEQKIT_SUBSAMPLE as SEQKIT_SUBSAMPLE_TRAIN } from '../modules/local/seqkit/subsample/main'
 include { GROUND_TRUTH                } from '../modules/local/ground_truth/main'
 include { PROFILE                     } from '../subworkflows/local/profile/main'
 
@@ -60,9 +61,14 @@ workflow SYNTHETIC_METAGENOMIC_BENCHMARK {
 
     if (params.step != 'profile') {
         //
-        // Train one error model + calibration per unique train_id.
+        // Optional subsample of the training reads (meta.subsample scalar;
+        // null = full-depth passthrough) before training one error model +
+        // calibration per unique train_id.
         //
-        TRAIN_ERROR_MODEL(ch_train)
+        SEQKIT_SUBSAMPLE_TRAIN(ch_train)
+        ch_versions = ch_versions.mix(SEQKIT_SUBSAMPLE_TRAIN.out.versions.first())
+
+        TRAIN_ERROR_MODEL(SEQKIT_SUBSAMPLE_TRAIN.out.reads)
         ch_versions = ch_versions.mix(TRAIN_ERROR_MODEL.out.versions)
 
         // Key trained artifacts by train_id for joining back to samples.
