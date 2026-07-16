@@ -23,6 +23,46 @@ nextflow_pipeline {
         }
     }
 
+    test("generate + sylph self profiling - stub") {
+        tag "stub"
+        options "-stub"
+        when {
+            params {
+                input  = "${projectDir}/tests/samplesheets/profiling.csv"
+                outdir = "$outputDir"
+            }
+        }
+        then {
+            assertAll(
+                { assert workflow.success },
+                // 6 generation tasks (as above) + per sample: SYLPH_BUILD_DB +
+                // SYLPH_PROFILE + NORMALIZE_SYLPH = 3*2 = 6 profiling tasks = 12.
+                { assert workflow.trace.succeeded().size() == 12 },
+                { assert path("${params.outdir}/S1/S1.sylph_profile.tsv").exists() },
+                { assert path("${params.outdir}/S2/S2.sylph_profile.tsv").exists() }
+            )
+        }
+    }
+
+    test("profile-only aap - stub") {
+        tag "stub"
+        options "-stub"
+        when {
+            params {
+                input  = "${projectDir}/tests/samplesheets/profile.csv"
+                outdir = "$outputDir"
+                step   = "profile"
+            }
+        }
+        then {
+            assertAll(
+                { assert workflow.success },
+                // profile-only: no generation, just 1 RUN_AAP.
+                { assert workflow.trace.succeeded().size() == 1 }
+            )
+        }
+    }
+
     test("two synthetic samples") {
         tag "e2e"
         when {
@@ -54,6 +94,57 @@ nextflow_pipeline {
                 // Trained model shared by both samples (train once)
                 { assert path("${params.outdir}/error_models/natA/natA.model.pt").exists() },
                 { assert path("${params.outdir}/error_models/natA/natA.phred_calibration.json").exists() }
+            )
+        }
+    }
+
+    test("generate + sylph self profiling") {
+        tag "e2e"
+        when {
+            params {
+                input  = "${projectDir}/tests/samplesheets/profiling.csv"
+                outdir = "$outputDir"
+            }
+        }
+        then {
+            assertAll(
+                { assert workflow.success },
+
+                // Generation + ground truth still produced.
+                { assert path("${params.outdir}/S1/S1_R1.fastq.gz").exists() },
+                { assert path("${params.outdir}/S1/S1.truth.tsv").exists() },
+
+                // Predicted sylph profile lands next to truth.tsv, with the right header.
+                { assert path("${params.outdir}/S1/S1.sylph_profile.tsv").exists() },
+                { assert path("${params.outdir}/S2/S2.sylph_profile.tsv").exists() },
+                { assert path("${params.outdir}/S1/S1.sylph_profile.tsv").readLines().get(0)
+                    == "genome_id\tpredicted_rel_abundance\tpredicted_tax_rel_abundance" },
+
+                // Raw sylph output kept under profiling/.
+                { assert path("${params.outdir}/S1/profiling/sylph/S1.sylph.tsv").exists() }
+            )
+        }
+    }
+
+    test("profile-only sylph, configured db") {
+        tag "e2e"
+        // Uses a committed .syldb fixture (tests/data/refdb.syldb, built with
+        // `sylph sketch -g genomeA.fasta genomeB.fasta -o refdb`) as a configured
+        // (non-self) database, exercising the step=profile + params.sylph_databases path.
+        when {
+            params {
+                input           = "${projectDir}/tests/samplesheets/profile_sylph.csv"
+                outdir          = "$outputDir"
+                step            = "profile"
+                sylph_databases = [ refdb: [ syldb: "${projectDir}/tests/data/refdb.syldb", label: "refdb" ] ]
+            }
+        }
+        then {
+            assertAll(
+                { assert workflow.success },
+                { assert path("${params.outdir}/P1/P1.sylph_profile.tsv").exists() },
+                { assert path("${params.outdir}/P1/P1.sylph_profile.tsv").readLines().get(0)
+                    == "genome_id\tpredicted_rel_abundance\tpredicted_tax_rel_abundance" }
             )
         }
     }
