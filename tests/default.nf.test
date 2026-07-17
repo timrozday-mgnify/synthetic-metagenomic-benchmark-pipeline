@@ -175,6 +175,48 @@ nextflow_pipeline {
         }
     }
 
+    test("chunked generation - unique read ids + cat merge") {
+        tag "e2e"
+        // Real (non-stub) chunked run: S1 fans out over 3 chunks, each with a
+        // distinct --read-prefix, then MERGE_GENOME_BLENDER_CHUNKS concatenates
+        // the per-chunk BAMs with `samtools cat`. Verifies the read-name
+        // uniqueness fix (no colliding IDs once chunks are merged) and that the
+        // cat-merged BAM is valid (GROUND_TRUTH sorts + indexes it downstream).
+        when {
+            params {
+                input  = "${projectDir}/tests/samplesheets/chunks.yaml"
+                outdir = "$outputDir"
+            }
+        }
+        then {
+            // Read IDs from the merged R1 FASTQ (concatenation of all 3 chunks).
+            def headers = path("${params.outdir}/S1/S1_R1.fastq.gz").linesGzip
+                .withIndex().findAll { line, i -> i % 4 == 0 }.collect { line, i -> line }
+            def ids = headers.collect { it.split(/\s/)[0] }          // up to first space
+            def prefixes = ids.collect { it.replaceFirst(/^@/, '').split(':')[0] }
+
+            assertAll(
+                { assert workflow.success },
+
+                // Merged reads + cat-merged, sorted, indexed ground-truth BAM.
+                { assert path("${params.outdir}/S1/S1_R1.fastq.gz").exists() },
+                { assert path("${params.outdir}/S1/S1_R2.fastq.gz").exists() },
+                { assert path("${params.outdir}/S1/S1.sorted.bam").exists() },
+                { assert path("${params.outdir}/S1/S1.sorted.bam.bai").exists() },
+                { assert path("${params.outdir}/S1/S1.truth.tsv").exists() },
+
+                // Core fix: no colliding read IDs across the merged chunks.
+                { assert ids.size() > 0 },
+                { assert (ids as Set).size() == ids.size() },
+
+                // --read-prefix wiring: every read is namespaced by its chunk,
+                // and reads actually came from more than one chunk.
+                { assert prefixes.every { it.startsWith('S1.chunk') } },
+                { assert (prefixes as Set).size() >= 2 }
+            )
+        }
+    }
+
     test("generate + sylph self profiling") {
         tag "e2e"
         when {
