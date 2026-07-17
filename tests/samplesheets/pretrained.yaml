@@ -1,0 +1,9 @@
+# --step generate reusing a pre-trained model dir (no training runs for natA).
+- sample: S1
+  train_id: natA
+  error_model_dir: tests/data/pretrained_natA
+  platform: hq-illumina
+  genomes_csv: tests/data/genomes_S1.csv
+  num_reads: 2000
+  mode: shotgun
+  paired_end: true

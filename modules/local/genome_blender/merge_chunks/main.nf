@@ -26,7 +26,9 @@ process MERGE_GENOME_BLENDER_CHUNKS {
     # Concatenated gzip members decompress fine with any gzip-aware reader.
     cat ${r1_glob} > ${r1_out}
     ${r2}
-    python3 -c "import pysam,sys; pysam.merge('-f','-o','${prefix}.bam', *sys.argv[1:])" ${bams}
+    # Chunk BAMs share one identical header and are SO:unsorted, so concatenate
+    # with `cat` (no sort assumption) rather than `merge` (assumes coord-sorted).
+    python3 -c "import pysam,sys; pysam.cat('-o','${prefix}.bam', *sys.argv[1:])" ${bams}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

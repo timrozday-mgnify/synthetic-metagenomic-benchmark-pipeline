@@ -69,6 +69,49 @@ nextflow_pipeline {
         }
     }
 
+    test("train-only - stub") {
+        tag "stub"
+        options "-stub"
+        when {
+            params {
+                input  = "${projectDir}/tests/samplesheets/train.yaml"
+                outdir = "$outputDir"
+                step   = "train"
+            }
+        }
+        then {
+            assertAll(
+                { assert workflow.success },
+                // train-only: 1 SEQKIT_SUBSAMPLE_TRAIN + 1 SKIVER_DUMP + 1 SKIVER_TRAIN
+                // + 1 SKIVER_REPORT = 4. No generation/profiling.
+                { assert workflow.trace.succeeded().size() == 4 },
+                { assert path("${params.outdir}/error_models/natA/natA.model.pt").exists() }
+            )
+        }
+    }
+
+    test("generate with pre-trained error_model_dir - stub") {
+        tag "stub"
+        options "-stub"
+        when {
+            params {
+                input  = "${projectDir}/tests/samplesheets/pretrained.yaml"
+                outdir = "$outputDir"
+                step   = "generate"
+            }
+        }
+        then {
+            assertAll(
+                { assert workflow.success },
+                // No training for natA (model comes from error_model_dir):
+                // 1 GENOME_BLENDER_GENERATE + 1 SEQKIT_SUBSAMPLE + 1 GROUND_TRUTH = 3.
+                { assert workflow.trace.succeeded().size() == 3 },
+                { assert workflow.trace.tasks().every { !it.name.contains('SKIVER_TRAIN') } },
+                { assert path("${params.outdir}/S1/S1_R1.fastq.gz").exists() }
+            )
+        }
+    }
+
     test("profile-only aap - stub") {
         tag "stub"
         options "-stub"

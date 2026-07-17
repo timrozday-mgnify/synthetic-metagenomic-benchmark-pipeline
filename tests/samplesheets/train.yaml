@@ -1,0 +1,7 @@
+# --step train: train one error model per train_id and stop (no generation).
+# Only the training fields are needed; genomes/num_reads/etc. are ignored.
+- train_id: natA
+  train_fastq_1: tests/data/natural_R1.fastq.gz
+  train_fastq_2: tests/data/natural_R2.fastq.gz
+  train_subsample: 1000
+  platform: hq-illumina

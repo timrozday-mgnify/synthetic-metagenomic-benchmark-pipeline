@@ -27,8 +27,8 @@ workflow {
     if (!params.input) {
         error "Provide a samplesheet with --input"
     }
-    if (!(params.step in ['all', 'generate', 'profile'])) {
-        error "params.step must be one of: all | generate | profile (got '${params.step}')"
+    if (!(params.step in ['all', 'generate', 'profile', 'train'])) {
+        error "params.step must be one of: all | generate | profile | train (got '${params.step}')"
     }
 
     // YAML samplesheet: a list of sample maps (allows nested fields like the
@@ -41,11 +41,13 @@ workflow {
 
     ch_samples    = Channel.empty()
     ch_train      = Channel.empty()
+    ch_pretrained = Channel.empty()
     ch_profile_in = Channel.empty()
+    def pretrainedIds = [] as Set
 
     if (params.step in ['all', 'generate']) {
         // Generate samplesheet columns:
-        //   sample,train_id,train_fastq_1,train_fastq_2,train_subsample,platform,genomes_csv,num_reads,mode,profiler,database,chunks
+        //   sample,train_id,train_fastq_1,train_fastq_2,train_subsample,platform,genomes_csv,num_reads,mode,profiler,database,chunks,error_model_dir
         ch_samples = ch_rows.map { row ->
             def meta = [
                 id:        row.sample,
@@ -70,8 +72,29 @@ workflow {
             [ meta, genomesCsv, fastas ]
         }
 
-        // Training channel, deduped per train_id: [ meta_train, [ reads ] ]
+        // Rows pointing at an already-trained error-model dir (from a prior
+        // `--step train` run): reach in for the model + calibration, keyed by
+        // train_id, and skip training for those train_ids.
+        def pretrainedRows = rows.findAll { it.error_model_dir }
+        pretrainedIds = pretrainedRows.collect { it.train_id } as Set  // reassigns the outer local
+        ch_pretrained = Channel
+            .fromList(pretrainedRows.collect { row ->
+                def dir = resolveFile(row.error_model_dir)
+                def m = files("${dir}/*.model.pt")
+                def c = files("${dir}/*.phred_calibration.json")
+                if (m.size() != 1 || c.size() != 1) {
+                    error "error_model_dir '${dir}' for train_id ${row.train_id} must contain exactly one *.model.pt and one *.phred_calibration.json"
+                }
+                [ row.train_id, m[0], c[0] ]
+            })
+            .unique { it[0] }
+    }
+
+    if (params.step in ['all', 'generate', 'train']) {
+        // Training channel, deduped per train_id: [ meta_train, [ reads ] ].
+        // Pretrained train_ids are excluded (their model comes from disk).
         ch_train = ch_rows
+            .filter { row -> !(row.train_id in pretrainedIds) }
             .map { row ->
                 def reads = [ resolveFile(row.train_fastq_1) ]
                 if (row.train_fastq_2?.trim()) reads << resolveFile(row.train_fastq_2)
@@ -81,7 +104,8 @@ workflow {
             .unique { it[0] }
             .map { train_id, meta_train, reads -> [ meta_train, reads ] }
     }
-    else {
+
+    if (params.step == 'profile') {
         // Profile-only samplesheet columns: sample,profiler,benchmark_dir,database
         // Reads are discovered inside each benchmark_dir (the layout this pipeline
         // publishes to ${outdir}/${sample}). The predicted profile is published back
@@ -103,5 +127,5 @@ workflow {
         }
     }
 
-    SYNTHETIC_METAGENOMIC_BENCHMARK(ch_samples, ch_train, ch_profile_in)
+    SYNTHETIC_METAGENOMIC_BENCHMARK(ch_samples, ch_train, ch_pretrained, ch_profile_in)
 }

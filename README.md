@@ -19,9 +19,10 @@ For each sample it:
    for WGS, the [amplicon-analysis-pipeline](https://github.com/EBI-Metagenomics/amplicon-analysis-pipeline)
    (AAP) for amplicon.
 
-Which phases run is controlled by `--step` (`all` | `generate` | `profile`), so
-you can generate only, profile pre-existing benchmark dirs only, or do both in
-one run.
+Which phases run is controlled by `--step` (`all` | `generate` | `profile` |
+`train`), so you can generate only, profile pre-existing benchmark dirs only, do
+both in one run, or just train an error model (`train`) once and reuse it across
+later `generate` runs (see [Standalone training](#standalone-training--reusing-a-model)).
 
 ## Quick start
 
@@ -75,8 +76,9 @@ working example):
 |--------|-------------|
 | `sample` | Unique synthetic-sample ID (names the output dir). |
 | `train_id` | Groups error-model training. Rows sharing a `train_id` train the profile **once** and reuse it. |
-| `train_fastq_1` | Natural-metagenome reads to learn the error profile from. |
+| `train_fastq_1` | Natural-metagenome reads to learn the error profile from. Not needed when `error_model_dir` is set. |
 | `train_fastq_2` | Optional mate (paired training reads). Leave blank for single-end. |
+| `error_model_dir` | Optional. Path to an `error_models/<train_id>/` directory produced by an earlier `--step train` (or `generate`/`all`) run. When set, the row's `train_id` is **not** trained — the `*.model.pt` + `*.phred_calibration.json` in that dir are used, and `train_fastq_*`/`train_subsample` are ignored. Set it for **all or none** of a `train_id`'s rows. |
 | `train_subsample` | Optional read/pair count to subsample the training reads to before training. `none`/`null`/empty/omitted → train on the full read set. Taken from the first row seen for a given `train_id`, same as `train_fastq_1`/`train_fastq_2`. |
 | `platform` | `hq-illumina` \| `lq-illumina` \| `ont` \| `pacbio`. |
 | `genomes_csv` | A genome-blender input CSV: `genome_id,fasta_path,abundance`. |
@@ -116,6 +118,41 @@ Subsampling is a generate-stage feature; the profile-only step ignores any
 profile is published to `<outdir>/<sample>/`, so point `--outdir` at the benchmark
 root to co-locate it with the existing `truth.tsv`. `database=self` is not
 available here (no reference genomes) — use a configured database.
+
+### Standalone training / reusing a model (`--step train`)
+
+Training the error model is normally coupled to `generate`, but it can be run on
+its own — train once, inspect the report, then point any number of later
+`generate` runs at the result instead of retraining each time.
+
+Train-only samplesheet (only the training fields; one model per `train_id`):
+
+```yaml
+- train_id: natA
+  train_fastq_1: natural_R1.fastq.gz
+  train_fastq_2: natural_R2.fastq.gz
+  train_subsample: 200000   # optional
+  platform: hq-illumina
+```
+
+```bash
+nextflow run main.nf -profile docker --step train \
+    --input train.yaml --outdir results
+```
+
+This writes `results/error_models/natA/` (`.model.pt`, `.phred_calibration.json`,
+`.context_model_aic.csv`, `.error_model_report.html`, `training_reads/`) and runs
+nothing else. Later, a `generate` samplesheet reuses it via `error_model_dir`
+(no `train_fastq_*` needed):
+
+```yaml
+- sample: S1
+  train_id: natA
+  error_model_dir: results/error_models/natA
+  platform: hq-illumina
+  genomes_csv: genomes_S1.csv
+  num_reads: 1000000
+```
 
 ### The genomes CSV
 
@@ -228,7 +265,7 @@ from `samtools idxstats` on the true BAM (what was actually generated).
 |-------|---------|-------------|
 | `--input` | – | Samplesheet CSV (required). |
 | `--outdir` | `./results` | Output directory. |
-| `--step` | `all` | `all` (generate + profile) \| `generate` \| `profile`. |
+| `--step` | `all` | `all` (generate + profile) \| `generate` \| `profile` \| `train` (train the error model only). |
 | `--seed` | `42` | Global RNG seed (training + generation). |
 | `--chunks` | `1` | Default number of chunks to split generation into (per-sample override via samplesheet `chunks`). |
 | `--sylph_databases` | `[:]` | Named sylph databases (see Profiling). |

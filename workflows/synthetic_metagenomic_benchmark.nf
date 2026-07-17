@@ -50,7 +50,8 @@ def chunkMeta(meta, i, n_reads_i, n) {
 workflow SYNTHETIC_METAGENOMIC_BENCHMARK {
     take:
     ch_samples    // [ val(meta), path(genomes_csv), [ path(fasta) ] ]  (generate/all)
-    ch_train      // [ val(meta_train), [ reads ] ]                     (generate/all)
+    ch_train      // [ val(meta_train), [ reads ] ]                     (generate/all/train)
+    ch_pretrained // [ train_id, path(model.pt), path(phred_cal) ]      (generate/all: reused models)
     ch_profile_in // [ val(meta), reads ]                               (profile)
 
     main:
@@ -71,10 +72,14 @@ workflow SYNTHETIC_METAGENOMIC_BENCHMARK {
         TRAIN_ERROR_MODEL(SEQKIT_SUBSAMPLE_TRAIN.out.reads)
         ch_versions = ch_versions.mix(TRAIN_ERROR_MODEL.out.versions)
 
-        // Key trained artifacts by train_id for joining back to samples.
+        // Key trained artifacts by train_id for joining back to samples, mixing
+        // in any pre-trained models supplied via the samplesheet (error_model_dir).
         ch_model = TRAIN_ERROR_MODEL.out.model.map       { meta, m -> [ meta.id, m ] }
+            .mix(ch_pretrained.map { tid, m, c -> [ tid, m ] })
         ch_cal   = TRAIN_ERROR_MODEL.out.calibration.map  { meta, c -> [ meta.id, c ] }
+            .mix(ch_pretrained.map { tid, m, c -> [ tid, c ] })
 
+      if (params.step != 'train') {
         //
         // Attach each sample's trained model + calibration by train_id, then generate.
         //
@@ -149,6 +154,7 @@ workflow SYNTHETIC_METAGENOMIC_BENCHMARK {
         // Feed subsampled reads (+ reference genomes for database='self') to profiling.
         ch_reads = SEQKIT_SUBSAMPLE.out.reads
         ch_aux   = ch_samples.map { meta, csv, fastas -> [ meta.id, csv, fastas ] }
+      }  // params.step != 'train'
     }
     else {
         ch_reads = ch_profile_in
@@ -157,7 +163,7 @@ workflow SYNTHETIC_METAGENOMIC_BENCHMARK {
     //
     // Profiling (all + profile steps).
     //
-    if (params.step != 'generate') {
+    if (params.step in ['all', 'profile']) {
         PROFILE(ch_reads, ch_aux)
         ch_versions = ch_versions.mix(PROFILE.out.versions)
     }

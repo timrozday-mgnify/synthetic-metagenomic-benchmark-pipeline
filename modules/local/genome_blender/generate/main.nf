@@ -42,6 +42,7 @@ process GENOME_BLENDER_GENERATE {
         --input-csv genomes.local.csv \\
         --num-reads ${meta.num_reads} \\
         --output-prefix ${prefix} \\
+        --read-prefix ${prefix}: \\
         --skiver-model ${model_pt} \\
         --skiver-phred-calibration ${phred_cal} \\
         --seed ${seed} \\
