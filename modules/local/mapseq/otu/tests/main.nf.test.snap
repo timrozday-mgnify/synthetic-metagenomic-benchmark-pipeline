@@ -1,0 +1,16 @@
+{
+    "majority-vote otu - stub": {
+        "content": [
+            {
+                "versions": [
+                    "versions.yml:md5,ba3a5bae0c5acdae5d99e15fa2b10d43"
+                ]
+            }
+        ],
+        "timestamp": "2026-07-20T14:20:27.364722",
+        "meta": {
+            "nf-test": "0.9.4",
+            "nextflow": "26.04.1"
+        }
+    }
+}

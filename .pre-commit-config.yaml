@@ -22,7 +22,7 @@ repos:
     hooks:
       - id: nextflow-syntax
         name: Nextflow pipeline syntax
-        entry: nextflow run main.nf -preview --input tests/samplesheets/test.csv --outdir /tmp/nf-precommit
+        entry: nextflow run main.nf -preview --input tests/samplesheets/test.yaml --outdir /tmp/nf-precommit
         language: system
         files: '\.(nf|config)$'
         pass_filenames: false

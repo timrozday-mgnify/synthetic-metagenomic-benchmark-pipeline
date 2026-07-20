@@ -31,13 +31,70 @@ workflow {
         error "params.step must be one of: all | generate | profile | train (got '${params.step}')"
     }
 
-    // YAML samplesheet: a list of sample maps (allows nested fields like the
-    // per-sample `subsample` list). See README for the schema.
-    def rows = new org.yaml.snakeyaml.Yaml().load(file(params.input, checkIfExists: true).text)
-    if (!(rows instanceof List)) {
-        error "Samplesheet ${params.input} must be a YAML list of sample entries"
+    // YAML samplesheet: either a bare list of sample maps, or a map with
+    // `samples:` (the list) and an optional `databases:` block of named sequence
+    // collections used to build/select profiler DBs. See README for the schema.
+    def loaded = new org.yaml.snakeyaml.Yaml().load(file(params.input, checkIfExists: true).text)
+    def rows
+    def dbDefs
+    if (loaded instanceof List) {
+        rows = loaded
+        dbDefs = [:]
+    }
+    else if (loaded instanceof Map) {
+        rows = loaded.samples
+        dbDefs = (loaded.databases ?: [:])
+        if (!(rows instanceof List)) {
+            error "Samplesheet ${params.input}: 'samples:' must be a YAML list of sample entries"
+        }
+    }
+    else {
+        error "Samplesheet ${params.input} must be a YAML list, or a map with 'samples:' (and optional 'databases:')"
     }
     ch_rows = Channel.fromList(rows)
+
+    //
+    // Named sequence collections -> profiler DBs. A collection is built (or its
+    // pre-built dir consumed) only if some sample references it by `database` name
+    // with a matching `profiler`. Names not defined under `databases:` fall back to
+    // params.sylph_databases / params.aap_config (unchanged behaviour).
+    //
+    def dbProfilers = [:]
+    rows.each { row ->
+        def name = row.database
+        def prof = row.profiler
+        if (name && name != 'self' && prof in ['sylph', 'aap']) {
+            dbProfilers.computeIfAbsent(name) { [] as Set } << prof
+        }
+    }
+    def dbSpecs = []
+    dbProfilers.each { name, profs ->
+        def d = dbDefs[name]
+        if (d == null) {
+            return  // not a YAML-defined collection -> params fallback in PROFILE
+        }
+        if (d.path && d.sequences) {
+            error "database '${name}': set either 'path' or 'sequences', not both"
+        }
+        if (d.path) {
+            dbSpecs << [ name: name, profilers: profs, prebuilt_dir: resolveFile(d.path), sequences: null ]
+        }
+        else if (d.sequences) {
+            def seqs = d.sequences.collect { s ->
+                [ id:       s.id,
+                  genome:   s.genome ? resolveFile(s.genome) : null,
+                  ssu:      s.ssu    ? resolveFile(s.ssu)    : null,
+                  taxonomy: s.taxonomy ]
+            }
+            dbSpecs << [ name: name, profilers: profs, prebuilt_dir: null, sequences: seqs ]
+        }
+        else {
+            error "database '${name}': must define 'sequences:' or 'path:'"
+        }
+    }
+    def builtSylphNames  = dbSpecs.findAll { 'sylph' in it.profilers }.collect { it.name } as Set
+    def builtMapseqNames = dbSpecs.findAll { 'aap'   in it.profilers }.collect { it.name } as Set
+    ch_db_specs = Channel.fromList(dbSpecs)
 
     ch_samples    = Channel.empty()
     ch_train      = Channel.empty()
@@ -127,5 +184,6 @@ workflow {
         }
     }
 
-    SYNTHETIC_METAGENOMIC_BENCHMARK(ch_samples, ch_train, ch_pretrained, ch_profile_in)
+    SYNTHETIC_METAGENOMIC_BENCHMARK(ch_samples, ch_train, ch_pretrained, ch_profile_in,
+        ch_db_specs, builtSylphNames, builtMapseqNames)
 }

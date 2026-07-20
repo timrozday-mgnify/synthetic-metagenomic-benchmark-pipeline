@@ -12,7 +12,9 @@ process RUN_AAP {
     executor 'local'
 
     input:
-    tuple val(meta), path(reads), path(aap_config)
+    // Optional inputs are stageAs'd to distinct fixed names so the shared NO_FILE
+    // placeholder doesn't collide across slots. `use_built` selects the DB source.
+    tuple val(meta), path(reads), val(use_built), path(aap_config, stageAs: 'aap_config_in'), path(mapseq_fasta, stageAs: 'mapseq_db.fasta'), path(mapseq_tax, stageAs: 'mapseq_db.tax'), path(mapseq_otu, stageAs: 'mapseq_db.otu'), path(mapseq_mscluster, stageAs: 'mapseq_db.mscluster')
 
     output:
     tuple val(meta), path("aap_out/**"), emit: results
@@ -27,8 +29,12 @@ process RUN_AAP {
     def fastq_1    = reads_list[0]
     def fastq_2    = paired ? reads_list[1] : ''
     def single_end = paired ? 'false' : 'true'
-    def cfg_arg    = aap_config.name != 'NO_FILE' ? "-c ${aap_config}" : ''
+    // A pipeline-built mapseq DB wins over the pass-through params.aap_config.
+    def dbname     = meta.database ?: 'community'
+    def cfg_arg    = use_built ? '-c aap.config' : (params.aap_config ? "-c ${aap_config}" : '')
     """
+    ${use_built ? "write_aap_config.py --name '${dbname}' --fasta ${mapseq_fasta} --tax ${mapseq_tax} --otu ${mapseq_otu} --mscluster ${mapseq_mscluster} --output aap.config" : "true"}
+
     # AAP samplesheet: sample,fastq_1,fastq_2,single_end (absolute paths to staged reads).
     printf 'sample,fastq_1,fastq_2,single_end\\n' > aap_samplesheet.csv
     printf '%s,%s,%s,%s\\n' "${meta.id}" "\$(readlink -f ${fastq_1})" "${fastq_2 ? "\$(readlink -f ${fastq_2})" : ''}" "${single_end}" >> aap_samplesheet.csv

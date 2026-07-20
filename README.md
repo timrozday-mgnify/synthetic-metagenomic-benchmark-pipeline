@@ -56,7 +56,9 @@ nextflow run main.nf -profile singularity --input samplesheet.yaml --outdir resu
 ## Samplesheet
 
 A YAML list, one entry per synthetic sample (`tests/samplesheets/test.yaml` is a
-working example):
+working example). It may also be a map with a `samples:` list plus an optional
+`databases:` block of named sequence collections the pipeline builds into profiler
+databases (see [Named sequence collections](#named-sequence-collections-databases)).
 
 ```yaml
 - sample: S1
@@ -103,12 +105,57 @@ working example):
 | `read_length_mean` | Optional. Mean read length. Blank → `params.read_length_mean` (default `150`). |
 | `read_length_variance` | Optional. Read-length variance. Blank → `params.read_length_variance` (default `10`). |
 | `profiler` | Optional. `sylph` (WGS) or `aap` (amplicon). Blank = generate only, no profiling. |
-| `database` | Sylph only: a key in `params.sylph_databases`, or `self` to build the DB from this sample's reference genomes. |
+| `database` | Database to profile against, by name. A name defined in the samplesheet `databases:` block is built (or its prebuilt dir consumed) by the pipeline — works for both `sylph` and `aap`. Otherwise: for `sylph`, a key in `params.sylph_databases`, or `self` to build the DB from this sample's reference genomes; for `aap`, blank (DB comes from `--aap_config`). |
 | `subsample` | Optional list of read depths to sweep (absolute read/pair counts). The full draw is generated once, then subsampled to each depth — each gets its own `subsample_<N>/` output dir with its own reads + ground truth + profile. `none`/`null`/empty/omitted → a single full-depth run in `<sample>/`. |
 | `chunks` | Optional. Split generation of `num_reads` across N parallel `generate-reads` calls (merged back into one reads-set + BAM before subsampling/ground truth), useful for large `num_reads`. Blank → `params.chunks` (default `1`, no chunking). |
 
 Relative `genomes_csv` / FASTA / FASTQ paths resolve against the pipeline
 directory; absolute paths and `scheme://` URLs pass through.
+
+### Named sequence collections (`databases:`)
+
+Instead of pre-building profiler databases out-of-band, define named **sequence
+collections** in a top-level `databases:` block and reference them from a sample's
+`database` column. The pipeline builds the DB each named collection needs — a sylph
+`.syldb` for `profiler: sylph`, a mapseq quartet for `profiler: aap` — once per run,
+and profiles the referencing samples against it. Only the DB type actually referenced
+by a sample is built (`build_databases` subworkflow → `SYLPH_BUILD_DB` /
+`MAPSEQ_PREP → MAPSEQ_CLUSTER → MAPSEQ_OTU`). This replaces the standalone
+`examples/subspecies_v4_sweep/scripts/build_profiling_dbs.py` for in-pipeline runs.
+
+```yaml
+databases:
+  community_v4:                     # build from sequences
+    sequences:
+      - id: bacteroides_fragilis
+        genome: references/genomes/CR626927.1.fasta.gz   # for a sylph DB
+        ssu: references/16S/CR626927.1_SSU.fasta          # for a mapseq DB
+        taxonomy: "Bacteria;Bacteroides;fragilis"          # for a mapseq DB (explicit)
+      # ... more sequences ...
+  gtdb_r220:                        # OR point at a pre-built DB directory
+    path: /dbs/databases/gtdb_r220
+
+samples:
+  - sample: S1
+    profiler: sylph
+    database: community_v4
+    # ... the usual sample fields ...
+```
+
+Per-entry rules:
+
+- Each named entry is **either** `sequences:` (build) **or** `path:` (a pre-built
+  directory), not both.
+- `sequences[].genome` is required for a `sylph` collection; `sequences[].ssu` and
+  `sequences[].taxonomy` (a `Kingdom;Genus;Species` string) are required for an `aap`
+  (mapseq) collection. One collection can serve both if every entry has all three.
+  `ssu` must be a pre-extracted full-length 16S FASTA (no barrnap step).
+- `path:` points at a directory laid out exactly like this pipeline publishes to
+  `<outdir>/databases/<name>/` (`<name>.syldb` and/or `<name>.mapseq.{fasta,tax,otu}`
+  + `<name>.mapseq.fasta.mscluster`), so a `databases/<name>/` dir from a prior run is
+  directly reusable.
+
+Built DBs are published to `<outdir>/databases/<name>/` for reuse.
 
 ### Profile-only samplesheet (`--step profile`)
 
@@ -190,6 +237,11 @@ profile next to `truth.tsv`.
 Uses the nf-core `sylph/profile` module. The database is chosen by the `database`
 column:
 
+- **A built collection** — a `database` name defined in the samplesheet
+  `databases:` block; the pipeline builds its `.syldb` from the collection's genomes
+  once per run (see [Named sequence collections](#named-sequence-collections-databases)).
+  A `path:` entry reuses a pre-built DB dir instead.
+
 - **A configured database** — define named databases (mapseq-style) in config and
   reference the key:
 
@@ -218,8 +270,15 @@ goes under `<sample>/profiling/sylph/`.
 ### amplicon (AAP)
 
 `profiler=aap` runs the EBI-Metagenomics amplicon-analysis-pipeline via a nested
-`nextflow run` (pinned by `--aap_revision`). Its MAPseq/reference databases are
-supplied through an extra config passed with `--aap_config`, e.g.:
+`nextflow run` (pinned by `--aap_revision`). The MAPseq DB can come from a built
+collection or a config:
+
+- **A built collection** — a `database` name defined in the samplesheet `databases:`
+  block; the pipeline builds the mapseq quartet (`fasta`/`tax`/`otu`/`mscluster`) from
+  the collection's 16S + explicit taxonomy and writes the `aap.config` for the nested
+  run automatically (no `--aap_config` needed).
+- **A config** — supply the MAPseq/reference databases through an extra config passed
+  with `--aap_config`, e.g.:
 
 ```groovy
 // aap.config
@@ -243,12 +302,14 @@ must be available** to the task.
 No production MAPseq database (e.g. SILVA) to hand? Build a small one from your
 own reference genomes' full-length 16S rRNA sequences — NOT the amplicon
 fragments used to generate the reads, mapseq needs full-length sequences to
-classify correctly. `examples/subspecies_v4_sweep/scripts/build_profiling_dbs.py`
-does this end-to-end via docker (`mapseq`'s own image, `barrnap` to predict 16S
-for any genome missing a pre-extracted copy): concatenates each genome's 16S
-into one fasta, writes a matching `.tax` file, runs `mapseq` once against itself
-to build the `.fasta.mscluster` clustering cache, then derives the `.otu` table
-from that clustering by majority-voting each cluster's genome-level taxonomy.
+classify correctly. The in-pipeline way is an `aap` collection in the `databases:`
+block (each entry an `ssu` full-length 16S FASTA + explicit `taxonomy`): the
+pipeline concatenates each entry's 16S into one fasta, writes a matching `.tax`,
+runs `mapseq` once against itself to build the `.fasta.mscluster` clustering cache,
+then majority-votes each cluster's taxonomy into the `.otu` table. The standalone
+`examples/subspecies_v4_sweep/scripts/build_profiling_dbs.py` does the same via
+docker and additionally runs `barrnap` to predict 16S for any genome missing a
+pre-extracted copy.
 
 ## Outputs
 
@@ -261,6 +322,11 @@ Published under `results/<sample>/`:
 | `<sample>.truth.tsv` | Ground-truth profile: `genome_id, target_rel_abundance, realized_n_reads, realized_rel_abundance`. |
 | `<sample>.sylph_profile.tsv` | Predicted profile (sylph), when `profiler=sylph`. |
 | `<sample>/profiling/` | Raw profiler outputs (`sylph/`, `aap/`). |
+
+Built profiler databases (from a samplesheet `databases:` block) are published under
+`results/databases/<name>/` — `<name>.syldb` (sylph) and/or
+`<name>.mapseq.{fasta,tax,otu}` + `<name>.mapseq.fasta.mscluster` (mapseq). This dir
+is directly reusable as a `path:` pre-built database entry.
 
 And under `results/error_models/<train_id>/`:
 

@@ -1,0 +1,33 @@
+nextflow_process {
+    name "Test Process MAPSEQ_PREP"
+    script "../main.nf"
+    process "MAPSEQ_PREP"
+
+    tag "modules"
+    tag "mapseq"
+    tag "mapseq/prep"
+
+    test("stage mapseq refs - stub") {
+        tag "stub"
+        options "-stub"
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'ampA' ],
+                    [ file(params.test_data_base + 'genomeA.fasta', checkIfExists: true),
+                      file(params.test_data_base + 'genomeB.fasta', checkIfExists: true) ],
+                    'genomeA\\tgenomeA.fasta\\tBacteria;Genusa;speciesa\\ngenomeB\\tgenomeB.fasta\\tBacteria;Genusb;speciesb'
+                ]
+                """
+            }
+        }
+        then {
+            assertAll(
+                { assert process.success },
+                { assert process.out.refs.size() == 1 },
+                { assert snapshot(process.out.findAll { k, v -> k.startsWith("versions") }).match() }
+            )
+        }
+    }
+}

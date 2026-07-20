@@ -1,0 +1,53 @@
+# Samplesheet with a `databases:` block: named sequence collections the pipeline
+# builds into profiler DBs, selected per-sample by the `database` column.
+databases:
+  commA:                       # sylph WGS DB built from the collection's genomes
+    sequences:
+      - id: genomeA
+        genome: tests/data/genomeA.fasta
+      - id: genomeB
+        genome: tests/data/genomeB.fasta
+  ampA:                        # mapseq amplicon DB built from 16S + explicit taxonomy
+    sequences:
+      - id: genomeA
+        ssu: tests/data/genomeA.fasta
+        taxonomy: "Bacteria;Genusa;speciesa"
+      - id: genomeB
+        ssu: tests/data/genomeB.fasta
+        taxonomy: "Bacteria;Genusb;speciesb"
+  commP:                       # pre-built sylph DB dir (published-results layout)
+    path: tests/data/prebuilt_db/commP
+
+samples:
+  - sample: S1
+    train_id: natA
+    train_fastq_1: tests/data/natural_R1.fastq.gz
+    train_fastq_2: tests/data/natural_R2.fastq.gz
+    platform: hq-illumina
+    genomes_csv: tests/data/genomes_S1.csv
+    num_reads: 2000
+    mode: shotgun
+    profiler: sylph
+    database: commA
+
+  - sample: S2
+    train_id: natA
+    train_fastq_1: tests/data/natural_R1.fastq.gz
+    train_fastq_2: tests/data/natural_R2.fastq.gz
+    platform: hq-illumina
+    genomes_csv: tests/data/genomes_S2.csv
+    num_reads: 2000
+    mode: amplicon
+    profiler: aap
+    database: ampA
+
+  - sample: S3                 # uses the pre-built commP DB dir (no build step)
+    train_id: natA
+    train_fastq_1: tests/data/natural_R1.fastq.gz
+    train_fastq_2: tests/data/natural_R2.fastq.gz
+    platform: hq-illumina
+    genomes_csv: tests/data/genomes_S1.csv
+    num_reads: 2000
+    mode: shotgun
+    profiler: sylph
+    database: commP

@@ -1,0 +1,16 @@
+{
+    "cluster mapseq db - stub": {
+        "content": [
+            {
+                "versions": [
+                    "versions.yml:md5,1d944c58859d2db6191d1409e773ebe8"
+                ]
+            }
+        ],
+        "timestamp": "2026-07-20T14:20:24.548204",
+        "meta": {
+            "nf-test": "0.9.4",
+            "nextflow": "26.04.1"
+        }
+    }
+}

@@ -17,6 +17,7 @@ include { MERGE_GENOME_BLENDER_CHUNKS } from '../modules/local/genome_blender/me
 include { SEQKIT_SUBSAMPLE            } from '../modules/local/seqkit/subsample/main'
 include { SEQKIT_SUBSAMPLE as SEQKIT_SUBSAMPLE_TRAIN } from '../modules/local/seqkit/subsample/main'
 include { GROUND_TRUTH                } from '../modules/local/ground_truth/main'
+include { BUILD_DATABASES             } from '../subworkflows/local/build_databases/main'
 include { PROFILE                     } from '../subworkflows/local/profile/main'
 
 // Derive a run-specific meta for one subsample depth (scalar null = full-depth
@@ -50,10 +51,13 @@ def chunkMeta(meta, i, n_reads_i, n) {
 
 workflow SYNTHETIC_METAGENOMIC_BENCHMARK {
     take:
-    ch_samples    // [ val(meta), path(genomes_csv), [ path(fasta) ] ]  (generate/all)
-    ch_train      // [ val(meta_train), [ reads ] ]                     (generate/all/train)
-    ch_pretrained // [ train_id, path(model.pt), path(phred_cal) ]      (generate/all: reused models)
-    ch_profile_in // [ val(meta), reads ]                               (profile)
+    ch_samples       // [ val(meta), path(genomes_csv), [ path(fasta) ] ]  (generate/all)
+    ch_train         // [ val(meta_train), [ reads ] ]                     (generate/all/train)
+    ch_pretrained    // [ train_id, path(model.pt), path(phred_cal) ]      (generate/all: reused models)
+    ch_profile_in    // [ val(meta), reads ]                               (profile)
+    ch_db_specs      // channel of named-collection spec maps               (all/profile)
+    builtSylphNames  // Set of collection names built/prebuilt for sylph
+    builtMapseqNames // Set of collection names built/prebuilt for mapseq/aap
 
     main:
     ch_versions = Channel.empty()
@@ -173,7 +177,13 @@ workflow SYNTHETIC_METAGENOMIC_BENCHMARK {
     // Profiling (all + profile steps).
     //
     if (params.step in ['all', 'profile']) {
-        PROFILE(ch_reads, ch_aux)
+        // Build (or resolve pre-built) the named-collection profiler DBs, then
+        // profile each sample against the DB named by its `database` column.
+        BUILD_DATABASES(ch_db_specs)
+        ch_versions = ch_versions.mix(BUILD_DATABASES.out.versions)
+
+        PROFILE(ch_reads, ch_aux, BUILD_DATABASES.out.sylph_dbs, BUILD_DATABASES.out.mapseq_dbs,
+            builtSylphNames, builtMapseqNames)
         ch_versions = ch_versions.mix(PROFILE.out.versions)
     }
 

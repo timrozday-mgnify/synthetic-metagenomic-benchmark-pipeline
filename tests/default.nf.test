@@ -19,8 +19,8 @@ nextflow_pipeline {
                 // 2 samples share train_id natA -> train once. S1 fans out over
                 // 2 subsample runs (none + 500), S2 over 1 (none). So:
                 // 1 SEQKIT_SUBSAMPLE_TRAIN + 1 SKIVER_DUMP + 1 SKIVER_TRAIN + 1 SKIVER_REPORT
-                // + 2 GENOME_BLENDER_GENERATE + 3 SEQKIT_SUBSAMPLE + 3 GROUND_TRUTH = 12
-                { assert workflow.trace.succeeded().size() == 12 }
+                // + 2 NORMALISE_REFERENCES + 2 GENOME_BLENDER_GENERATE + 3 SEQKIT_SUBSAMPLE + 3 GROUND_TRUTH = 14
+                { assert workflow.trace.succeeded().size() == 14 }
             )
         }
     }
@@ -38,9 +38,9 @@ nextflow_pipeline {
             assertAll(
                 { assert workflow.success },
                 // S1 with chunks:3, no subsample: 1 subsample_train + 1 dump + 1 train + 1 report
-                // + 3 GENOME_BLENDER_GENERATE + 1 MERGE_GENOME_BLENDER_CHUNKS
-                // + 1 SEQKIT_SUBSAMPLE + 1 GROUND_TRUTH = 10
-                { assert workflow.trace.succeeded().size() == 10 },
+                // + 1 NORMALISE_REFERENCES + 3 GENOME_BLENDER_GENERATE + 1 MERGE_GENOME_BLENDER_CHUNKS
+                // + 1 SEQKIT_SUBSAMPLE + 1 GROUND_TRUTH = 11
+                { assert workflow.trace.succeeded().size() == 11 },
                 { assert path("${params.outdir}/S1/S1_R1.fastq.gz").exists() },
                 { assert path("${params.outdir}/S1/S1.truth.tsv").exists() }
             )
@@ -59,12 +59,42 @@ nextflow_pipeline {
         then {
             assertAll(
                 { assert workflow.success },
-                // 10 generation tasks (subsample_train + dump + train + report + 2 gen + 2 subsample + 2 truth)
+                // 12 generation tasks (subsample_train + dump + train + report
+                // + 2 NORMALISE_REFERENCES + 2 gen + 2 subsample + 2 truth)
                 // + per sample: SYLPH_BUILD_DB + SYLPH_PROFILE + NORMALIZE_SYLPH
-                // = 3*2 = 6 profiling tasks = 16.
-                { assert workflow.trace.succeeded().size() == 16 },
+                // = 3*2 = 6 profiling tasks = 18.
+                { assert workflow.trace.succeeded().size() == 18 },
                 { assert path("${params.outdir}/S1/S1.sylph_profile.tsv").exists() },
                 { assert path("${params.outdir}/S2/S2.sylph_profile.tsv").exists() }
+            )
+        }
+    }
+
+    test("built + prebuilt profiler databases - stub") {
+        tag "stub"
+        options "-stub"
+        when {
+            params {
+                input  = "${projectDir}/tests/samplesheets/databases.yaml"
+                outdir = "$outputDir"
+            }
+        }
+        then {
+            assertAll(
+                { assert workflow.success },
+
+                // Built DBs published under databases/<name>/ (the prebuilt-dir layout).
+                { assert path("${params.outdir}/databases/commA/commA.syldb").exists() },
+                { assert path("${params.outdir}/databases/ampA/ampA.mapseq.fasta").exists() },
+                { assert path("${params.outdir}/databases/ampA/ampA.mapseq.tax").exists() },
+                { assert path("${params.outdir}/databases/ampA/ampA.mapseq.otu").exists() },
+
+                // S1 profiled against the built sylph DB; S3 against the pre-built dir.
+                { assert path("${params.outdir}/S1/S1.sylph_profile.tsv").exists() },
+                { assert path("${params.outdir}/S3/S3.sylph_profile.tsv").exists() },
+
+                // S2 profiled via aap against the built mapseq DB.
+                { assert path("${params.outdir}/S2/profiling/aap").exists() }
             )
         }
     }
@@ -104,8 +134,8 @@ nextflow_pipeline {
             assertAll(
                 { assert workflow.success },
                 // No training for natA (model comes from error_model_dir):
-                // 1 GENOME_BLENDER_GENERATE + 1 SEQKIT_SUBSAMPLE + 1 GROUND_TRUTH = 3.
-                { assert workflow.trace.succeeded().size() == 3 },
+                // 1 NORMALISE_REFERENCES + 1 GENOME_BLENDER_GENERATE + 1 SEQKIT_SUBSAMPLE + 1 GROUND_TRUTH = 4.
+                { assert workflow.trace.succeeded().size() == 4 },
                 { assert workflow.trace.tasks().every { !it.name.contains('SKIVER_TRAIN') } },
                 { assert path("${params.outdir}/S1/S1_R1.fastq.gz").exists() }
             )

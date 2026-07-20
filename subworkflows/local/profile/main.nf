@@ -13,8 +13,12 @@ include { RUN_AAP         } from '../../../modules/local/amplicon_analysis/main'
 
 workflow PROFILE {
     take:
-    ch_reads // [ val(meta), reads ]                 meta: id, mode, profiler, database
-    ch_aux   // [ id, genomes_csv, [ fasta ] ]       (empty in profile-only step)
+    ch_reads         // [ val(meta), reads ]                 meta: id, mode, profiler, database
+    ch_aux           // [ id, genomes_csv, [ fasta ] ]       (empty in profile-only step)
+    ch_sylph_dbs     // [ name, syldb ]                      built/prebuilt sylph DBs by name
+    ch_mapseq_dbs    // [ name, fasta, tax, otu, mscluster ] built/prebuilt mapseq DBs by name
+    builtSylphNames  // Set of collection names resolved for sylph
+    builtMapseqNames // Set of collection names resolved for mapseq/aap
 
     main:
     ch_versions = Channel.empty()
@@ -50,16 +54,31 @@ workflow PROFILE {
         .join(SYLPH_BUILD_DB.out.db.map { meta, db -> [ meta.id, db ] }, by: 0)
         .map { id, meta, reads, csv, db -> [ meta, reads, db, csv ] }
 
-    // config DB: resolve the .syldb path from params.sylph_databases (no ch_aux needed).
-    ch_cfg_in = ch_by_prof.sylph
+    // named DB: a `database` defined under the samplesheet `databases:` block is
+    // built (or its prebuilt dir resolved) by BUILD_DATABASES and joined here by
+    // name; any other name falls back to params.sylph_databases.
+    ch_by_prof.sylph
         .filter { it[0].database && it[0].database != 'self' }
+        .branch { meta, reads ->
+            built:  meta.database in builtSylphNames
+            config: true
+        }
+        .set { ch_named }
+
+    ch_built_in = ch_named.built
+        .map { meta, reads -> [ meta.database, meta, reads ] }
+        .combine(ch_sylph_dbs, by: 0)
+        .map { name, meta, reads, db -> [ meta, reads, db, no_file ] }
+
+    // config DB: resolve the .syldb path from params.sylph_databases (no ch_aux needed).
+    ch_cfg_in = ch_named.config
         .map { meta, reads ->
             def entry = (params.sylph_databases ?: [:])[meta.database]
-            if (!entry?.syldb) error "No sylph database '${meta.database}' in params.sylph_databases (sample ${meta.id})"
+            if (!entry?.syldb) error "No sylph database '${meta.database}' in params.sylph_databases or samplesheet databases: block (sample ${meta.id})"
             [ meta, reads, file(entry.syldb, checkIfExists: true), no_file ]
         }
 
-    ch_sylph_in = ch_self_in.mix(ch_cfg_in)
+    ch_sylph_in = ch_self_in.mix(ch_built_in).mix(ch_cfg_in)
 
     // SYLPH_PROFILE takes reads + db as two inputs; multiMap keeps them aligned.
     ch_prof = ch_sylph_in.multiMap { meta, reads, db, csv ->
@@ -78,12 +97,30 @@ workflow PROFILE {
     ch_versions = ch_versions.mix(NORMALIZE_SYLPH.out.versions.first())
 
     //
-    // aap (nested nextflow run)
+    // aap (nested nextflow run). A `database` naming a built/prebuilt mapseq
+    // collection attaches its fasta/tax/otu/mscluster (RUN_AAP writes the aap.config);
+    // any other name keeps the params.aap_config pass-through.
     //
-    ch_aap_in = ch_by_prof.aap.map { meta, reads ->
-        [ meta, reads, (params.aap_config ? file(params.aap_config, checkIfExists: true) : no_file) ]
+    ch_by_prof.aap
+        .branch { meta, reads ->
+            built: meta.database in builtMapseqNames
+            other: true
+        }
+        .set { ch_aap }
+
+    ch_aap_built = ch_aap.built
+        .map { meta, reads -> [ meta.database, meta, reads ] }
+        .combine(ch_mapseq_dbs, by: 0)
+        .map { name, meta, reads, fasta, tax, otu, mscluster ->
+            [ meta, reads, true, no_file, fasta, tax, otu, mscluster ]
+        }
+
+    ch_aap_other = ch_aap.other.map { meta, reads ->
+        [ meta, reads, false, (params.aap_config ? file(params.aap_config, checkIfExists: true) : no_file),
+          no_file, no_file, no_file, no_file ]
     }
-    RUN_AAP(ch_aap_in)
+
+    RUN_AAP(ch_aap_built.mix(ch_aap_other))
     ch_versions = ch_versions.mix(RUN_AAP.out.versions.first())
 
     emit:
