@@ -39,6 +39,8 @@ database:
 #   amplicon : pre-trimmed 515-YF/806BR V4 FASTA (used to generate reads)
 #   ssu      : pre-extracted full-length 16S FASTA (aap/mapseq DB)
 #   genome   : full genome assembly, .fasta[.gz] (only needed if 'sylph' in profilers)
+#   taxonomy : optional 3-rank "Kingdom;Genus;species" override, e.g.
+#              taxonomy: "Bacteria;Bacteroides;fragilis"  (else derived from species)
 panel:
   - {id: bacteroides_fragilis,        species: bacteroides_fragilis,        amplicon: references/amplicons/bacteroides_fragilis.amplicons.fasta,        ssu: references/16S/bacteroides_fragilis.ssu.fasta}
   - {id: bacteroides_thetaiotaomicron, species: bacteroides_thetaiotaomicron, amplicon: references/amplicons/bacteroides_thetaiotaomicron.amplicons.fasta, ssu: references/16S/bacteroides_thetaiotaomicron.ssu.fasta}

@@ -21,7 +21,8 @@ scripts. Edit:
   record as a fragment directly) and `ssu` at its **pre-extracted full-length 16S FASTA** (needed
   to build the `aap`/mapseq profiler DB — V4 fragments are not valid mapseq input). Exactly one
   `species` must appear twice: that pair is the sweep target. `id`s must be unique. `taxonomy` is
-  derived from the `species` slug unless given; add `kingdom: archaea` for archaea. Add `genome:`
+  derived from the `species` slug unless given as a 3-rank `Kingdom;Genus;species` string (e.g.
+  `taxonomy: "Bacteria;Bacteroides;fragilis"`); add `kingdom: archaea` for archaea. Add `genome:`
   per entry (and `sylph` to `database.profilers`) to also build a sylph WGS DB.
 
 The scripts require **PyYAML** — run them with `python` (the same interpreter `run.sh` uses).

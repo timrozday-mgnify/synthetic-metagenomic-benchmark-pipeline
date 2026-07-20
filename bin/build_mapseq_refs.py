@@ -20,8 +20,27 @@ import argparse
 import json
 import sys
 
-TAX_CUTOFFS = "0.00:0.08 0.85:0.65 0.95:0.85"  # loose defaults; only 3 ranks used here
-TAX_LEVELS = ["Kingdom", "Genus", "Species"]
+# Canonical rank names, most-general first. The number of levels actually written
+# is derived from the taxonomy strings (see build), so 3-rank and 8-rank manifests
+# both work; RANK_NAMES only supplies the labels.
+RANK_NAMES = ["Domain", "Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"]
+
+
+def _levels_header(n):
+    """Return (levels, cutoffs) strings sized to n taxonomy ranks.
+
+    Cutoffs are one 'id:conf' pair per level, interpolated loose->strict from
+    general to specific ranks (a tuning knob; values are placeholders).
+    """
+    if n <= len(RANK_NAMES):
+        names = RANK_NAMES[-n:]  # take the n most-specific canonical ranks
+    else:
+        names = [f"Level{i + 1}" for i in range(n)]
+    cutoffs = " ".join(
+        f"{0.80 + 0.19 * i / max(n - 1, 1):.2f}:{0.50 + 0.35 * i / max(n - 1, 1):.2f}"
+        for i in range(n)
+    )
+    return " ".join(names), cutoffs
 
 
 def parse_fasta(path):
@@ -55,9 +74,19 @@ def read_manifest(path):
 
 def build(manifest, out_fasta, out_tax, out_headers):
     rows = read_manifest(manifest)
+    if not rows:
+        raise SystemExit("build_mapseq_refs: empty manifest")
+    n_levels = rows[0][2].count(";") + 1
+    for gid, _, taxonomy in rows:
+        if taxonomy.count(";") + 1 != n_levels:
+            raise ValueError(
+                f"inconsistent taxonomy rank count for id {gid}: "
+                f"{taxonomy!r} has {taxonomy.count(';') + 1}, expected {n_levels}"
+            )
+    levels, cutoffs = _levels_header(n_levels)
     fasta_order, header_to_id, id_to_tax = [], {}, {}
     with open(out_fasta, "w") as fa, open(out_tax, "w") as tx:
-        tx.write(f"#cutoff: {TAX_CUTOFFS}\n#name: custom\n#levels: {' '.join(TAX_LEVELS)}\n")
+        tx.write(f"#cutoff: {cutoffs}\n#name: custom\n#levels: {levels}\n")
         for gid, ssu, taxonomy in rows:
             if gid in id_to_tax and id_to_tax[gid] != taxonomy:
                 raise ValueError(f"conflicting taxonomy for id {gid}: {id_to_tax[gid]!r} vs {taxonomy!r}")
