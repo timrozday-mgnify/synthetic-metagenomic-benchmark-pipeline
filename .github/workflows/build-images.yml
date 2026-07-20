@@ -48,6 +48,13 @@ jobs:
           context: .
           file: ${{ matrix.dockerfile }}
           push: true
+          # Single-platform, no attestations: buildx defaults attach provenance/SBOM
+          # attestations that make the pushed ref an OCI index with an `unknown/unknown`
+          # manifest, which Singularity/Apptainer fails to convert to SIF
+          # ("unexpected end of JSON input"). Keep the manifest a plain single image.
+          platforms: linux/amd64
+          provenance: false
+          sbom: false
           tags: |
             ghcr.io/timrozday-mgnify/${{ matrix.image }}:latest
             ghcr.io/timrozday-mgnify/${{ matrix.image }}:${{ github.sha }}

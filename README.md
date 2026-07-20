@@ -38,6 +38,21 @@ Requires Nextflow (>=25) and a container engine (Docker / Singularity / Apptaine
 On a laptop, cap resources so process requests fit your machine (the defaults
 target HPC), e.g. `--max_memory 8.GB --max_cpus 4`.
 
+### HPC (Singularity / Apptainer)
+
+Point the container cache and OCI build scratch at a large shared filesystem (not a
+quota'd `$HOME`/`/tmp`), and pre-fetch the images once so the parallel generate tasks
+don't race to pull the same image (which corrupts the cache and fails with
+`unexpected end of JSON input`):
+
+```bash
+export NXF_SINGULARITY_CACHEDIR=/scratch/$USER/nxf_singularity_cache
+export APPTAINER_TMPDIR=/scratch/$USER/apptainer_tmp
+./bin/prefetch-singularity.sh
+
+nextflow run main.nf -profile singularity --input samplesheet.yaml --outdir results
+```
+
 ## Samplesheet
 
 A YAML list, one entry per synthetic sample (`tests/samplesheets/test.yaml` is a
