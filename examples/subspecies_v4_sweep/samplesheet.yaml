@@ -217,4 +217,3 @@
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-
