@@ -78,6 +78,10 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  subsample: &id001
+  - none
+  - 100000
+  - 500000
 - sample: S02_a0.00
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -91,6 +95,7 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  subsample: *id001
 - sample: S03_a0.01
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -104,6 +109,7 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  subsample: *id001
 - sample: S04_a0.01
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -117,6 +123,7 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  subsample: *id001
 - sample: S05_a0.03
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -130,6 +137,7 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  subsample: *id001
 - sample: S06_a0.05
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -143,6 +151,7 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  subsample: *id001
 - sample: S07_a0.10
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -156,6 +165,7 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  subsample: *id001
 - sample: S08_a0.17
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -169,6 +179,7 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  subsample: *id001
 - sample: S09_a0.28
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -182,6 +193,7 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  subsample: *id001
 - sample: S10_a0.42
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -195,6 +207,7 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  subsample: *id001
 - sample: S11_a0.58
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -208,6 +221,7 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  subsample: *id001
 - sample: S12_a0.72
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -221,6 +235,7 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  subsample: *id001
 - sample: S13_a0.83
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -234,6 +249,7 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  subsample: *id001
 - sample: S14_a0.90
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -247,6 +263,7 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  subsample: *id001
 - sample: S15_a0.95
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -260,6 +277,7 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  subsample: *id001
 - sample: S16_a0.97
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -273,6 +291,7 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  subsample: *id001
 - sample: S17_a0.99
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -286,6 +305,7 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  subsample: *id001
 - sample: S18_a0.99
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -299,6 +319,7 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  subsample: *id001
 - sample: S19_a1.00
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -312,6 +333,7 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  subsample: *id001
 - sample: S20_a1.00
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -325,3 +347,4 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  subsample: *id001

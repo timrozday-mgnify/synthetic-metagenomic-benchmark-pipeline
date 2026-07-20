@@ -38,6 +38,10 @@ def main():
     fracs = sc.logistic_fracs(n, cfg["sweep"]["steepness"])
     profiler = cfg["database"]["profilers"][0]  # primary profiler for the combined run
     db_name = cfg["database"]["name"]
+    # Optional depth sweep: `reads.subsample` (scalar or list of absolute read counts,
+    # or `none`) is written verbatim into every sample row; the pipeline runs one
+    # (sub)sample per depth. Omitted => no field => full-depth passthrough.
+    subsample = cfg["reads"].get("subsample")
 
     (HERE / "genomes").mkdir(exist_ok=True)
     rows = []
@@ -75,11 +79,12 @@ def main():
             "read_length_variance": cfg["reads"]["read_length_variance"],
             "profiler": profiler,
             "database": db_name,
+            **({"subsample": subsample} if subsample is not None else {}),
         })
 
     # One combined samplesheet: the `databases:` block the pipeline builds the DB
     # from + the sweep samples (training is deduped by train_id, so `--step all`
-    # trains once). Add a `subsample: [none, N, ...]` line per sample to sweep depth.
+    # trains once). Set `reads.subsample` in config.yaml to sweep depth per sample.
     doc = {"databases": sc.database_block(cfg), "samples": rows}
     with open(HERE / "samplesheet.yaml", "w") as fh:
         yaml.safe_dump(doc, fh, sort_keys=False, default_flow_style=False)

@@ -14,6 +14,8 @@ train:
 
 reads:
   num_reads: 1000000           # 500k pairs x 2 (pipeline counts paired reads as pairs*2)
+  subsample: [none, 100000, 500000]  # depths swept per sample (absolute read counts;
+                               #   `none` = full depth). Omit this line for full depth only.
   mode: amplicon               # amplicon: each FASTA record is used as a fragment directly
   paired_end: true
   read_length_mean: 300
