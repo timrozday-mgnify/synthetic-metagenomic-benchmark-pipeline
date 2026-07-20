@@ -1,58 +1,63 @@
 #!/usr/bin/env python3
-"""Build a custom sylph (WGS) database and a custom mapseq (AAP amplicon) database
-from the same reference genomes used to generate this example's synthetic reads
-(see ../generate_sweep.py's PANEL), so `--step profile` can profile against a
-"community-scale" DB instead of `self`/a full production database.
+"""OPTIONAL / out-of-band builder for a custom sylph (WGS) and/or mapseq (AAP
+amplicon) profiler database, driven by ../config.yaml.
 
-- sylph DB: sketched directly from the full genome assemblies.
-- mapseq DB: built from each genome's full-length 16S rRNA sequence(s) - NOT the
-  V4 amplicon fragments in ../references/*.amplicons.fasta, mapseq needs
-  full-length 16S to classify correctly. If you don't have a pre-extracted
-  full-length 16S for a genome, leave its GENOMES entry's ssu_fasta as None and
-  this script predicts one from the genome with barrnap.
+The DEFAULT path does NOT need this script: generate_sweep.py emits a `databases:`
+block into samplesheet.yaml and the pipeline (BUILD_DATABASES) builds the DB itself
+during the run. Use this only if you want the DB prebuilt out-of-band; it also
+writes sylph_databases.config / aap.config for a config-based `database:` run.
 
-Runs mapseq/sylph/barrnap via docker (mapseq/sylph images match
-modules/ebi-metagenomics/mapseq and modules/local/sylph/build_db; no local
-install of either needed beyond Docker). Fill in GENOMES below, then run once:
-    python scripts/build_profiling_dbs.py
-Writes genome_references/, mapseq_references/, mapseq_db/, sylph_db/, and two
-example config snippets (sylph_databases.config, aap.config) next to this
-script's parent directory.
+Containers run under Docker (default) or Singularity/Apptainer (`--runtime
+singularity`, for HPC without Docker). Under Singularity the `docker://` images are
+pulled to a SIF cache once (many HPC installs won't resolve docker:// at exec
+time); for an air-gapped cluster, pre-pull the SIF and point the *_IMAGE constants
+at the local .sif paths.
+
+Which DBs are built follows config.yaml's `database.profilers`:
+- sylph DB (if 'sylph'): sketched from each panel member's `genome`.
+- mapseq DB (if 'aap'): built from each member's `ssu` (full-length 16S; NOT the V4
+  amplicon fragments). If a member has no `ssu` file on disk, its 16S is predicted
+  from `genome` with barrnap.
+
+    python scripts/build_profiling_dbs.py [config.yaml] [--runtime docker|singularity]
+Writes genome_references/, mapseq_references/, mapseq_db/, sylph_db/, and (for the
+built DBs) sylph_databases.config / aap.config next to this script's parent.
 """
+import argparse
+import os
 import shutil
 import subprocess
 import sys
 from collections import defaultdict
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import sweep_config as sc
+
 HERE = Path(__file__).resolve().parent
 RUN_DIR = HERE.parent
+CONFIG = RUN_DIR / "config.yaml"
 GENOME_REFS_DIR = RUN_DIR / "genome_references"
 SSU_REFS_DIR = RUN_DIR / "mapseq_references"
 MAPSEQ_DB_DIR = RUN_DIR / "mapseq_db"
 SYLPH_DB_DIR = RUN_DIR / "sylph_db"
 
-MAPSEQ_IMAGE = "quay.io/biocontainers/mapseq:2.1.1b--h3ab3c3b_0"     # matches modules/ebi-metagenomics/mapseq
-SYLPH_IMAGE = "quay.io/biocontainers/sylph:0.9.0--ha6fb395_0"        # matches modules/local/sylph/build_db
-BARRNAP_IMAGE = "quay.io/biocontainers/barrnap:0.9--hdfd78af_4"      # fallback 16S extraction, not an nf-core module here
+# docker:// biocontainers (match modules/ebi-metagenomics/mapseq and
+# modules/local/sylph/build_db). Under --runtime docker the prefix is stripped;
+# under singularity it's pulled to a SIF. Swap for local .sif paths if air-gapped.
+MAPSEQ_IMAGE = "docker://quay.io/biocontainers/mapseq:2.1.1b--h3ab3c3b_0"
+SYLPH_IMAGE = "docker://quay.io/biocontainers/sylph:0.9.0--ha6fb395_0"
+BARRNAP_IMAGE = "docker://quay.io/biocontainers/barrnap:0.9--hdfd78af_4"  # not an nf-core module here
 
-# --- Fill these in ---------------------------------------------------------
-# One entry per genome used in ../generate_sweep.py's PANEL. genome_id is
-# "genus_species" (matches PANEL genome_ids); override GENUS_SPECIES below for
-# any genome_id that doesn't split cleanly (e.g. an extra strain like
-# "species_strain2"). ssu_fasta=None -> predict full-length 16S with barrnap.
-GENOMES = {
-    "bacteroides_fragilis": dict(genome_fasta="/PATH/TO/bacteroides_fragilis.fna", ssu_fasta=None),
-    "bacteroides_thetaiotaomicron": dict(genome_fasta="/PATH/TO/bacteroides_thetaiotaomicron.fna", ssu_fasta=None),
-    "bacteroides_uniformis": dict(genome_fasta="/PATH/TO/bacteroides_uniformis.fna", ssu_fasta=None),
-    # ... one entry per PANEL genome_id ...
-    "bacteroides_uniformis_strain2": dict(
-        genome_fasta="/PATH/TO/bacteroides_uniformis_strain2.fna", ssu_fasta=None,
-    ),
-}
-GENUS_SPECIES_OVERRIDES = {"bacteroides_uniformis_strain2": ("bacteroides", "uniformis")}
-KINGDOM_OVERRIDES = {}  # genome_id -> "arc" for Archaea; rest default to "bac" (barrnap --kingdom)
-# ---------------------------------------------------------------------------
+# Container runtime, set from --runtime in main(). `singularity` may be `apptainer`.
+RUNTIME = "docker"
+SINGULARITY = "singularity"
+# Pulled .sif cache (singularity only). Reuses $SINGULARITY_CACHEDIR if set, else
+# sif_cache/ in the run dir. Point at a shared path on HPC to avoid re-pulling.
+SIF_CACHE_DIR = Path(os.environ.get("SINGULARITY_CACHEDIR", RUN_DIR / "sif_cache"))
+
+# genome_id -> config panel member; populated in main(), used by tax_string().
+BY_ID = {}
 
 
 def sh(cmd, **kw):
@@ -60,8 +65,27 @@ def sh(cmd, **kw):
     subprocess.run(cmd, check=True, **kw)
 
 
-def docker_run(image, args, workdir):
-    sh(["docker", "run", "--rm", "-v", f"{workdir}:/data", "-w", "/data", image, *args])
+def _sif(image):
+    """Local path Singularity can exec: local .sif passes through; docker:// URIs
+    are pulled to SIF_CACHE_DIR once."""
+    if not image.startswith("docker://"):
+        return image
+    SIF_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    sif = SIF_CACHE_DIR / (image.removeprefix("docker://").replace("/", "_").replace(":", "_") + ".sif")
+    if not sif.exists():
+        sh([SINGULARITY, "pull", str(sif), image])
+    return str(sif)
+
+
+def container_run(image, args, workdir):
+    """Run `args` in `image` with `workdir` bound to /data (cwd /data), under the
+    selected runtime. Docker and Singularity get the same /data view so callers'
+    /data paths are identical."""
+    if RUNTIME == "singularity":
+        sh([SINGULARITY, "exec", "--bind", f"{workdir}:/data", "--pwd", "/data", _sif(image), *args])
+    else:
+        sh(["docker", "run", "--rm", "-v", f"{workdir}:/data", "-w", "/data",
+            image.removeprefix("docker://"), *args])
 
 
 def parse_fasta(path):
@@ -79,17 +103,10 @@ def parse_fasta(path):
             yield header, "".join(chunks)
 
 
-def genus_species(genome_id):
-    if genome_id in GENUS_SPECIES_OVERRIDES:
-        return GENUS_SPECIES_OVERRIDES[genome_id]
-    genus, species = genome_id.split("_", 1)
-    return genus, species
-
-
-def stage_genome(genome_id):
-    """Decompress/copy this genome's assembly into genome_references/{genome_id}.fasta."""
-    out = GENOME_REFS_DIR / f"{genome_id}.fasta"
-    src = Path(str(GENOMES[genome_id]["genome_fasta"])).expanduser()
+def stage_genome(member):
+    """Decompress/copy this genome's assembly into genome_references/{id}.fasta."""
+    out = GENOME_REFS_DIR / f"{member['id']}.fasta"
+    src = Path(member["genome"])
     if src.suffix == ".gz":
         with open(out, "wb") as fh:
             sh(["gzip", "-dc", str(src)], stdout=fh)
@@ -98,33 +115,36 @@ def stage_genome(genome_id):
     return out
 
 
-def stage_ssu(genome_id, genome_fasta):
-    """Write mapseq_references/{genome_id}.ssu.fasta: full-length 16S copies, headers
-    prefixed with genome_id so cluster/taxonomy assignment is traceable per genome."""
-    out = SSU_REFS_DIR / f"{genome_id}.ssu.fasta"
-    ssu_fasta = GENOMES[genome_id]["ssu_fasta"]
+def stage_ssu(member):
+    """Write mapseq_references/{id}.ssu.fasta: full-length 16S copies, headers
+    prefixed with genome_id so cluster/taxonomy assignment is traceable per genome.
+    Falls back to barrnap on the genome if no pre-extracted 16S file is present."""
+    gid = member["id"]
+    out = SSU_REFS_DIR / f"{gid}.ssu.fasta"
+    ssu = member.get("ssu")
 
-    if ssu_fasta and Path(ssu_fasta).expanduser().exists():
-        records = list(parse_fasta(Path(ssu_fasta).expanduser()))
+    if ssu and Path(ssu).exists():
+        records = list(parse_fasta(ssu))
     else:
-        # No pre-extracted full-length 16S for this genome - predict it directly.
-        print(f"  no ssu_fasta for {genome_id}; running barrnap on the genome")
-        gff = GENOME_REFS_DIR / f"{genome_id}.barrnap.gff3"
-        rrna_fa = GENOME_REFS_DIR / f"{genome_id}.barrnap.fasta"
-        docker_run(BARRNAP_IMAGE, [
-            "barrnap", "--kingdom", KINGDOM_OVERRIDES.get(genome_id, "bac"), "--quiet",
+        if not member.get("genome"):
+            raise RuntimeError(f"{gid}: no ssu file at {ssu!r} and no `genome:` to run barrnap")
+        print(f"  no pre-extracted SSU for {gid} ({ssu}); running barrnap on the genome")
+        genome_fasta = stage_genome(member)
+        rrna_fa = GENOME_REFS_DIR / f"{gid}.barrnap.fasta"
+        kingdom = "arc" if str(member.get("kingdom", "")).lower() == "archaea" else "bac"
+        container_run(BARRNAP_IMAGE, [
+            "barrnap", "--kingdom", kingdom, "--quiet",
             "--outseq", f"/data/{rrna_fa.name}", f"/data/{genome_fasta.name}",
         ], workdir=str(GENOME_REFS_DIR))
         records = [(h, s) for h, s in parse_fasta(rrna_fa) if h.startswith("16S_rRNA")]
         if not records:
-            raise RuntimeError(f"barrnap found no 16S_rRNA hits for {genome_id}")
-        gff.unlink(missing_ok=True)
+            raise RuntimeError(f"barrnap found no 16S_rRNA hits for {gid}")
         rrna_fa.unlink()
         (genome_fasta.with_suffix(".fasta.fai")).unlink(missing_ok=True)
 
     with open(out, "w") as fh:
         for i, (header, seq) in enumerate(records):
-            fh.write(f">{genome_id}|{i}|{header}\n{seq}\n")
+            fh.write(f">{gid}|{i}|{header}\n{seq}\n")
     return out
 
 
@@ -133,7 +153,7 @@ def build_sylph_db(genome_fastas):
     prefix = "community"
     for f in genome_fastas:
         shutil.copy(f, SYLPH_DB_DIR / f.name)
-    docker_run(SYLPH_IMAGE, [
+    container_run(SYLPH_IMAGE, [
         "sylph", "sketch", "-g", *[f.name for f in genome_fastas], "-o", prefix, "-t", "4",
     ], workdir=str(SYLPH_DB_DIR))
     for f in genome_fastas:
@@ -146,9 +166,7 @@ TAX_CUTOFFS = "0.00:0.08 0.85:0.65 0.95:0.85"  # loose defaults; only 3 ranks us
 
 
 def tax_string(genome_id):
-    genus, species = genus_species(genome_id)
-    kingdom = "Archaea" if KINGDOM_OVERRIDES.get(genome_id) == "arc" else "Bacteria"
-    return f"{kingdom};{genus.capitalize()};{species}"
+    return sc.taxonomy(BY_ID[genome_id])
 
 
 def build_mapseq_tax(headers_by_genome):
@@ -207,7 +225,7 @@ def build_mapseq_db(ssu_fastas):
 
     # Self-search to force mapseq to build & cache `mapseq_db.fasta.mscluster`
     # (no clustering file -> mapseq clusters the db on this first run).
-    docker_run(MAPSEQ_IMAGE, [
+    container_run(MAPSEQ_IMAGE, [
         "mapseq", db_fasta.name, db_fasta.name, "mapseq_db.tax", "-nthreads", "4",
     ], workdir=str(MAPSEQ_DB_DIR))
     mscluster_path = MAPSEQ_DB_DIR / "mapseq_db.fasta.mscluster"
@@ -216,25 +234,25 @@ def build_mapseq_db(ssu_fastas):
     return db_fasta, MAPSEQ_DB_DIR / "mapseq_db.tax", MAPSEQ_DB_DIR / "mapseq_db.otu", mscluster_path
 
 
-def write_configs(syldb_path, mapseq_paths):
-    mapseq_fasta, mapseq_tax, mapseq_otu, mapseq_mscluster = mapseq_paths
-
-    (RUN_DIR / "sylph_databases.config").write_text(f"""\
-// Example config for `--step profile` (or `all`) with a per-sample `database`
-// column set to 'community_v4' instead of 'self' or a production GTDB db.
+def write_configs(db_name, syldb_path, mapseq_paths):
+    if syldb_path:
+        (RUN_DIR / "sylph_databases.config").write_text(f"""\
+// Config for `--step profile` (or `all`) with a per-sample `database` column set
+// to '{db_name}' instead of 'self' or a production GTDB db.
 params {{
     sylph_databases = [
-        community_v4: [ syldb: '{syldb_path}', label: 'subspecies_v4_sweep community' ],
+        {db_name}: [ syldb: '{syldb_path}', label: 'subspecies_v4_sweep community' ],
     ]
 }}
 """)
-
-    (RUN_DIR / "aap.config").write_text(f"""\
-// Example --aap_config for `profiler=aap`: a custom mapseq DB built from this
-// example's own reference genomes' full-length 16S, instead of production SILVA.
+    if mapseq_paths:
+        mapseq_fasta, mapseq_tax, mapseq_otu, mapseq_mscluster = mapseq_paths
+        (RUN_DIR / "aap.config").write_text(f"""\
+// --aap_config for `profiler=aap`: a custom mapseq DB built from this example's own
+// reference genomes' full-length 16S, instead of production SILVA.
 params {{
     mapseq_databases {{
-        community_v4 {{
+        {db_name} {{
             fasta = '{mapseq_fasta}'
             tax = '{mapseq_tax}'
             otu = '{mapseq_otu}'
@@ -249,13 +267,15 @@ params {{
 
 
 def _selfcheck():
-    """Runnable check for the .mscluster-parsing / majority-vote OTU logic (no docker)."""
+    """Runnable check for the .mscluster-parsing / majority-vote OTU logic (no container)."""
     import tempfile
 
-    global MAPSEQ_DB_DIR
+    global MAPSEQ_DB_DIR, BY_ID
+    BY_ID = {gid: {"id": gid, "species": gid} for gid in
+             ("bacteroides_fragilis", "clostridium_bolteae", "clostridium_ramosum")}
     fasta_order = ["h0", "h1", "h2", "h3"]
     genome_of_header = {"h0": "bacteroides_fragilis", "h1": "bacteroides_fragilis",
-                         "h2": "clostridium_bolteae", "h3": "clostridium_ramosum"}
+                        "h2": "clostridium_bolteae", "h3": "clostridium_ramosum"}
 
     with tempfile.TemporaryDirectory() as d:
         mscluster_path = Path(d) / "test.mscluster"
@@ -276,29 +296,45 @@ def _selfcheck():
 
 
 def main():
-    if len(sys.argv) > 1 and sys.argv[1] == "--selfcheck":
+    ap = argparse.ArgumentParser(description="Build custom sylph/mapseq profiler DBs from config.yaml.")
+    ap.add_argument("config", nargs="?", default=str(CONFIG), help="config.yaml (default: ../config.yaml)")
+    ap.add_argument("--runtime", choices=["docker", "singularity"], default="docker",
+                    help="container runtime (default: docker)")
+    ap.add_argument("--selfcheck", action="store_true", help="run the OTU-logic self-check and exit")
+    args = ap.parse_args()
+
+    if args.selfcheck:
         _selfcheck()
         return
+
+    global RUNTIME, BY_ID
+    RUNTIME = args.runtime
+    cfg = sc.load_config(args.config)
+    BY_ID = {m["id"]: m for m in cfg["panel"]}
+    profilers = cfg["database"]["profilers"]
+    db_name = cfg["database"]["name"]
     for d in (GENOME_REFS_DIR, SSU_REFS_DIR):
         d.mkdir(exist_ok=True)
 
-    genome_fastas, ssu_fastas = [], []
-    for genome_id in GENOMES:
-        print(f"staging {genome_id}")
-        genome_fasta = stage_genome(genome_id)
-        genome_fastas.append(genome_fasta)
-        ssu_fastas.append(stage_ssu(genome_id, genome_fasta))
+    genome_fastas = []
+    if "sylph" in profilers:
+        for m in cfg["panel"]:
+            print(f"staging genome {m['id']}")
+            genome_fastas.append(stage_genome(m))
+    ssu_fastas = []
+    if "aap" in profilers:
+        for m in cfg["panel"]:
+            print(f"staging 16S {m['id']}")
+            ssu_fastas.append(stage_ssu(m))
 
-    print("building sylph db")
-    syldb_path = build_sylph_db(genome_fastas)
+    syldb_path = build_sylph_db(genome_fastas) if genome_fastas else None
+    mapseq_paths = build_mapseq_db(ssu_fastas) if ssu_fastas else None
+    write_configs(db_name, syldb_path, mapseq_paths)
 
-    print("building mapseq db")
-    mapseq_paths = build_mapseq_db(ssu_fastas)
-
-    write_configs(syldb_path, mapseq_paths)
-    print(f"\nWrote {syldb_path}")
-    print(f"Wrote {mapseq_paths[0]} (+ .tax/.otu/.mscluster)")
-    print("Wrote sylph_databases.config, aap.config")
+    if syldb_path:
+        print(f"\nWrote {syldb_path} (+ sylph_databases.config)")
+    if mapseq_paths:
+        print(f"Wrote {mapseq_paths[0]} (+ .tax/.otu/.mscluster, aap.config)")
 
 
 if __name__ == "__main__":

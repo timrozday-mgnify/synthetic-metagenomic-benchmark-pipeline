@@ -1,0 +1,62 @@
+# Config for the sub-species V4 abundance-sweep benchmark. This one file is the
+# single source of truth for all the helper scripts (generate_sweep.py,
+# generate_profile_samplesheet.py, scripts/build_profiling_dbs.py) - no paths or
+# metadata are hard-coded in Python. Relative paths resolve against this file's dir.
+#
+# Edit the two train FASTQ paths and the panel's reference paths, then `./run.sh`.
+
+train:
+  id: sc2200627
+  # Real reads the sequencing-error model is trained from (once, shared by all samples).
+  fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina        # 2x300 MiSeq amplicon tails may fit 'lq-illumina' better
+
+reads:
+  num_reads: 1000000           # 500k pairs x 2 (pipeline counts paired reads as pairs*2)
+  mode: amplicon               # amplicon: each FASTA record is used as a fragment directly
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+
+sweep:
+  n_samples: 20
+  steepness: 6.0               # higher -> more samples bunched near the 0/1 extremes
+
+# In-pipeline profiler database, defined here and emitted into samplesheet.yaml's
+# `databases:` block: the pipeline builds it during the run (no out-of-band step).
+database:
+  name: community_v4
+  profilers: [aap]             # [aap], [sylph], or [sylph, aap]
+                               #   aap  -> each panel member needs `ssu` (+ taxonomy)
+                               #   sylph-> each panel member needs `genome`
+
+# One entry per genome. Exactly one `species` must appear twice - that pair is the
+# abundance-sweep target (major = first listed, minor = second). `taxonomy` is
+# derived from the `species` slug unless given; `kingdom: archaea` flips the domain.
+#   amplicon : pre-trimmed 515-YF/806BR V4 FASTA (used to generate reads)
+#   ssu      : pre-extracted full-length 16S FASTA (aap/mapseq DB)
+#   genome   : full genome assembly, .fasta[.gz] (only needed if 'sylph' in profilers)
+panel:
+  - {id: bacteroides_fragilis,        species: bacteroides_fragilis,        amplicon: references/amplicons/bacteroides_fragilis.amplicons.fasta,        ssu: references/16S/bacteroides_fragilis.ssu.fasta}
+  - {id: bacteroides_thetaiotaomicron, species: bacteroides_thetaiotaomicron, amplicon: references/amplicons/bacteroides_thetaiotaomicron.amplicons.fasta, ssu: references/16S/bacteroides_thetaiotaomicron.ssu.fasta}
+  - {id: bacteroides_uniformis,       species: bacteroides_uniformis,       amplicon: references/amplicons/bacteroides_uniformis.amplicons.fasta,       ssu: references/16S/bacteroides_uniformis.ssu.fasta}
+  - {id: bacteroides_vulgatus,        species: bacteroides_vulgatus,        amplicon: references/amplicons/bacteroides_vulgatus.amplicons.fasta,        ssu: references/16S/bacteroides_vulgatus.ssu.fasta}
+  - {id: clostridium_bolteae,         species: clostridium_bolteae,         amplicon: references/amplicons/clostridium_bolteae.amplicons.fasta,         ssu: references/16S/clostridium_bolteae.ssu.fasta}
+  - {id: clostridium_perfringens,     species: clostridium_perfringens,     amplicon: references/amplicons/clostridium_perfringens.amplicons.fasta,     ssu: references/16S/clostridium_perfringens.ssu.fasta}
+  - {id: clostridium_ramosum,         species: clostridium_ramosum,         amplicon: references/amplicons/clostridium_ramosum.amplicons.fasta,         ssu: references/16S/clostridium_ramosum.ssu.fasta}
+  - {id: clostridium_saccharolyticum, species: clostridium_saccharolyticum, amplicon: references/amplicons/clostridium_saccharolyticum.amplicons.fasta, ssu: references/16S/clostridium_saccharolyticum.ssu.fasta}
+  - {id: collinsella_aerofaciens,     species: collinsella_aerofaciens,     amplicon: references/amplicons/collinsella_aerofaciens.amplicons.fasta,     ssu: references/16S/collinsella_aerofaciens.ssu.fasta}
+  - {id: coprococcus_comes,           species: coprococcus_comes,           amplicon: references/amplicons/coprococcus_comes.amplicons.fasta,           ssu: references/16S/coprococcus_comes.ssu.fasta}
+  - {id: dorea_formicigenerans,       species: dorea_formicigenerans,       amplicon: references/amplicons/dorea_formicigenerans.amplicons.fasta,       ssu: references/16S/dorea_formicigenerans.ssu.fasta}
+  - {id: eggerthella_lenta,           species: eggerthella_lenta,           amplicon: references/amplicons/eggerthella_lenta.amplicons.fasta,           ssu: references/16S/eggerthella_lenta.ssu.fasta}
+  - {id: eubacterium_rectale,         species: eubacterium_rectale,         amplicon: references/amplicons/eubacterium_rectale.amplicons.fasta,         ssu: references/16S/eubacterium_rectale.ssu.fasta}
+  - {id: fusobacterium_nucleatum,     species: fusobacterium_nucleatum,     amplicon: references/amplicons/fusobacterium_nucleatum.amplicons.fasta,     ssu: references/16S/fusobacterium_nucleatum.ssu.fasta}
+  - {id: methanobrevibacter_smithii,  species: methanobrevibacter_smithii,  amplicon: references/amplicons/methanobrevibacter_smithii.amplicons.fasta,  ssu: references/16S/methanobrevibacter_smithii.ssu.fasta, kingdom: archaea}
+  - {id: parabacteroides_merdae,      species: parabacteroides_merdae,      amplicon: references/amplicons/parabacteroides_merdae.amplicons.fasta,      ssu: references/16S/parabacteroides_merdae.ssu.fasta}
+  - {id: roseburia_intestinalis,      species: roseburia_intestinalis,      amplicon: references/amplicons/roseburia_intestinalis.amplicons.fasta,      ssu: references/16S/roseburia_intestinalis.ssu.fasta}
+  - {id: ruminococcus_gnavus,         species: ruminococcus_gnavus,         amplicon: references/amplicons/ruminococcus_gnavus.amplicons.fasta,         ssu: references/16S/ruminococcus_gnavus.ssu.fasta}
+  - {id: streptococcus_parasanguinis, species: streptococcus_parasanguinis, amplicon: references/amplicons/streptococcus_parasanguinis.amplicons.fasta, ssu: references/16S/streptococcus_parasanguinis.ssu.fasta}
+  - {id: streptococcus_salivarius,    species: streptococcus_salivarius,    amplicon: references/amplicons/streptococcus_salivarius.amplicons.fasta,    ssu: references/16S/streptococcus_salivarius.ssu.fasta}
+  # The additional genome: same species as a background member above (the sweep pair).
+  - {id: bacteroides_uniformis_strain2, species: bacteroides_uniformis,     amplicon: references/amplicons/bacteroides_uniformis_strain2.amplicons.fasta, ssu: references/16S/bacteroides_uniformis_strain2.ssu.fasta}

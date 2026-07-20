@@ -1,6 +1,74 @@
+databases:
+  community_v4:
+    sequences:
+    - id: bacteroides_fragilis
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/references/16S/bacteroides_fragilis.ssu.fasta
+      taxonomy: Bacteria;Bacteroides;fragilis
+    - id: bacteroides_thetaiotaomicron
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/references/16S/bacteroides_thetaiotaomicron.ssu.fasta
+      taxonomy: Bacteria;Bacteroides;thetaiotaomicron
+    - id: bacteroides_uniformis
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/references/16S/bacteroides_uniformis.ssu.fasta
+      taxonomy: Bacteria;Bacteroides;uniformis
+    - id: bacteroides_vulgatus
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/references/16S/bacteroides_vulgatus.ssu.fasta
+      taxonomy: Bacteria;Bacteroides;vulgatus
+    - id: clostridium_bolteae
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/references/16S/clostridium_bolteae.ssu.fasta
+      taxonomy: Bacteria;Clostridium;bolteae
+    - id: clostridium_perfringens
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/references/16S/clostridium_perfringens.ssu.fasta
+      taxonomy: Bacteria;Clostridium;perfringens
+    - id: clostridium_ramosum
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/references/16S/clostridium_ramosum.ssu.fasta
+      taxonomy: Bacteria;Clostridium;ramosum
+    - id: clostridium_saccharolyticum
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/references/16S/clostridium_saccharolyticum.ssu.fasta
+      taxonomy: Bacteria;Clostridium;saccharolyticum
+    - id: collinsella_aerofaciens
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/references/16S/collinsella_aerofaciens.ssu.fasta
+      taxonomy: Bacteria;Collinsella;aerofaciens
+    - id: coprococcus_comes
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/references/16S/coprococcus_comes.ssu.fasta
+      taxonomy: Bacteria;Coprococcus;comes
+    - id: dorea_formicigenerans
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/references/16S/dorea_formicigenerans.ssu.fasta
+      taxonomy: Bacteria;Dorea;formicigenerans
+    - id: eggerthella_lenta
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/references/16S/eggerthella_lenta.ssu.fasta
+      taxonomy: Bacteria;Eggerthella;lenta
+    - id: eubacterium_rectale
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/references/16S/eubacterium_rectale.ssu.fasta
+      taxonomy: Bacteria;Eubacterium;rectale
+    - id: fusobacterium_nucleatum
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/references/16S/fusobacterium_nucleatum.ssu.fasta
+      taxonomy: Bacteria;Fusobacterium;nucleatum
+    - id: methanobrevibacter_smithii
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/references/16S/methanobrevibacter_smithii.ssu.fasta
+      taxonomy: Archaea;Methanobrevibacter;smithii
+    - id: parabacteroides_merdae
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/references/16S/parabacteroides_merdae.ssu.fasta
+      taxonomy: Bacteria;Parabacteroides;merdae
+    - id: roseburia_intestinalis
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/references/16S/roseburia_intestinalis.ssu.fasta
+      taxonomy: Bacteria;Roseburia;intestinalis
+    - id: ruminococcus_gnavus
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/references/16S/ruminococcus_gnavus.ssu.fasta
+      taxonomy: Bacteria;Ruminococcus;gnavus
+    - id: streptococcus_parasanguinis
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/references/16S/streptococcus_parasanguinis.ssu.fasta
+      taxonomy: Bacteria;Streptococcus;parasanguinis
+    - id: streptococcus_salivarius
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/references/16S/streptococcus_salivarius.ssu.fasta
+      taxonomy: Bacteria;Streptococcus;salivarius
+    - id: bacteroides_uniformis_strain2
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/references/16S/bacteroides_uniformis_strain2.ssu.fasta
+      taxonomy: Bacteria;Bacteroides;uniformis
+samples:
 - sample: S01_a0.00
   train_id: sc2200627
-  error_model_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/error_models/sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
   platform: hq-illumina
   genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/genomes/sample_01.csv
   num_reads: 1000000
@@ -8,10 +76,12 @@
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-
+  profiler: aap
+  database: community_v4
 - sample: S02_a0.00
   train_id: sc2200627
-  error_model_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/error_models/sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
   platform: hq-illumina
   genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/genomes/sample_02.csv
   num_reads: 1000000
@@ -19,10 +89,12 @@
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-
+  profiler: aap
+  database: community_v4
 - sample: S03_a0.01
   train_id: sc2200627
-  error_model_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/error_models/sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
   platform: hq-illumina
   genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/genomes/sample_03.csv
   num_reads: 1000000
@@ -30,10 +102,12 @@
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-
+  profiler: aap
+  database: community_v4
 - sample: S04_a0.01
   train_id: sc2200627
-  error_model_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/error_models/sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
   platform: hq-illumina
   genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/genomes/sample_04.csv
   num_reads: 1000000
@@ -41,10 +115,12 @@
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-
+  profiler: aap
+  database: community_v4
 - sample: S05_a0.03
   train_id: sc2200627
-  error_model_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/error_models/sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
   platform: hq-illumina
   genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/genomes/sample_05.csv
   num_reads: 1000000
@@ -52,10 +128,12 @@
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-
+  profiler: aap
+  database: community_v4
 - sample: S06_a0.05
   train_id: sc2200627
-  error_model_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/error_models/sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
   platform: hq-illumina
   genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/genomes/sample_06.csv
   num_reads: 1000000
@@ -63,10 +141,12 @@
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-
+  profiler: aap
+  database: community_v4
 - sample: S07_a0.10
   train_id: sc2200627
-  error_model_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/error_models/sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
   platform: hq-illumina
   genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/genomes/sample_07.csv
   num_reads: 1000000
@@ -74,10 +154,12 @@
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-
+  profiler: aap
+  database: community_v4
 - sample: S08_a0.17
   train_id: sc2200627
-  error_model_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/error_models/sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
   platform: hq-illumina
   genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/genomes/sample_08.csv
   num_reads: 1000000
@@ -85,10 +167,12 @@
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-
+  profiler: aap
+  database: community_v4
 - sample: S09_a0.28
   train_id: sc2200627
-  error_model_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/error_models/sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
   platform: hq-illumina
   genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/genomes/sample_09.csv
   num_reads: 1000000
@@ -96,10 +180,12 @@
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-
+  profiler: aap
+  database: community_v4
 - sample: S10_a0.42
   train_id: sc2200627
-  error_model_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/error_models/sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
   platform: hq-illumina
   genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/genomes/sample_10.csv
   num_reads: 1000000
@@ -107,10 +193,12 @@
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-
+  profiler: aap
+  database: community_v4
 - sample: S11_a0.58
   train_id: sc2200627
-  error_model_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/error_models/sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
   platform: hq-illumina
   genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/genomes/sample_11.csv
   num_reads: 1000000
@@ -118,10 +206,12 @@
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-
+  profiler: aap
+  database: community_v4
 - sample: S12_a0.72
   train_id: sc2200627
-  error_model_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/error_models/sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
   platform: hq-illumina
   genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/genomes/sample_12.csv
   num_reads: 1000000
@@ -129,10 +219,12 @@
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-
+  profiler: aap
+  database: community_v4
 - sample: S13_a0.83
   train_id: sc2200627
-  error_model_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/error_models/sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
   platform: hq-illumina
   genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/genomes/sample_13.csv
   num_reads: 1000000
@@ -140,10 +232,12 @@
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-
+  profiler: aap
+  database: community_v4
 - sample: S14_a0.90
   train_id: sc2200627
-  error_model_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/error_models/sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
   platform: hq-illumina
   genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/genomes/sample_14.csv
   num_reads: 1000000
@@ -151,10 +245,12 @@
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-
+  profiler: aap
+  database: community_v4
 - sample: S15_a0.95
   train_id: sc2200627
-  error_model_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/error_models/sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
   platform: hq-illumina
   genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/genomes/sample_15.csv
   num_reads: 1000000
@@ -162,10 +258,12 @@
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-
+  profiler: aap
+  database: community_v4
 - sample: S16_a0.97
   train_id: sc2200627
-  error_model_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/error_models/sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
   platform: hq-illumina
   genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/genomes/sample_16.csv
   num_reads: 1000000
@@ -173,10 +271,12 @@
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-
+  profiler: aap
+  database: community_v4
 - sample: S17_a0.99
   train_id: sc2200627
-  error_model_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/error_models/sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
   platform: hq-illumina
   genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/genomes/sample_17.csv
   num_reads: 1000000
@@ -184,10 +284,12 @@
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-
+  profiler: aap
+  database: community_v4
 - sample: S18_a0.99
   train_id: sc2200627
-  error_model_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/error_models/sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
   platform: hq-illumina
   genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/genomes/sample_18.csv
   num_reads: 1000000
@@ -195,10 +297,12 @@
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-
+  profiler: aap
+  database: community_v4
 - sample: S19_a1.00
   train_id: sc2200627
-  error_model_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/error_models/sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
   platform: hq-illumina
   genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/genomes/sample_19.csv
   num_reads: 1000000
@@ -206,10 +310,12 @@
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-
+  profiler: aap
+  database: community_v4
 - sample: S20_a1.00
   train_id: sc2200627
-  error_model_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/error_models/sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
   platform: hq-illumina
   genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/genomes/sample_20.csv
   num_reads: 1000000
@@ -217,3 +323,5 @@
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
+  profiler: aap
+  database: community_v4

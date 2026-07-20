@@ -8,57 +8,72 @@ from 0/1 to 1/0 with logistic spacing (denser near the extremes; endpoints exact
 summing to 1 (one species' worth, like every other species).
 
 - **Reads:** V4 amplicon (515-YF / 806BR), 2×300 bp paired, 500k pairs/sample.
-- **Error model:** trained once from the real SC2200627 Illumina reads (shared `train_id`).
+- **Error model:** trained once from the real reads named in `config.yaml` (shared `train_id`).
 
 ## Fill in before running
 
-Edit `generate_sweep.py`:
-- `TRAIN_FASTQ_1/2` — the real R1/R2 (defaults point at the SC2200627 lane1C5 pair).
-- `PANEL` — 21 rows `(genome_id, species, v4_fasta_path)`. Point `fasta_path` at each genome's
-  **pre-trimmed V4 amplicon FASTA** (mode=amplicon has no primer logic — it uses each record as a
-  fragment directly). The last row is the additional genome; set its species to match one member
-  and give it the second strain's V4 FASTA. `genome_id`s must be unique.
+Everything is driven by **`config.yaml`** — no paths or metadata are hard-coded in the Python
+scripts. Edit:
+
+- `train.fastq_1` / `train.fastq_2` — the real R1/R2 the error model is trained from.
+- `panel` — one entry per genome (`id`, `species`, `amplicon`, `ssu`). Point `amplicon` at each
+  genome's **pre-trimmed V4 amplicon FASTA** (mode=amplicon has no primer logic — it uses each
+  record as a fragment directly) and `ssu` at its **pre-extracted full-length 16S FASTA** (needed
+  to build the `aap`/mapseq profiler DB — V4 fragments are not valid mapseq input). Exactly one
+  `species` must appear twice: that pair is the sweep target. `id`s must be unique. `taxonomy` is
+  derived from the `species` slug unless given; add `kingdom: archaea` for archaea. Add `genome:`
+  per entry (and `sylph` to `database.profilers`) to also build a sylph WGS DB.
+
+The scripts require **PyYAML** — run them with `python` (the same interpreter `run.sh` uses).
 
 ## Run
 
 ```bash
-./run.sh          # regenerates inputs, then runs train -> generate -> profile in sequence
+./run.sh          # config.yaml -> samplesheet.yaml, then one `--step all` run
 ```
 
-`run.sh` runs the three steps explicitly so the error model is trained once and
-reused (and the profiling step is included). `generate_sweep.py` writes
-`train_samplesheet.yaml` (consumed by `--step train`) and a `samplesheet.yaml`
-whose rows carry `error_model_dir` pointing at the trained model, so
-`--step generate` skips retraining. Fill in the reference genomes in
-`scripts/build_profiling_dbs.py`'s `GENOMES` before running (see "Profiling this sweep").
+`generate_sweep.py` reads `config.yaml` and writes a single `samplesheet.yaml` containing a
+top-level `databases: community_v4` block **and** the 20 sweep samples (each with inline
+`train_*`, read-geometry columns, `profiler`, and `database: community_v4`). `run.sh` then does
+one `nextflow run --step all`, which — because training is deduped by `train_id` — trains the
+error model once, generates every sample, **builds the `community_v4` profiler DB in-pipeline
+from the samplesheet's `databases:` block**, and profiles each sample against it. No out-of-band
+DB build step is needed.
 
 ## Notes
 
-- `num_reads = 1_000_000` = 500k pairs (pipeline counts paired reads as pairs×2). Halve if
+- `reads.num_reads = 1000000` = 500k pairs (pipeline counts paired reads as pairs×2). Halve if
   genome-blender counts pairs directly.
-- `platform = hq-illumina`; 2×300 MiSeq amplicon tails may fit `lq-illumina` — one word in the script.
-- Paired 2×300 read geometry lives in the samplesheet columns (`mode=amplicon`, `paired_end=true`,
-  `read_length_mean=300`, `read_length_variance=0`), written by `generate_sweep.py` — no `ext.args`.
+- `train.platform = hq-illumina`; 2×300 MiSeq amplicon tails may fit `lq-illumina` — one line in
+  `config.yaml`.
+- Paired 2×300 read geometry lives in `config.yaml`'s `reads:` block (`mode`, `paired_end`,
+  `read_length_mean`, `read_length_variance`), emitted into the samplesheet — no `ext.args`.
+- The three scripts share `scripts/sweep_config.py` (config loader + `databases:`-block builder);
+  run any script's `--selfcheck` to sanity-test its logic without the pipeline.
 
-## Profiling this sweep
+## Re-profiling without regenerating
 
-After a `--step generate` (or `all`) run, each sample is profiled against a custom
-`community_v4` database built from this sweep's own reference genomes.
+To re-profile already-generated reads (e.g. to compare profilers) without regenerating them:
 
-- **Reference genomes** — fill in `GENOMES` at the top of `scripts/build_profiling_dbs.py`:
-  a full genome FASTA (for sylph) and a full-length 16S FASTA + taxonomy (for aap/mapseq)
-  per `PANEL` genome_id. This dict is the single source of truth for the DB; the profile
-  samplesheet reads it directly. V4 amplicon fragments are NOT valid mapseq input — it needs
-  full-length 16S. `ssu_fasta=None` is only OK if you drop `aap` from `PROFILERS` (the
-  in-pipeline path has no barrnap step, unlike the standalone build script).
-- `generate_profile_samplesheet.py [results_dir]` — builds `profile_samplesheet.yaml` for a
-  `--step profile` re-run. It emits a top-level `databases: community_v4` block (a sequence
-  collection built from `GENOMES`) and one row per sample per profiler (`sylph` + `aap` by
-  default, set by `PROFILERS`), each with `database: community_v4` and `benchmark_dir` at
-  `<results_dir>/<sample>`. The pipeline builds the sylph `.syldb` and mapseq DB itself during
-  the run — no separate build step or config. See the root README's "Named sequence
-  collections (`databases:`)" section.
-- `scripts/build_profiling_dbs.py` (+ `_singularity.py`) — optional out-of-band builder that
-  produces the same DBs plus `sylph_databases.config` / `aap.config` for a config-based run
-  (e.g. on HPC where you'd rather prebuild). Not needed for the in-pipeline path above, but it
-  still holds the `GENOMES` reference-genome registry both paths share.
+```bash
+python generate_profile_samplesheet.py "$OUTDIR"   # reads config.yaml + samplesheet.yaml
+nextflow run ../../main.nf -profile docker -c benchmark.config \
+    --step profile --input profile_samplesheet.yaml --outdir "$OUTDIR" --seed 42
+```
+
+`generate_profile_samplesheet.py` emits the same `databases:` block plus one row per
+(sample, profiler) — every profiler in `database.profilers` — with `benchmark_dir` at
+`<results_dir>/<sample>`. See the root README's "Named sequence collections (`databases:`)".
+
+## Building the profiler DB out-of-band (optional)
+
+`scripts/build_profiling_dbs.py` builds the same sylph/mapseq DBs **outside** the pipeline from
+the same `config.yaml`, writing `sylph_databases.config` / `aap.config` for a config-based
+`database:` run. It runs under Docker by default or Singularity/Apptainer for HPC without Docker:
+
+```bash
+python scripts/build_profiling_dbs.py --runtime singularity   # or --runtime docker (default)
+```
+
+This is **not** needed for the default in-pipeline path above — use it only if you specifically
+want the DB prebuilt. Which DBs are built follows `config.yaml`'s `database.profilers`.

@@ -4,27 +4,22 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/../.." && pwd)"
 OUTDIR="$REPO/results/subspecies_v4_sweep"
 
-run() {  # $1 = step, $2 = input samplesheet
-    nextflow run "$REPO/main.nf" \
-        -profile docker \
-        -c "$HERE/benchmark.config" \
-        --step "$1" \
-        --input "$2" \
-        --outdir "$OUTDIR" \
-        --seed 42
-}
-
-# Regenerate train_samplesheet.yaml + samplesheet.yaml + genomes/*.csv from the PANEL.
+# Regenerate samplesheet.yaml + genomes/*.csv from config.yaml.
 python "$HERE/generate_sweep.py"
 
-# 1. Train the error model once -> $OUTDIR/error_models/<train_id>/
-run train "$HERE/train_samplesheet.yaml"
+# One combined run: --step all trains the error model once (deduped by train_id),
+# generates reads for every sample, builds the community_v4 profiler DB from the
+# samplesheet's `databases:` block, and profiles each sample against it.
+nextflow run "$REPO/main.nf" \
+    -profile docker \
+    -c "$HERE/benchmark.config" \
+    --step all \
+    --input "$HERE/samplesheet.yaml" \
+    --outdir "$OUTDIR" \
+    --seed 42
 
-# 2. Generate reads for every sample, reusing that model (rows carry error_model_dir).
-run generate "$HERE/samplesheet.yaml"
-
-# 3. Profile the generated samples. The samplesheet carries a `databases:` block
-#    (built in-pipeline from scripts/build_profiling_dbs.py's GENOMES) and profiles
-#    each sample with sylph + aap against it; fill in that GENOMES first.
-python "$HERE/generate_profile_samplesheet.py" "$OUTDIR"
-run profile "$HERE/profile_samplesheet.yaml"
+# To re-profile already-generated reads without regenerating (e.g. to compare
+# profilers), regenerate a profile-only samplesheet and run --step profile:
+#   python "$HERE/generate_profile_samplesheet.py" "$OUTDIR"
+#   nextflow run "$REPO/main.nf" -profile docker -c "$HERE/benchmark.config" \
+#       --step profile --input "$HERE/profile_samplesheet.yaml" --outdir "$OUTDIR" --seed 42
