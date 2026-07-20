@@ -23,6 +23,7 @@ Writes genome_references/, mapseq_references/, mapseq_db/, sylph_db/, and two
 example config snippets (sylph_databases.config, aap.config) next to this
 script's parent directory.
 """
+import os
 import shutil
 import subprocess
 import sys
@@ -42,8 +43,13 @@ MAPSEQ_IMAGE = "docker://quay.io/biocontainers/mapseq:2.1.1b--h3ab3c3b_0"     # 
 SYLPH_IMAGE = "docker://quay.io/biocontainers/sylph:0.9.0--ha6fb395_0"        # matches modules/local/sylph/build_db
 BARRNAP_IMAGE = "docker://quay.io/biocontainers/barrnap:0.9--hdfd78af_4"      # fallback 16S extraction, not an nf-core module here
 
-# `singularity` or `apptainer` - both accept the same exec/bind/pwd flags.
+# `singularity` or `apptainer` - both accept the same exec/bind/pwd/pull flags.
 SINGULARITY = "singularity"
+
+# Where pulled .sif files are cached. Reuses $SINGULARITY_CACHEDIR if set,
+# else a sif_cache/ dir next to this script's run dir. Set to a shared path on
+# HPC to avoid re-pulling per job.
+SIF_CACHE_DIR = Path(os.environ.get("SINGULARITY_CACHEDIR", RUN_DIR / "sif_cache"))
 
 # --- Fill these in ---------------------------------------------------------
 # One entry per genome used in ../generate_sweep.py's PANEL. genome_id is
@@ -69,10 +75,23 @@ def sh(cmd, **kw):
     subprocess.run(cmd, check=True, **kw)
 
 
+def resolve_image(image):
+    """Return a local path singularity can exec. Local .sif paths pass through;
+    docker:// URIs are pulled to SIF_CACHE_DIR once (many HPC installs won't
+    resolve docker:// at exec time)."""
+    if not image.startswith("docker://"):
+        return image
+    SIF_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    sif = SIF_CACHE_DIR / (image.removeprefix("docker://").replace("/", "_").replace(":", "_") + ".sif")
+    if not sif.exists():
+        sh([SINGULARITY, "pull", str(sif), image])
+    return str(sif)
+
+
 def container_run(image, args, workdir):
     # Bind workdir to /data and set pwd there so the callers' /data paths work
     # unchanged, exactly as the Docker `-v {workdir}:/data -w /data` version did.
-    sh([SINGULARITY, "exec", "--bind", f"{workdir}:/data", "--pwd", "/data", image, *args])
+    sh([SINGULARITY, "exec", "--bind", f"{workdir}:/data", "--pwd", "/data", resolve_image(image), *args])
 
 
 def parse_fasta(path):
