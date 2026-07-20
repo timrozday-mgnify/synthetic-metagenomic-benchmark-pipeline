@@ -29,8 +29,8 @@ Edit `generate_sweep.py`:
 reused (and the profiling step is included). `generate_sweep.py` writes
 `train_samplesheet.yaml` (consumed by `--step train`) and a `samplesheet.yaml`
 whose rows carry `error_model_dir` pointing at the trained model, so
-`--step generate` skips retraining. Fill in `PROFILER`/`DATABASE` at the top of
-`generate_profile_samplesheet.py` before running (see "Profiling this sweep").
+`--step generate` skips retraining. Fill in the reference genomes in
+`scripts/build_profiling_dbs.py`'s `GENOMES` before running (see "Profiling this sweep").
 
 ## Notes
 
@@ -42,16 +42,23 @@ whose rows carry `error_model_dir` pointing at the trained model, so
 
 ## Profiling this sweep
 
-After a `--step generate` (or `all`) run:
+After a `--step generate` (or `all`) run, each sample is profiled against a custom
+`community_v4` database built from this sweep's own reference genomes.
 
-- `generate_profile_samplesheet.py [results_dir]` — builds `profile_samplesheet.yaml` for a later
-  `--step profile` re-run, one row per sample pointing `benchmark_dir` at `<results_dir>/<sample>`
-  (see the root README's "Profile-only samplesheet" section). Fill in `PROFILER`/`DATABASE` at the
-  top of the script first.
-- `scripts/build_profiling_dbs.py` — builds a custom sylph `.syldb` and mapseq DB from this sweep's
-  own reference genomes (fill in `GENOMES` at the top: a full genome FASTA and, ideally, a
-  full-length 16S FASTA per `PANEL` genome_id — V4 amplicon fragments are NOT valid mapseq input,
-  it needs full-length 16S; leave `ssu_fasta=None` to have it predicted with barrnap instead).
-  Writes `sylph_databases.config` / `aap.config` you can pass to the profiling run so
-  `database: community_v4` resolves to these instead of `self`/a production DB. See the root
-  README's "Taxonomic profiling" section for the general pattern.
+- **Reference genomes** — fill in `GENOMES` at the top of `scripts/build_profiling_dbs.py`:
+  a full genome FASTA (for sylph) and a full-length 16S FASTA + taxonomy (for aap/mapseq)
+  per `PANEL` genome_id. This dict is the single source of truth for the DB; the profile
+  samplesheet reads it directly. V4 amplicon fragments are NOT valid mapseq input — it needs
+  full-length 16S. `ssu_fasta=None` is only OK if you drop `aap` from `PROFILERS` (the
+  in-pipeline path has no barrnap step, unlike the standalone build script).
+- `generate_profile_samplesheet.py [results_dir]` — builds `profile_samplesheet.yaml` for a
+  `--step profile` re-run. It emits a top-level `databases: community_v4` block (a sequence
+  collection built from `GENOMES`) and one row per sample per profiler (`sylph` + `aap` by
+  default, set by `PROFILERS`), each with `database: community_v4` and `benchmark_dir` at
+  `<results_dir>/<sample>`. The pipeline builds the sylph `.syldb` and mapseq DB itself during
+  the run — no separate build step or config. See the root README's "Named sequence
+  collections (`databases:`)" section.
+- `scripts/build_profiling_dbs.py` (+ `_singularity.py`) — optional out-of-band builder that
+  produces the same DBs plus `sylph_databases.config` / `aap.config` for a config-based run
+  (e.g. on HPC where you'd rather prebuild). Not needed for the in-pipeline path above, but it
+  still holds the `GENOMES` reference-genome registry both paths share.

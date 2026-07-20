@@ -23,6 +23,8 @@ run train "$HERE/train_samplesheet.yaml"
 # 2. Generate reads for every sample, reusing that model (rows carry error_model_dir).
 run generate "$HERE/samplesheet.yaml"
 
-# 3. Profile the generated samples (fill in PROFILER/DATABASE in the script first).
+# 3. Profile the generated samples. The samplesheet carries a `databases:` block
+#    (built in-pipeline from scripts/build_profiling_dbs.py's GENOMES) and profiles
+#    each sample with sylph + aap against it; fill in that GENOMES first.
 python "$HERE/generate_profile_samplesheet.py" "$OUTDIR"
 run profile "$HERE/profile_samplesheet.yaml"
