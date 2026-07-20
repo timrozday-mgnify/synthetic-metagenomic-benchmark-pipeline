@@ -16,6 +16,8 @@ import math
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+# Must match run.sh's --outdir; error_model_dir points inside it (see generate_profile_samplesheet.py).
+RESULTS_DIR = HERE.parent.parent / "results" / "subspecies_v4_sweep"
 
 # --- Fill these in ---------------------------------------------------------
 # Real reads the sequencing-error model is trained from (once, shared by all samples).
@@ -49,60 +51,76 @@ PLATFORM = "hq-illumina"   # 2x300 MiSeq amplicon tails may fit 'lq-illumina' be
 NUM_READS = 1_000_000      # 500k pairs x 2 (pipeline counts paired reads as pairs*2)
 N_SAMPLES = 20
 TRAIN_ID = "sc2200627"
-RATIO_LO, RATIO_HI = 1e-3, 1e3   # major:minor swept log-spaced 1:1000 -> 1000:1
+SWEEP_STEEPNESS = 6.0   # higher -> more samples bunched near 0 and 1
 # ---------------------------------------------------------------------------
 
 
-def sweep_ratios(n):
-    """n log-spaced major:minor ratios from RATIO_LO to RATIO_HI."""
-    lo, hi = math.log10(RATIO_LO), math.log10(RATIO_HI)
-    return [10 ** (lo + (hi - lo) * i / (n - 1)) for i in range(n)]
+def logistic_fracs(n, k):
+    """n fractions in [0,1], symmetric, denser near the 0/1 extremes (logistic
+    spacing). Endpoints are rescaled to land exactly on 0 and 1."""
+    s = [1 / (1 + math.exp(-k * (2 * i / (n - 1) - 1))) for i in range(n)]
+    lo, hi = s[0], s[-1]
+    return [(v - lo) / (hi - lo) for v in s]
 
 
 def main():
-    # Identify the doubled species and its two genome_ids (major = first seen).
+    # Identify the doubled species and its two genome_ids.
     species = [p[1] for p in PANEL]
     dup = next(sp for sp in species if species.count(sp) == 2)
-    major_id, minor_id = [p[0] for p in PANEL if p[1] == dup]
+    strain_ids = [p[0] for p in PANEL if p[1] == dup]
     singles = [p for p in PANEL if p[1] != dup]  # 19 background species
     assert len(singles) == 19, "expected exactly one duplicated species (20 species, 21 genomes)"
 
+    strain_a, strain_b = strain_ids
+    strain_fa = {gid: next(f for g, _sp, f in PANEL if g == gid) for gid in strain_ids}
+
+    fracs = logistic_fracs(N_SAMPLES, SWEEP_STEEPNESS)
+
     (HERE / "genomes").mkdir(exist_ok=True)
     rows = []
-    for i, ratio in enumerate(sweep_ratios(N_SAMPLES), start=1):
-        major, minor = ratio / (1 + ratio), 1 / (1 + ratio)  # pair sums to 1 = one species' worth
+    for i in range(1, N_SAMPLES + 1):
+        # Sweep the intra-species split (logistic, denser at the extremes; endpoints
+        # exactly 0/1): strain_a 0 -> 1, strain_b 1 -> 0, always summing to 1 (one
+        # species' worth, like every other species).
+        a = fracs[i - 1]
+        b = 1 - a
         csv_path = HERE / "genomes" / f"sample_{i:02d}.csv"
         with open(csv_path, "w", newline="") as fh:
             w = csv.writer(fh)
             w.writerow(["genome_id", "fasta_path", "abundance"])
             for gid, _sp, fa in singles:
                 w.writerow([gid, fa, 1])
-            major_fa = next(fa for gid, _sp, fa in PANEL if gid == major_id)
-            minor_fa = next(fa for gid, _sp, fa in PANEL if gid == minor_id)
-            w.writerow([major_id, major_fa, f"{major:.6g}"])
-            w.writerow([minor_id, minor_fa, f"{minor:.6g}"])
+            w.writerow([strain_a, strain_fa[strain_a], f"{a:.6g}"])
+            w.writerow([strain_b, strain_fa[strain_b], f"{b:.6g}"])
 
-        # ponytail: self-check — every species normalises to equal weight, pair sums to one.
+        # ponytail: self-check — every species (incl. the doubled pair) has equal weight.
         weights = {}
         for gid, sp, _fa in singles:
             weights[sp] = weights.get(sp, 0) + 1
-        weights[dup] = major + minor
+        weights[dup] = a + b
         total = sum(weights.values())
         per = [v / total for v in weights.values()]
         assert all(abs(x - per[0]) < 1e-9 for x in per), f"sample {i}: species not equal-weight"
 
-        sample = f"S{i:02d}_minor{minor:.0e}".replace("-0", "-").replace("+0", "")
         rows.append({
-            "sample": sample, "train_id": TRAIN_ID,
-            "train_fastq_1": TRAIN_FASTQ_1, "train_fastq_2": TRAIN_FASTQ_2,
+            "sample": f"S{i:02d}_a{a:.2f}", "train_id": TRAIN_ID,
+            # run.sh trains once (--step train) into this dir; generate reuses it.
+            "error_model_dir": str(RESULTS_DIR / "error_models" / TRAIN_ID),
             "platform": PLATFORM, "genomes_csv": str(csv_path),
             "num_reads": NUM_READS, "mode": "amplicon", "paired_end": "true",
             "read_length_mean": 300, "read_length_variance": 0,
         })
 
+    # Train-only samplesheet (one row per train_id): consumed by `--step train`.
+    with open(HERE / "train_samplesheet.yaml", "w") as fh:
+        fh.write(f"- train_id: {TRAIN_ID}\n")
+        fh.write(f"  train_fastq_1: {TRAIN_FASTQ_1}\n")
+        fh.write(f"  train_fastq_2: {TRAIN_FASTQ_2}\n")
+        fh.write(f"  platform: {PLATFORM}\n")
+
     # Hand-written YAML (no pyyaml dependency): a list of flat sample maps. Add a
     # `subsample: [none, N, ...]` line per sample to sweep read depths.
-    fields = ["train_id", "train_fastq_1", "train_fastq_2", "platform",
+    fields = ["train_id", "error_model_dir", "platform",
               "genomes_csv", "num_reads", "mode", "paired_end",
               "read_length_mean", "read_length_variance"]
     with open(HERE / "samplesheet.yaml", "w") as fh:
@@ -112,9 +130,10 @@ def main():
                 fh.write(f"  {k}: {r[k]}\n")
             fh.write("\n")
 
-    print(f"Wrote samplesheet.yaml ({len(rows)} samples) and genomes/sample_01..{N_SAMPLES:02d}.csv")
-    print(f"Swept species: {dup} ({major_id} : {minor_id}), minor frac "
-          f"{1/(1+sweep_ratios(N_SAMPLES)[0]):.3g} -> {1/(1+sweep_ratios(N_SAMPLES)[-1]):.3g}")
+    print(f"Wrote train_samplesheet.yaml, samplesheet.yaml ({len(rows)} samples) "
+          f"and genomes/sample_01..{N_SAMPLES:02d}.csv")
+    print(f"Swept intra-species split of {dup}: {strain_a} 0 -> 1, {strain_b} 1 -> 0 "
+          f"(sum 1 in every sample); all other species fixed at 1.")
 
 
 if __name__ == "__main__":

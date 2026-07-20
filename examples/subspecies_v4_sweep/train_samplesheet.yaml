@@ -1,0 +1,4 @@
+- train_id: sc2200627
+  train_fastq_1: /Users/timrozday/Downloads/SC2200627-SC3/SC2200627-SC3_Batch_54_samples_26s000943-1-1_Finn_lane1C5_1_sequence.txt.gz
+  train_fastq_2: /Users/timrozday/Downloads/SC2200627-SC3/SC2200627-SC3_Batch_54_samples_26s000943-1-1_Finn_lane1C5_2_sequence.txt.gz
+  platform: hq-illumina

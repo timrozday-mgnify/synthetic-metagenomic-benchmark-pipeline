@@ -18,5 +18,5 @@ roseburia_intestinalis,/Users/timrozday/Documents/mimicc/mimicc-primer-investiga
 ruminococcus_gnavus,/Users/timrozday/Documents/mimicc/mimicc-primer-investigations/amplicon-primer-screen_runs/20HM+/results/seqkit_amplicon/ruminococcus_gnavus/515-YF-806BR/ruminococcus_gnavus.amplicons.fasta,1
 streptococcus_parasanguinis,/Users/timrozday/Documents/mimicc/mimicc-primer-investigations/amplicon-primer-screen_runs/20HM+/results/seqkit_amplicon/streptococcus_parasanguinis/515-YF-806BR/streptococcus_parasanguinis.amplicons.fasta,1
 streptococcus_salivarius,/Users/timrozday/Documents/mimicc/mimicc-primer-investigations/amplicon-primer-screen_runs/20HM+/results/seqkit_amplicon/streptococcus_salivarius/515-YF-806BR/streptococcus_salivarius.amplicons.fasta,1
-bacteroides_uniformis,/Users/timrozday/Documents/mimicc/mimicc-primer-investigations/amplicon-primer-screen_runs/20HM+/results/seqkit_amplicon/bacteroides_uniformis/515-YF-806BR/bacteroides_uniformis.amplicons.fasta,0.00878088
-bacteroides_uniformis_strain2,/PATH/TO/bacteroides_uniformis_strain2.v4.amplicons.fasta,0.991219
+bacteroides_uniformis,/Users/timrozday/Documents/mimicc/mimicc-primer-investigations/amplicon-primer-screen_runs/20HM+/results/seqkit_amplicon/bacteroides_uniformis/515-YF-806BR/bacteroides_uniformis.amplicons.fasta,0.013814
+bacteroides_uniformis_strain2,/PATH/TO/bacteroides_uniformis_strain2.v4.amplicons.fasta,0.986186

@@ -1,9 +1,11 @@
 # Sub-species V4 abundance sweep
 
-Benchmarks how well a method resolves **two genomes of the same species** as their abundance
-ratio varies. 20 background species (one genome each, fixed at equal abundance) plus one
-additional genome of the same species as one member. Across 20 samples only the same-species
-pair's split changes (log-spaced, minor fraction ~0.001 → ~0.999); everything else stays equal.
+Benchmarks how well a method resolves **two genomes of the same species** as their relative
+abundance varies. 20 background species (one genome each, fixed at abundance 1) plus one
+additional genome of the same species as one member. Every species carries the same target
+abundance; only the split *between the two strains* changes across the 20 samples — swept
+from 0/1 to 1/0 with logistic spacing (denser near the extremes; endpoints exactly 0/1), always
+summing to 1 (one species' worth, like every other species).
 
 - **Reads:** V4 amplicon (515-YF / 806BR), 2×300 bp paired, 500k pairs/sample.
 - **Error model:** trained once from the real SC2200627 Illumina reads (shared `train_id`).
@@ -20,11 +22,15 @@ Edit `generate_sweep.py`:
 ## Run
 
 ```bash
-./run.sh          # regenerates inputs, then launches the pipeline
+./run.sh          # regenerates inputs, then runs train -> generate -> profile in sequence
 ```
 
-Or by hand: `python generate_sweep.py`, then
-`nextflow run ../../main.nf -profile docker -c benchmark.config --input samplesheet.yaml --outdir <out>`.
+`run.sh` runs the three steps explicitly so the error model is trained once and
+reused (and the profiling step is included). `generate_sweep.py` writes
+`train_samplesheet.yaml` (consumed by `--step train`) and a `samplesheet.yaml`
+whose rows carry `error_model_dir` pointing at the trained model, so
+`--step generate` skips retraining. Fill in `PROFILER`/`DATABASE` at the top of
+`generate_profile_samplesheet.py` before running (see "Profiling this sweep").
 
 ## Notes
 
