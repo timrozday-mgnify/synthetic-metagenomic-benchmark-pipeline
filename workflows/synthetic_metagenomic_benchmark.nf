@@ -11,6 +11,7 @@
 //
 
 include { TRAIN_ERROR_MODEL           } from '../subworkflows/local/train_error_model/main'
+include { NORMALISE_REFERENCES        } from '../modules/local/normalise_references/main'
 include { GENOME_BLENDER_GENERATE     } from '../modules/local/genome_blender/generate/main'
 include { MERGE_GENOME_BLENDER_CHUNKS } from '../modules/local/genome_blender/merge_chunks/main'
 include { SEQKIT_SUBSAMPLE            } from '../modules/local/seqkit/subsample/main'
@@ -81,9 +82,17 @@ workflow SYNTHETIC_METAGENOMIC_BENCHMARK {
 
       if (params.step != 'train') {
         //
+        // Normalise reference FASTA headers (unique, whitespace-free) so
+        // genome-blender emits one @SQ line per contig; duplicate contig names
+        // otherwise corrupt the merged ground-truth BAM header.
+        //
+        NORMALISE_REFERENCES(ch_samples)
+        ch_versions = ch_versions.mix(NORMALISE_REFERENCES.out.versions.first())
+
+        //
         // Attach each sample's trained model + calibration by train_id, then generate.
         //
-        ch_gen = ch_samples
+        ch_gen = NORMALISE_REFERENCES.out.references
             .map { meta, csv, fastas -> [ meta.train_id, meta, csv, fastas ] }
             .combine(ch_model, by: 0)
             .combine(ch_cal,   by: 0)

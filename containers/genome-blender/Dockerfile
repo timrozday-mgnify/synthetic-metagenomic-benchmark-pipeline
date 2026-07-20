@@ -27,4 +27,5 @@ RUN pip install --no-cache-dir "typer>=0.9" click \
     && pip install --no-cache-dir /opt/genome-blender
 
 RUN generate-reads --help >/dev/null && skiver-generate --help >/dev/null \
+    && normalise-fasta --help >/dev/null \
     && python -c "import pysam; print('pysam', pysam.__version__)"
