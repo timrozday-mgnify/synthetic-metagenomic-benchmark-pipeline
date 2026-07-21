@@ -70,6 +70,9 @@ process RUN_AAP {
         --outdir aap_out \\
         ${db_cfg} ${extra_cfg}
 
+    # Report contract is *.mseq.gz; AAP emits uncompressed .mseq. Idempotent (no-op if gz).
+    find aap_out -name '*.mseq' -exec gzip -f {} +
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         amplicon-analysis-pipeline: ${params.aap_revision}
