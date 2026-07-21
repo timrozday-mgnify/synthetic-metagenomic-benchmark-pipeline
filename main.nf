@@ -22,13 +22,29 @@ def parseSubsamples(v) {
     list ?: [null]
 }
 
-// Parse a per-sample primer-pairs TSV into [ [pair_id, forward, reverse], ... ].
-// Columns are matched by header name (pair_id + forward/forward_primer +
-// reverse/reverse_primer), mirroring mimicc's data/primers/primer_pairs.tsv.
-// Missing column / empty path => [] (the sample skips extraction: existing
-// "amplicon references already provided" passthrough).
+// Parse a sample's `primers` into [ [pair_id, forward, reverse], ... ]. Accepts
+// either an inline YAML list in the samplesheet (each entry a 3-item [id, fwd, rev]
+// list or a map {pair_id/id, forward[_primer], reverse[_primer]}), or a path to a
+// TSV with those columns (mirroring mimicc's data/primers/primer_pairs.tsv).
+// null / empty => [] (the sample skips extraction: existing "amplicon references
+// already provided" passthrough).
 def parsePrimerPairs(v) {
-    if (v == null || v.toString().trim() == '') return []
+    if (v == null) return []
+    if (v instanceof List) {
+        return v.findAll { it != null }.collect { e ->
+            if (e instanceof Map) {
+                def id = e.pair_id ?: e.id; def fwd = e.forward ?: e.forward_primer; def rev = e.reverse ?: e.reverse_primer
+                if (!id || !fwd || !rev) error "primers entry ${e} needs pair_id, forward, reverse"
+                [ id.toString().trim(), fwd.toString().trim(), rev.toString().trim() ]
+            }
+            else {
+                def c = (e instanceof List) ? e : e.toString().split(/[\t,]/).toList()
+                if (c.size() < 3) error "primers entry '${e}' needs 3 fields: pair_id, forward, reverse"
+                [ c[0].toString().trim(), c[1].toString().trim(), c[2].toString().trim() ]
+            }
+        }
+    }
+    if (v.toString().trim() == '') return []
     def lines = resolveFile(v.toString().trim()).readLines().findAll { it?.trim() }
     if (!lines) return []
     def header = lines[0].split('\t').collect { it.trim() }

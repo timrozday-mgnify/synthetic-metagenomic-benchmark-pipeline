@@ -14,9 +14,14 @@ Schema (see ../config.yaml for a filled-in template):
     database: {name, profilers: [aap|sylph, ...],
                rfam_covariance_model?, rfam_claninfo?}  # required if 'aap' in profilers
     aap:      {configs?: [path, ...], profile?}         # optional; nested-AAP engine/-c files
+    primers:  [ {pair_id, forward, reverse}, ... ] | path-to-TSV   # optional; in-silico PCR
     panel:    [ {id, species, amplicon, ssu?, genome?, taxonomy?, kingdom?}, ... ]
 
 Exactly one `species` must appear twice: that pair is the abundance-sweep target.
+
+When `primers:` is set, reads are generated from amplicons the pipeline extracts
+from each panel member's `genome:` (which becomes required), not from the
+pre-trimmed `amplicon:` FASTA; every primer pair is run as its own benchmark.
 """
 import math
 import sys
@@ -52,6 +57,9 @@ def load_config(path):
     aap_configs = (cfg.get("aap") or {}).get("configs")
     if aap_configs:
         cfg["aap"]["configs"] = [resolve(p) for p in aap_configs]
+    # `primers:` may be an inline list of pairs (passed through) or a path to a TSV.
+    if isinstance(cfg.get("primers"), str):
+        cfg["primers"] = resolve(cfg["primers"])
 
     _validate(cfg)
     return cfg
@@ -79,8 +87,13 @@ def _validate(cfg):
         for key in ("rfam_covariance_model", "rfam_claninfo"):
             if not cfg["database"].get(key):
                 sys.exit(f"config: database needs `{key}:` (aap rRNA detection)")
+    use_primers = bool(cfg.get("primers"))
     for m in panel:
-        if not m.get("amplicon"):
+        # With `primers:`, reads come from amplicons extracted from `genome:`; without
+        # it, from the pre-trimmed `amplicon:` FASTA. One of the two is required.
+        if use_primers and not m.get("genome"):
+            sys.exit(f"config: panel member '{m['id']}' needs `genome:` (primer extraction source)")
+        if not use_primers and not m.get("amplicon"):
             sys.exit(f"config: panel member '{m['id']}' needs `amplicon:`")
         if "aap" in profilers and not m.get("ssu"):
             sys.exit(f"config: panel member '{m['id']}' needs `ssu:` (aap profiling)")
@@ -197,6 +210,26 @@ def _selfcheck():
             assert "genome" in str(e), e
         else:
             raise AssertionError("expected SystemExit for missing genome")
+
+        # `primers:` set: genome required (extraction source), primers path resolved.
+        primed = cfg_text.replace(
+            "panel:",
+            "primers: [{pair_id: v4, forward: GTGYCAG, reverse: GGACTAC}]\npanel:",
+        ).replace("amplicon: refs/a.fa", "genome: refs/a.fna").replace(
+            "amplicon: refs/b.fa", "genome: refs/b.fna"
+        ).replace("amplicon: refs/b2.fa", "genome: refs/b2.fna")
+        p.write_text(primed)
+        cfg2 = load_config(p)
+        assert cfg2["primers"][0]["pair_id"] == "v4", cfg2["primers"]
+        assert cfg2["panel"][0]["genome"] == str(base / "refs/a.fna"), cfg2["panel"][0]
+        # primers set but a member lacks genome -> exits.
+        p.write_text(primed.replace("genome: refs/b2.fna", "amplicon: refs/b2.fa"))
+        try:
+            load_config(p)
+        except SystemExit as e:
+            assert "genome" in str(e), e
+        else:
+            raise AssertionError("expected SystemExit for missing genome under primers")
     print("selfcheck OK")
 
 

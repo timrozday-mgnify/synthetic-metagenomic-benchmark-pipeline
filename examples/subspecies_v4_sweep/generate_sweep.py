@@ -30,7 +30,11 @@ def main():
     cfg = sc.load_config(cfg_path)
 
     panel = cfg["panel"]
-    fa = {m["id"]: m["amplicon"] for m in panel}
+    # With `primers:`, the genomes CSV points at each member's full `genome:` and the
+    # pipeline extracts the amplicon in-silico (per primer pair); otherwise it uses the
+    # pre-trimmed `amplicon:` FASTA directly.
+    primers = cfg.get("primers")
+    fa = {m["id"]: (m["genome"] if primers else m["amplicon"]) for m in panel}
     _dup, major_id, minor_id = sc.sweep_pair(cfg)
     singles = [m for m in panel if m["id"] not in (major_id, minor_id)]
 
@@ -80,6 +84,7 @@ def main():
             "profiler": profiler,
             "database": db_name,
             **({"subsample": subsample} if subsample is not None else {}),
+            **({"primers": primers} if primers else {}),
         })
 
     # One combined samplesheet: the `databases:` block the pipeline builds the DB

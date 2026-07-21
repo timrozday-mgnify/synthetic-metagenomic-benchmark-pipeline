@@ -25,6 +25,16 @@ sweep:
   n_samples: 20
   steepness: 6.0               # higher -> more samples bunched near the 0/1 extremes
 
+# Optional: extract the amplified region from each panel member's `genome:` with
+# these primers (in-silico PCR via AmpliconHunter), instead of using the pre-trimmed
+# `amplicon:` FASTAs. When set, every panel member needs a `genome:` and each primer
+# pair is run + published as its own benchmark (<sample>.<pair_id>/). Give an inline
+# list of pairs, or a path to a TSV with pair_id/forward/reverse columns. Omit to use
+# the pre-trimmed `amplicon:` FASTAs as-is.
+# primers:
+#   - {pair_id: 515-YF-806BR, forward: GTGYCAGCMGCCGCGGTAA, reverse: GGACTACNVGGGTWTCTAAT}
+#   - {pair_id: 341F-805R,    forward: CCTACGGGNGGCWGCAG,   reverse: GACTACHVGGGTATCTAATCC}
+
 # Optional: the nested amplicon-analysis-pipeline runs on the host and does NOT
 # inherit the outer -profile. On HPC point it at an engine config (emitted verbatim
 # into samplesheet.yaml's top-level aap_configs/aap_profile). Relative paths resolve
