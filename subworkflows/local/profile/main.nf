@@ -122,11 +122,42 @@ workflow PROFILE {
           no_file, no_file, no_file, no_file, '', '' ]
     }
 
-    RUN_AAP(ch_aap_built.mix(ch_aap_other))
+    // Batch samples that share a DB config into one nested AAP run (AAP's samplesheet
+    // is multi-row). Group key = everything that fixes the nested command + its -c files:
+    // the DB (use_built + database), the extra engine configs, and the -profile. The DB
+    // slots are identical within a group, so we keep one copy ([0]); metas + layout carry
+    // the per-sample rows. paired/single-end is NOT part of the key — it's per-row in the
+    // AAP samplesheet.
+    ch_aap_grouped = ch_aap_built.mix(ch_aap_other)
+        .map { meta, reads, use_built, aap_config, fasta, tax, otu, mscluster, rfam_cm, rfam_claninfo ->
+            def key = [ use_built, meta.database, meta.aap_configs, meta.aap_profile ]
+            [ key, meta, reads, use_built, aap_config, fasta, tax, otu, mscluster, rfam_cm, rfam_claninfo ]
+        }
+        .groupTuple(by: 0)
+        .map { key, metas, readsL, useBuilts, aapConfigs, fastas, taxs, otus, msclusters, rfamCms, rfamClaninfos ->
+            // layout: one [id, single_end, fastq_1, fastq_2] per sample. Reads are passed as
+            // absolute paths (val), not staged — see RUN_AAP (executor local, avoids sub_* collisions).
+            def layout = [metas, readsL].transpose().collect { m, r ->
+                def rl = r instanceof List ? r : [r]
+                [ m.id, rl.size() > 1 ? 'false' : 'true', rl[0].toString(), rl.size() > 1 ? rl[1].toString() : '' ]
+            }
+            [ metas, layout, useBuilts[0], aapConfigs[0], fastas[0], taxs[0], otus[0], msclusters[0], rfamCms[0], rfamClaninfos[0] ]
+        }
+
+    RUN_AAP(ch_aap_grouped)
     ch_versions = ch_versions.mix(RUN_AAP.out.versions.first())
+
+    // Demux the batched output back to per-sample [meta, files] for the emitted contract
+    // (AAP namespaces files under aap_out/<id>/; match by that path segment). Publishing
+    // itself is per-sample via the RUN_AAP publishDir in modules.config.
+    ch_aap_out = RUN_AAP.out.results
+        .flatMap { metas, files ->
+            def fl = files instanceof List ? files : [files]
+            metas.collect { m -> [ m, fl.findAll { it.toString().contains("/aap_out/${m.id}/") } ] }
+        }
 
     emit:
     sylph    = NORMALIZE_SYLPH.out.profile // [ meta, sylph_profile.tsv ]
-    aap      = RUN_AAP.out.results         // [ meta, aap_out/** ]
+    aap      = ch_aap_out                  // [ meta, aap_out/<id> ]
     versions = ch_versions
 }

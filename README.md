@@ -328,7 +328,11 @@ params.mapseq_databases {
 
 Outputs land under `<sample>/profiling/aap/`. The wrapper runs on the host
 (`executor local`, no container), so **host `nextflow` and the container engine
-must be available** to the task.
+must be available** to the task. Samples that share a DB config (same `database`,
+`aap_configs`, and `aap_profile`) are batched into a **single** nested AAP run —
+AAP's samplesheet is multi-row and namespaces output per sample — so the nested
+Nextflow starts once per DB, not once per sample (study-level aggregate outputs
+from the batched run are not published).
 
 No production MAPseq database (e.g. SILVA) to hand? Build a small one from your
 own reference genomes' full-length 16S rRNA sequences — NOT the amplicon

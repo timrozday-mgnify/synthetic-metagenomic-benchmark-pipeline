@@ -161,6 +161,30 @@ nextflow_pipeline {
         }
     }
 
+    test("profile-only aap batching - stub") {
+        tag "stub"
+        options "-stub"
+        when {
+            params {
+                input  = "${projectDir}/tests/samplesheets/profile_aap_batch.yaml"
+                outdir = "$outputDir"
+                step   = "profile"
+            }
+        }
+        then {
+            assertAll(
+                { assert workflow.success },
+                // A1+A2 share a DB config -> 1 batched RUN_AAP; A3's differs -> 1 more. 2 total.
+                { assert workflow.trace.succeeded().size() == 2 },
+                { assert workflow.trace.tasks().findAll { it.name.contains('RUN_AAP') }.size() == 2 },
+                // Every sample still publishes under its own dir despite batching.
+                { assert path("${params.outdir}/A1/profiling/aap").exists() },
+                { assert path("${params.outdir}/A2/profiling/aap").exists() },
+                { assert path("${params.outdir}/A3/profiling/aap").exists() }
+            )
+        }
+    }
+
     test("two synthetic samples") {
         tag "e2e"
         when {
