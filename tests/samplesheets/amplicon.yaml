@@ -1,0 +1,25 @@
+# Amplicon extraction: A1 supplies a `primers` TSV -> AmpliconHunter extracts the
+# amplified region per genome and the pair runs as its own benchmark, published to
+# ${outdir}/A1.515-YF-806BR/. A2 has no `primers` -> passthrough (references used
+# as-is), published to ${outdir}/A2/.
+- sample: A1
+  train_id: natA
+  train_fastq_1: tests/data/natural_R1.fastq.gz
+  train_fastq_2: tests/data/natural_R2.fastq.gz
+  train_subsample: 1000
+  platform: hq-illumina
+  genomes_csv: tests/data/genomes_S1.csv
+  primers: tests/data/primer_pairs.tsv
+  num_reads: 2000
+  mode: amplicon
+  paired_end: true
+
+- sample: A2
+  train_id: natA
+  train_fastq_1: tests/data/natural_R1.fastq.gz
+  train_fastq_2: tests/data/natural_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: tests/data/genomes_S2.csv
+  num_reads: 2000
+  mode: shotgun
+  paired_end: true

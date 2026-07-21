@@ -1,0 +1,59 @@
+nextflow_process {
+    name "Test Process BUILD_AMPLICON_GENOMES"
+    script "../main.nf"
+    process "BUILD_AMPLICON_GENOMES"
+
+    tag "modules"
+    tag "build_amplicon_genomes"
+
+    test("split amplicons by source genome") {
+        when {
+            process {
+                """
+                def amplicons = file("\${workDir}/amplicons.fa")
+                amplicons.text = '''>ENA|X| source=genomeA.fasta.coordinates=10-20.orientation=FR.Tm=60
+ACGTACGT
+>ENA|Y| source=genomeB.fasta.coordinates=5-15.orientation=RF.Tm=61
+TTGGCCAA
+'''
+                input[0] = [
+                    [ id: 'A1.515-YF-806BR' ],
+                    amplicons,
+                    file(params.test_data_base + 'genomes_S1.csv', checkIfExists: true)
+                ]
+                """
+            }
+        }
+        then {
+            assertAll(
+                { assert process.success },
+                // genomes_S1.csv has genomeA + genomeB -> one amplicon FASTA each.
+                { assert process.out.references.get(0).get(2).size() == 2 },
+                { assert path(process.out.references.get(0).get(1)).text.contains('amplicons/genomeA.fa') },
+                { assert path(process.out.references.get(0).get(1)).text.contains('amplicons/genomeB.fa') }
+            )
+        }
+    }
+
+    test("split - stub") {
+        tag "stub"
+        options "-stub"
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id: 'A1.515-YF-806BR' ],
+                    file(params.test_data_base + 'genomeA.fasta', checkIfExists: true),
+                    file(params.test_data_base + 'genomes_S1.csv', checkIfExists: true)
+                ]
+                """
+            }
+        }
+        then {
+            assertAll(
+                { assert process.success },
+                { assert process.out.references.get(0).get(2).size() == 2 }
+            )
+        }
+    }
+}

@@ -1,0 +1,40 @@
+nextflow_process {
+    name "Test Process AMPLICONHUNTER"
+    script "../main.nf"
+    process "AMPLICONHUNTER"
+
+    tag "modules"
+    tag "ampliconhunter"
+
+    // Note: the real (non-stub) run needs the smb-ampliconhunter image and
+    // -profile docker. AmpliconHunter's Hyperscan is x86_64 only.
+
+    test("515-YF/806BR over two genomes - stub") {
+        tag "stub"
+        options "-stub"
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id: 'A1.515-YF-806BR' ],
+                    [
+                        file(params.test_data_base + 'genomeA.fasta', checkIfExists: true),
+                        file(params.test_data_base + 'genomeB.fasta', checkIfExists: true)
+                    ],
+                    'GTGYCAGCMGCCGCGGTAA',
+                    'GGACTACNVGGGTWTCTAAT'
+                ]
+                """
+            }
+        }
+        then {
+            assertAll(
+                { assert process.success },
+                { assert file(process.out.amplicons[0][1]).name == 'amplicons.fa' },
+                { assert file(process.out.stats[0][1]).name == 'run_statistics.json' },
+                { assert file(process.out.results_dir[0][1]).isDirectory() },
+                { assert process.out.versions.size() == 1 }
+            )
+        }
+    }
+}

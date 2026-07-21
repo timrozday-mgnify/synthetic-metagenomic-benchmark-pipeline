@@ -11,6 +11,8 @@
 //
 
 include { TRAIN_ERROR_MODEL           } from '../subworkflows/local/train_error_model/main'
+include { AMPLICONHUNTER              } from '../modules/local/ampliconhunter/main'
+include { BUILD_AMPLICON_GENOMES      } from '../modules/local/build_amplicon_genomes/main'
 include { NORMALISE_REFERENCES        } from '../modules/local/normalise_references/main'
 include { GENOME_BLENDER_GENERATE     } from '../modules/local/genome_blender/generate/main'
 include { MERGE_GENOME_BLENDER_CHUNKS } from '../modules/local/genome_blender/merge_chunks/main'
@@ -86,11 +88,40 @@ workflow SYNTHETIC_METAGENOMIC_BENCHMARK {
 
       if (params.step != 'train') {
         //
+        // In-silico PCR: samples that supply `primers` get one AmpliconHunter run
+        // per primer pair (batched over all their genomes). The batched amplicons.fa
+        // is split back into per-genome FASTAs + a genomes CSV, so each primer pair
+        // becomes an independent amplicon-mode sample (meta.id = "<sample>.<pair>",
+        // published to its own ${outdir}/<sample>.<pair>/ tree). Samples without
+        // primers pass straight through (pre-provided amplicon/shotgun references).
+        //
+        ch_passthrough = ch_samples.filter { meta, csv, fastas -> !meta.primer_sets }
+        ch_amp_in = ch_samples
+            .filter { meta, csv, fastas -> meta.primer_sets }
+            .flatMap { meta, csv, fastas ->
+                meta.primer_sets.collect { pid, fwd, rev ->
+                    [ meta + [ id: "${meta.id}.${pid}", primer: pid, mode: 'amplicon' ], csv, fastas, fwd, rev ]
+                }
+            }
+
+        AMPLICONHUNTER(ch_amp_in.map { meta, csv, fastas, fwd, rev -> [ meta, fastas, fwd, rev ] })
+        ch_versions = ch_versions.mix(AMPLICONHUNTER.out.versions.first())
+
+        BUILD_AMPLICON_GENOMES(
+            AMPLICONHUNTER.out.amplicons
+                .join(ch_amp_in.map { meta, csv, fastas, fwd, rev -> [ meta, csv ] })
+        )
+        ch_versions = ch_versions.mix(BUILD_AMPLICON_GENOMES.out.versions.first())
+
+        // [ meta, genomes_csv, [ fasta ] ] — same shape as ch_samples, ready to generate.
+        ch_gen_samples = ch_passthrough.mix(BUILD_AMPLICON_GENOMES.out.references)
+
+        //
         // Normalise reference FASTA headers (unique, whitespace-free) so
         // genome-blender emits one @SQ line per contig; duplicate contig names
         // otherwise corrupt the merged ground-truth BAM header.
         //
-        NORMALISE_REFERENCES(ch_samples)
+        NORMALISE_REFERENCES(ch_gen_samples)
         ch_versions = ch_versions.mix(NORMALISE_REFERENCES.out.versions.first())
 
         //
@@ -153,7 +184,7 @@ workflow SYNTHETIC_METAGENOMIC_BENCHMARK {
         // Ground truth per run: filter the full BAM (keyed by sample) to this
         // run's reads (names.txt), then derive target + realized profiles.
         //
-        ch_csv_by_id = ch_samples.map { meta, csv, fastas -> [ meta.id, csv ] }
+        ch_csv_by_id = ch_gen_samples.map { meta, csv, fastas -> [ meta.id, csv ] }
         ch_full_bam  = ch_gen_bam.map { meta, bam -> [ meta.id, bam ] }
         ch_truth_in  = SEQKIT_SUBSAMPLE.out.names
             .map { meta, names -> [ meta.sample, meta, names ] }
@@ -166,7 +197,7 @@ workflow SYNTHETIC_METAGENOMIC_BENCHMARK {
 
         // Feed subsampled reads (+ reference genomes for database='self') to profiling.
         ch_reads = SEQKIT_SUBSAMPLE.out.reads
-        ch_aux   = ch_samples.map { meta, csv, fastas -> [ meta.id, csv, fastas ] }
+        ch_aux   = ch_gen_samples.map { meta, csv, fastas -> [ meta.id, csv, fastas ] }
       }  // params.step != 'train'
     }
     else {

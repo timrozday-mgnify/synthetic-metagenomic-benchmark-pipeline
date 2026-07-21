@@ -28,6 +28,8 @@ jobs:
             dockerfile: containers/skiver/Dockerfile
           - image: smb-genome-blender
             dockerfile: containers/genome-blender/Dockerfile
+          - image: smb-ampliconhunter
+            dockerfile: containers/ampliconhunter/Dockerfile
     steps:
       - uses: actions/checkout@v4
         with:

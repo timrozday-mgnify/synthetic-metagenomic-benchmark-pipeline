@@ -126,6 +126,7 @@ databases (see [Named sequence collections](#named-sequence-collections-database
 | `genomes_csv` | A genome-blender input CSV: `genome_id,fasta_path,abundance`. |
 | `num_reads` | Sequencing depth as total reads (read pairs × 2 for paired mode). |
 | `mode` | Read structure: `shotgun` \| `amplicon` (also `long`). Default `shotgun`. |
+| `primers` | Optional. Path to a primer-pairs TSV for in-silico PCR (see [Amplicon extraction](#amplicon-extraction-from-primers)). Each pair is extracted from the genomes with AmpliconHunter and run as its own benchmark, published to `<sample>.<pair_id>/`. Blank/omitted → no extraction; the `genomes_csv` FASTAs are used as-is (pre-provided amplicon or shotgun references). |
 | `paired_end` | Optional. `true` \| `false`. Blank → `params.paired_end` (default `true`). Forced single-end when `mode=long`. |
 | `read_length_mean` | Optional. Mean read length. Blank → `params.read_length_mean` (default `150`). |
 | `read_length_variance` | Optional. Read-length variance. Blank → `params.read_length_variance` (default `10`). |
@@ -136,6 +137,39 @@ databases (see [Named sequence collections](#named-sequence-collections-database
 
 Relative `genomes_csv` / FASTA / FASTQ paths resolve against the pipeline
 directory; absolute paths and `scheme://` URLs pass through.
+
+### Amplicon extraction from primers
+
+Instead of pre-trimming amplicon FASTAs yourself, give a sample a `primers` column
+and the pipeline extracts the amplified region straight from the genomes with
+[AmpliconHunter](https://github.com/rhowardstone/AmpliconHunter) (in-silico PCR).
+
+The `primers` file is a TSV of primer pairs, one pair per row (IUPAC degenerate
+bases allowed); the actual primer **sequences** go in the `forward`/`reverse`
+columns:
+
+```tsv
+pair_id	forward	reverse
+515-YF-806BR	GTGYCAGCMGCCGCGGTAA	GGACTACNVGGGTWTCTAAT
+341F-805R	CCTACGGGNGGCWGCAG	GACTACHVGGGTATCTAATCC
+```
+
+For each row, AmpliconHunter runs once over **all** of the sample's genomes, the
+resulting amplicons are split back per source genome (preserving each genome's
+`abundance` and ground-truth identity), and that pair is generated + profiled as an
+independent `amplicon`-mode benchmark. Each pair gets its own output tree,
+`${outdir}/<sample>.<pair_id>/`, with the raw AmpliconHunter outputs
+(`amplicons.fa`, `run_statistics.json`) under an `ampliconhunter/` subdir. Set
+`mode: amplicon` on the sample. If a genome yields no amplicon for a pair, it is
+dropped from that pair's benchmark.
+
+Tune the PCR with `params.ampliconhunter_args` (default
+`--mismatches 2 --Lmin 50 --Lmax 2000`). The `smb-ampliconhunter` image is built by
+the container CI; AmpliconHunter's Hyperscan engine is **x86_64 only**.
+
+Samples **without** a `primers` column are unchanged: the `genomes_csv` FASTAs are
+used directly (so pre-provided amplicon references still work — just point
+`genomes_csv` at them and set `mode: amplicon`).
 
 ### Named sequence collections (`databases:`)
 

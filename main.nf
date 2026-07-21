@@ -22,6 +22,28 @@ def parseSubsamples(v) {
     list ?: [null]
 }
 
+// Parse a per-sample primer-pairs TSV into [ [pair_id, forward, reverse], ... ].
+// Columns are matched by header name (pair_id + forward/forward_primer +
+// reverse/reverse_primer), mirroring mimicc's data/primers/primer_pairs.tsv.
+// Missing column / empty path => [] (the sample skips extraction: existing
+// "amplicon references already provided" passthrough).
+def parsePrimerPairs(v) {
+    if (v == null || v.toString().trim() == '') return []
+    def lines = resolveFile(v.toString().trim()).readLines().findAll { it?.trim() }
+    if (!lines) return []
+    def header = lines[0].split('\t').collect { it.trim() }
+    def iId = header.findIndexOf { it in ['pair_id', 'id'] }
+    def iF  = header.findIndexOf { it in ['forward', 'forward_primer'] }
+    def iR  = header.findIndexOf { it in ['reverse', 'reverse_primer'] }
+    if (iId < 0 || iF < 0 || iR < 0) {
+        error "primers TSV '${v}' must have columns pair_id, forward[_primer], reverse[_primer]"
+    }
+    lines.drop(1).collect { line ->
+        def c = line.split('\t')
+        [ c[iId].trim(), c[iF].trim(), c[iR].trim() ]
+    }
+}
+
 // Resolve nested-AAP `-c` config files to absolute path strings (a YAML list, or a
 // comma-separated string from the CLI). Relative paths resolve against projectDir.
 def parseAapConfigs(v) {
@@ -145,6 +167,9 @@ workflow {
                 subsamples: parseSubsamples(row.subsample),
                 aap_configs: effAapConfigs,
                 aap_profile: effAapProfile,
+                // Primer pairs for in-silico PCR (empty => no extraction, use the
+                // genomes_csv FASTAs directly). Each pair is extracted + run separately.
+                primer_sets: parsePrimerPairs(row.primers),
             ]
             def genomesCsv = resolveFile(row.genomes_csv)
             // Resolve the FASTA files referenced by the genomes CSV so Nextflow stages them.
