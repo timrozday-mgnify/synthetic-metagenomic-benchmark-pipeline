@@ -1,0 +1,4 @@
+# quarto driver env — runs the `quarto` binary. Needs papermill (pulls in
+# nbclient/nbformat/jupyter_client) so `quarto render -P ...` can apply parameter
+# overrides and launch the basicpython execution kernel. Does NOT execute report code.
+papermill==2.7.0

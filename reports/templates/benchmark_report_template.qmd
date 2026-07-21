@@ -1,0 +1,438 @@
+---
+title: "Synthetic metagenomic benchmark"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-location: left
+    code-fold: true
+    code-tools: true
+    embed-resources: true
+execute:
+  warning: false
+jupyter:
+  kernelspec:
+    display_name: basicpython
+    language: python
+    name: basicpython
+params:
+  run_label: ""
+  run_dir: "."
+  pipeline_dir: "results/subspecies_v4_sweep"
+  abundance_csv: "abundance.csv"
+  mismapping_csv: "mismapping.csv"
+  summary_csv: "summary.csv"
+  meta_json: "meta.json"
+  output_dir: ""
+---
+
+```{python}
+#| tags: [parameters]
+#| include: false
+# Default parameter values — overridden by -P flags at render time.
+run_label = ""
+run_dir = "."
+pipeline_dir = "results/subspecies_v4_sweep"
+abundance_csv = "abundance.csv"
+mismapping_csv = "mismapping.csv"
+summary_csv = "summary.csv"
+meta_json = "meta.json"
+output_dir = ""
+```
+
+```{python}
+#| echo: false
+#| output: false
+import json
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+from IPython.display import Markdown, display
+
+pd.set_option("display.max_columns", 40)
+
+# Resolve run_dir whether the template is rendered directly or from a Taskfile
+# elsewhere: try the path as given, then relative to cwd and each parent, picking
+# the candidate that actually contains the preprocessed CSVs.
+_candidates = [Path(run_dir), *(p / run_dir for p in [Path.cwd(), *Path.cwd().parents])]
+RUN_DIR = next((p for p in _candidates if (p / abundance_csv).exists() or (p / meta_json).exists()),
+               Path(run_dir))
+
+
+def _resolve(path_param):
+    p = Path(path_param)
+    return p if p.is_absolute() else RUN_DIR / p
+
+
+ABUNDANCE = pd.read_csv(_resolve(abundance_csv))
+MISMAP = pd.read_csv(_resolve(mismapping_csv))
+SUMMARY = pd.read_csv(_resolve(summary_csv))
+META = json.loads(_resolve(meta_json).read_text())
+
+SWEEP_PAIR = META.get("sweep_pair", [])
+SOURCES = META.get("sources", sorted(MISMAP["source"].unique()) if not MISMAP.empty else [])
+SOURCE_LABEL = {"profiler": "Profiler assignments", "reference": "Reference BAM"}
+
+
+def depth_order(depths):
+    """Order depth labels by read count ascending, 'full' last."""
+    def key(d):
+        return (1, 0) if d == "full" else (0, int(d.replace("sub", "")))
+    return sorted(depths, key=key)
+
+
+DEPTHS = depth_order(ABUNDANCE["depth"].unique().tolist())
+DEFAULT_DEPTH = "full" if "full" in DEPTHS else DEPTHS[-1]
+PALETTE = px.colors.qualitative.Safe
+```
+
+```{python}
+#| echo: false
+title_label = run_label or META.get("run_label") or RUN_DIR.name
+display(Markdown(f"# {title_label}"))
+```
+
+This report benchmarks a synthetic metagenomic run where reads are simulated from a
+panel of known genomes at controlled abundances, then profiled. Because the ground
+truth is known per read, it quantifies both **mis-mapping between genomes** and the
+**accuracy of detected abundances**, summarised across every subsampling depth.
+
+Two independent detection sources are compared where available:
+
+- **Profiler assignments** — the profiler's own per-read calls (mapseq for amplicon
+  runs). Measures what the profiler itself gets right or wrong.
+- **Reference BAM** — reads mapped back to the reference sequences. In runs where each
+  read is mapped to its origin reference this is diagonal by construction; it becomes
+  an informative mis-mapping signal for competitive mapping (e.g. WGS against a
+  multi-genome reference).
+
+```{python}
+#| echo: false
+n_samples = ABUNDANCE["sample"].nunique()
+pair_txt = " vs ".join(SWEEP_PAIR) if SWEEP_PAIR else "none"
+display(Markdown(
+    f"**Panel:** {META.get('n_genomes', ABUNDANCE['genome_id'].nunique())} genomes &nbsp;·&nbsp; "
+    f"**Sweep points:** {n_samples} &nbsp;·&nbsp; "
+    f"**Depths:** {', '.join(DEPTHS)} &nbsp;·&nbsp; "
+    f"**Swept pair:** {pair_txt} &nbsp;·&nbsp; "
+    f"**Detection sources:** {', '.join(SOURCE_LABEL.get(s, s) for s in SOURCES)}"
+))
+```
+
+## Mis-mapping between genomes
+
+Aggregated across all sweep points at the **{python} DEFAULT_DEPTH** depth. The matrix
+is row-normalised: each row is a true origin genome, each column the genome its reads
+were assigned to, so off-diagonal mass is mis-mapping.
+
+```{python}
+#| echo: false
+def confusion_matrix(source, depth):
+    sub = MISMAP[(MISMAP["source"] == source) & (MISMAP["depth"] == depth)]
+    if sub.empty:
+        return None
+    counts = sub.groupby(["truth_genome", "assigned_genome"])["reads"].sum().reset_index()
+    mat = counts.pivot(index="truth_genome", columns="assigned_genome", values="reads").fillna(0.0)
+    genomes = sorted(set(mat.index) | set(mat.columns))
+    mat = mat.reindex(index=genomes, columns=genomes, fill_value=0.0)
+    row_frac = mat.div(mat.sum(axis=1).replace(0, np.nan), axis=0).fillna(0.0)
+    return mat, row_frac, genomes
+
+
+def confusion_heatmap(source, depth):
+    res = confusion_matrix(source, depth)
+    if res is None:
+        return None
+    mat, row_frac, genomes = res
+    fig = go.Figure(go.Heatmap(
+        z=row_frac.values, x=genomes, y=genomes,
+        customdata=mat.values,
+        colorscale="Blues", zmin=0, zmax=1,
+        colorbar=dict(title="frac of<br>true reads"),
+        hovertemplate=("true: %{y}<br>assigned: %{x}<br>"
+                       "fraction: %{z:.3f}<br>reads: %{customdata:.0f}<extra></extra>"),
+    ))
+    fig.update_layout(
+        template="simple_white", height=640, width=760,
+        xaxis=dict(title="assigned genome", tickangle=45, side="bottom"),
+        yaxis=dict(title="true genome", autorange="reversed"),
+        margin=dict(l=10, r=10, t=10, b=10),
+    )
+    return fig
+
+
+def per_genome_mismap_bar(source, depth):
+    res = confusion_matrix(source, depth)
+    if res is None:
+        return None
+    mat, row_frac, genomes = res
+    diag = pd.Series(np.diag(row_frac.values), index=genomes)
+    off = (1 - diag).sort_values(ascending=False)
+    reads = mat.sum(axis=1).reindex(off.index)
+    fig = go.Figure(go.Bar(
+        x=off.values, y=off.index, orientation="h",
+        customdata=reads.values,
+        marker_color="#c1666b",
+        hovertemplate="%{y}<br>mis-mapped: %{x:.2%}<br>reads: %{customdata:.0f}<extra></extra>",
+    ))
+    fig.update_layout(
+        template="simple_white", height=max(320, 22 * len(off)), width=760,
+        xaxis=dict(title="fraction of reads assigned to another genome", tickformat=".0%"),
+        yaxis=dict(autorange="reversed"), margin=dict(l=10, r=10, t=10, b=10),
+    )
+    return fig
+```
+
+::: {.panel-tabset}
+
+```{python}
+#| echo: false
+#| output: asis
+for source in SOURCES:
+    print(f"### {SOURCE_LABEL.get(source, source)}\n")
+    hm = confusion_heatmap(source, DEFAULT_DEPTH)
+    bar = per_genome_mismap_bar(source, DEFAULT_DEPTH)
+    if hm is None:
+        display(Markdown(f"_No {source} data at the {DEFAULT_DEPTH} depth._\n"))
+        continue
+    display(hm)
+    display(Markdown("\n**Per-genome mis-mapping rate** (1 − correctly-assigned fraction):\n"))
+    display(bar)
+    print("\n")
+```
+
+:::
+
+## Ground-truth vs detected abundance
+
+Detected relative abundance against the realized ground truth for every genome, at the
+**{python} DEFAULT_DEPTH** depth (log–log; the dashed line is perfect agreement). Points
+far below the diagonal are under-detected, above are over-detected.
+
+```{python}
+#| echo: false
+def truth_vs_detected(source_col, depth):
+    sub = ABUNDANCE[(ABUNDANCE["depth"] == depth) & ABUNDANCE[source_col].notna()].copy()
+    if sub.empty:
+        return None
+    sub["detected"] = sub[source_col].clip(lower=1e-6)
+    sub["realized"] = sub["realized_rel_abundance"].clip(lower=1e-6)
+    fig = go.Figure()
+    for is_pair, grp in [(False, sub[~sub["is_sweep_pair"]]), (True, sub[sub["is_sweep_pair"]])]:
+        if grp.empty:
+            continue
+        fig.add_trace(go.Scatter(
+            x=grp["realized"], y=grp["detected"], mode="markers",
+            name="swept pair" if is_pair else "background",
+            marker=dict(size=9 if is_pair else 6,
+                        color="#c1666b" if is_pair else "#4c72b0",
+                        opacity=0.85, line=dict(width=0.5, color="white")),
+            customdata=np.stack([grp["genome_id"], grp["sample"]], axis=-1),
+            hovertemplate=("%{customdata[0]}<br>sample: %{customdata[1]}<br>"
+                           "realized: %{x:.4f}<br>detected: %{y:.4f}<extra></extra>"),
+        ))
+    lo = min(sub["realized"].min(), sub["detected"].min())
+    hi = max(sub["realized"].max(), sub["detected"].max())
+    fig.add_trace(go.Scatter(x=[lo, hi], y=[lo, hi], mode="lines",
+                             line=dict(dash="dash", color="#888"), showlegend=False,
+                             hoverinfo="skip"))
+    fig.update_layout(
+        template="simple_white", height=520, width=680,
+        xaxis=dict(title="realized relative abundance", type="log"),
+        yaxis=dict(title="detected relative abundance", type="log"),
+        legend=dict(orientation="h", y=1.05), margin=dict(l=10, r=10, t=10, b=10),
+    )
+    return fig
+```
+
+::: {.panel-tabset}
+
+```{python}
+#| echo: false
+#| output: asis
+_col = {"profiler": "detected_profiler_rel_abundance", "reference": "detected_reference_rel_abundance"}
+for source in SOURCES:
+    print(f"### {SOURCE_LABEL.get(source, source)}\n")
+    fig = truth_vs_detected(_col[source], DEFAULT_DEPTH)
+    if fig is None:
+        display(Markdown(f"_No {source} detection at the {DEFAULT_DEPTH} depth._\n"))
+    else:
+        display(fig)
+    print("\n")
+```
+
+:::
+
+```{python}
+#| echo: false
+#| output: asis
+if not SWEEP_PAIR:
+    display(Markdown(
+        "## Swept pair\n\n_No swept pair detected — every genome holds a constant target "
+        "abundance across samples, so the abundance-sweep section is omitted. "
+        "This section populates automatically for runs that sweep a pair's abundance ratio._"
+    ))
+```
+
+```{python}
+#| echo: false
+#| output: false
+HAS_SWEEP = bool(SWEEP_PAIR) and ABUNDANCE["sweep_x"].notna().any()
+```
+
+```{python}
+#| echo: false
+#| output: asis
+# The swept-pair section only renders when a pair with a varying x-axis exists.
+if HAS_SWEEP:
+    display(Markdown(
+        "## Swept pair\n\n"
+        f"Ground-truth and detected abundance of the two swept genomes "
+        f"(**{SWEEP_PAIR[0]}** and **{SWEEP_PAIR[1]}**) across the abundance sweep, at "
+        f"the {DEFAULT_DEPTH} depth. Lines are the realized ground truth; markers are "
+        "detected. Where the two genomes are near-identical, detected abundance tracks "
+        "their *combined* signal rather than the true split."
+    ))
+```
+
+```{python}
+#| echo: false
+if HAS_SWEEP:
+    det_col = "detected_profiler_rel_abundance" if "profiler" in SOURCES else "detected_reference_rel_abundance"
+    pair = ABUNDANCE[(ABUNDANCE["depth"] == DEFAULT_DEPTH)
+                     & ABUNDANCE["genome_id"].isin(SWEEP_PAIR)].sort_values("sweep_x")
+    fig = go.Figure()
+    for i, g in enumerate(SWEEP_PAIR):
+        gp = pair[pair["genome_id"] == g]
+        color = PALETTE[i % len(PALETTE)]
+        fig.add_trace(go.Scatter(
+            x=gp["sweep_x"], y=gp["realized_rel_abundance"], mode="lines",
+            name=f"{g} (truth)", line=dict(color=color, width=2),
+            hovertemplate=f"{g}<br>x=%{{x:.3f}}<br>truth=%{{y:.4f}}<extra></extra>"))
+        fig.add_trace(go.Scatter(
+            x=gp["sweep_x"], y=gp[det_col], mode="markers",
+            name=f"{g} (detected)", marker=dict(color=color, size=9, symbol="circle-open"),
+            hovertemplate=f"{g}<br>x=%{{x:.3f}}<br>detected=%{{y:.4f}}<extra></extra>"))
+    fig.update_layout(
+        template="simple_white", height=460, width=760,
+        xaxis=dict(title="sweep x (major-genome fraction)"),
+        yaxis=dict(title="relative abundance"),
+        legend=dict(orientation="h", y=1.12), margin=dict(l=10, r=10, t=10, b=10))
+    display(fig)
+```
+
+```{python}
+#| echo: false
+#| output: asis
+if HAS_SWEEP and "profiler" in SOURCES:
+    display(Markdown(
+        "\n**Cross-mapping between the pair across the sweep** — the fraction of each "
+        "swept genome's reads the profiler assigns to its partner. High values mean the "
+        "two are hard to tell apart.\n"))
+```
+
+```{python}
+#| echo: false
+if HAS_SWEEP and "profiler" in SOURCES:
+    xmap = MISMAP[(MISMAP["source"] == "profiler") & (MISMAP["depth"] == DEFAULT_DEPTH)
+                  & (MISMAP["truth_genome"].isin(SWEEP_PAIR))
+                  & (MISMAP["assigned_genome"].isin(SWEEP_PAIR))
+                  & (MISMAP["truth_genome"] != MISMAP["assigned_genome"])].copy()
+    sx = ABUNDANCE.drop_duplicates("sample").set_index("sample")["sweep_x"]
+    xmap["sweep_x"] = xmap["sample"].map(sx)
+    xmap = xmap.sort_values("sweep_x")
+    fig = go.Figure()
+    for i, g in enumerate(SWEEP_PAIR):
+        gp = xmap[xmap["truth_genome"] == g]
+        fig.add_trace(go.Scatter(
+            x=gp["sweep_x"], y=gp["frac_of_truth"], mode="lines+markers",
+            name=f"{g} → partner", line=dict(color=PALETTE[i % len(PALETTE)]),
+            customdata=gp["reads"],
+            hovertemplate=(f"{g} mis-assigned<br>x=%{{x:.3f}}<br>"
+                           "frac=%{y:.2%}<br>reads=%{customdata:.0f}<extra></extra>")))
+    fig.update_layout(
+        template="simple_white", height=420, width=760,
+        xaxis=dict(title="sweep x (major-genome fraction)"),
+        yaxis=dict(title="fraction mis-assigned to partner", tickformat=".0%"),
+        legend=dict(orientation="h", y=1.12), margin=dict(l=10, r=10, t=10, b=10))
+    display(fig)
+```
+
+## Performance across subsampling
+
+How abundance accuracy and mis-mapping hold up as sequencing depth changes. `pearson_r`
+and `l1_error_per_sample` measure detected-vs-realized abundance agreement;
+`mismapping_rate` is the overall off-diagonal read fraction; `pair_mismapping_rate` is
+the fraction of the swept pair's reads assigned to their partner sub-species (blank when
+there is no swept pair).
+
+```{python}
+#| echo: false
+_has_pair_mm = "pair_mismapping_rate" in SUMMARY.columns and SUMMARY["pair_mismapping_rate"].notna().any()
+if not SUMMARY.empty:
+    disp = SUMMARY.copy()
+    disp["source"] = disp["source"].map(lambda s: SOURCE_LABEL.get(s, s))
+    rename = {"depth": "Depth", "source": "Source", "l1_error_per_sample": "L1 error",
+              "pearson_r": "Pearson r", "mismapping_rate": "Mis-mapping",
+              "pair_mismapping_rate": "Pair mis-mapping", "n_reads": "Reads"}
+    if not _has_pair_mm:
+        disp = disp.drop(columns=["pair_mismapping_rate"], errors="ignore")
+    disp = disp.rename(columns=rename)
+    disp["Depth"] = pd.Categorical(disp["Depth"], categories=DEPTHS, ordered=True)
+    disp = disp.sort_values(["Source", "Depth"])
+    fmt = {"L1 error": "{:.4f}", "Pearson r": "{:.3f}", "Mis-mapping": "{:.2%}",
+           "Reads": "{:,.0f}"}
+    if _has_pair_mm:
+        fmt["Pair mis-mapping"] = "{:.2%}"
+    display(disp.style.format(fmt, na_rep="—").hide(axis="index"))
+```
+
+```{python}
+#| echo: false
+if not SUMMARY.empty:
+    metrics = [("pearson_r", "Pearson r", ".3f"),
+               ("l1_error_per_sample", "L1 error / sample", ".4f"),
+               ("mismapping_rate", "Mis-mapping rate", ".2%")]
+    if _has_pair_mm:
+        metrics.append(("pair_mismapping_rate", "Pair mis-mapping rate", ".2%"))
+    order = {d: i for i, d in enumerate(DEPTHS)}
+    fig = go.Figure()
+    for source in SUMMARY["source"].unique():
+        s = SUMMARY[SUMMARY["source"] == source].copy()
+        s = s.sort_values("depth", key=lambda c: c.map(order))
+        for metric, label, _fmt in metrics:
+            fig.add_trace(go.Scatter(
+                x=s["depth"], y=s[metric], mode="lines+markers",
+                name=f"{SOURCE_LABEL.get(source, source)} · {label}",
+                visible=(metric == "pearson_r"),
+                hovertemplate=f"%{{x}}<br>{label}=%{{y:.4f}}<extra></extra>"))
+    n_src = SUMMARY["source"].nunique()
+    buttons = []
+    for mi, (metric, label, _fmt) in enumerate(metrics):
+        vis = [False] * (n_src * len(metrics))
+        for si in range(n_src):
+            vis[si * len(metrics) + mi] = True
+        buttons.append(dict(label=label, method="update",
+                            args=[{"visible": vis}, {"yaxis": {"title": label}}]))
+    fig.update_layout(
+        template="simple_white", height=440, width=760,
+        xaxis=dict(title="depth", categoryorder="array", categoryarray=DEPTHS),
+        yaxis=dict(title="Pearson r"),
+        updatemenus=[dict(buttons=buttons, direction="down", x=1.0, xanchor="right",
+                          y=1.18, yanchor="top", showactive=True)],
+        legend=dict(orientation="h", y=-0.2), margin=dict(l=10, r=10, t=10, b=10))
+    display(fig)
+```
+
+---
+
+```{python}
+#| echo: false
+display(Markdown(
+    f"_Generated from preprocessed tables in `{RUN_DIR}` "
+    f"(`{abundance_csv}`, `{mismapping_csv}`, `{summary_csv}`). "
+    "Regenerate with `benchmark_preprocess.py` then re-render._"))
+```

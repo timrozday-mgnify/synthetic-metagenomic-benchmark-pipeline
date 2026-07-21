@@ -1,0 +1,10 @@
+# basicpython execution-kernel env — everything the preprocessing script and the
+# report's code cells import. Registered as the Jupyter kernel `basicpython`.
+# pysam is the extra dependency vs a plain report env: it parses the reference BAMs.
+ipykernel==6.29.5
+ipython==9.0.0
+pandas==2.2.3
+numpy==2.2.6
+plotly==6.7.0
+pysam==0.24.0
+PyYAML==6.0.2

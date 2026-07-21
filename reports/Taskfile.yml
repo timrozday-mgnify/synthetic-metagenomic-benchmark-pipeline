@@ -1,0 +1,88 @@
+version: '3'
+
+# Benchmark report generation. Run data (and the rendered HTML) live outside this
+# repo in the sibling `synthetic-metagenomic-benchmark-pipeline_runs` directory —
+# override with `task <name> DIR=/path/to/other/runs` to point elsewhere.
+vars:
+  DIR: '{{.ROOT_DIR}}/../../synthetic-metagenomic-benchmark-pipeline_runs'
+  QUARTO_ENV: /Users/timrozday/miniforge3/envs/quarto
+  BASICPYTHON_ENV: /Users/timrozday/.local/share/mamba/envs/basicpython
+  TEMPLATE: '{{.ROOT_DIR}}/templates/benchmark_report_template.qmd'
+  PREPROCESS: '{{.ROOT_DIR}}/scripts/benchmark_preprocess.py'
+
+tasks:
+  default:
+    desc: Preprocess + render every benchmark report
+    cmds:
+      - task: subspecies-v4
+
+  # --- building blocks --------------------------------------------------------
+
+  _preprocess:
+    internal: true
+    requires:
+      vars: [RUN_DIR, PIPELINE_DIR]
+    vars:
+      RUN_DIR_ABS: '{{.DIR}}/{{.RUN_DIR}}'
+      MSEQ_GLOB: '{{.MSEQ_GLOB | default "profiling/aap/*/taxonomy-summary/*/*.mseq.gz"}}'
+      SWEEP_PAIR: '{{.SWEEP_PAIR | default ""}}'
+    cmds:
+      - |
+        {{.BASICPYTHON_ENV}}/bin/python {{.PREPROCESS}} \
+          --run-dir "{{.RUN_DIR_ABS}}" \
+          --pipeline-dir "{{.PIPELINE_DIR}}" \
+          --mseq-glob "{{.MSEQ_GLOB}}" \
+          {{if .SWEEP_PAIR}}--sweep-pair "{{.SWEEP_PAIR}}"{{end}} \
+          --run-label "{{.RUN_LABEL}}" \
+          --output-dir "{{.RUN_DIR_ABS}}"
+
+  _render:
+    internal: true
+    dir: '{{.DIR}}'
+    requires:
+      vars: [RUN_DIR, PIPELINE_DIR]
+    vars:
+      RUN_DIR_ABS: '{{.DIR}}/{{.RUN_DIR}}'
+    cmds:
+      - |
+        mamba run -p {{.QUARTO_ENV}} \
+          quarto render "{{.TEMPLATE}}" \
+          -P run_label:"{{.RUN_LABEL}}" \
+          -P run_dir:"{{.RUN_DIR_ABS}}" \
+          -P pipeline_dir:"{{.PIPELINE_DIR}}" \
+          -P abundance_csv:abundance.csv \
+          -P mismapping_csv:mismapping.csv \
+          -P summary_csv:summary.csv \
+          -P meta_json:meta.json \
+          -P output_dir:"" \
+          --output-dir "{{.RUN_DIR_ABS}}"
+
+  # --- per-run tasks ----------------------------------------------------------
+
+  subspecies-v4:
+    desc: Preprocess + render the sub-species B. uniformis V4 amplicon abundance sweep
+    cmds:
+      - task: _preprocess
+        vars:
+          RUN_DIR: subspecies_Buniformis_amplicon_v4
+          PIPELINE_DIR: results/subspecies_v4_sweep
+          RUN_LABEL: "Sub-species B. uniformis V4 amplicon abundance sweep"
+      - task: _render
+        vars:
+          RUN_DIR: subspecies_Buniformis_amplicon_v4
+          PIPELINE_DIR: results/subspecies_v4_sweep
+          RUN_LABEL: "Sub-species B. uniformis V4 amplicon abundance sweep"
+
+  # Split entry points if you want to re-render without re-walking the run tree.
+  preprocess:
+    desc: Only run preprocessing (RUN_DIR, PIPELINE_DIR, RUN_LABEL required)
+    cmds:
+      - task: _preprocess
+        vars: {RUN_DIR: '{{.RUN_DIR}}', PIPELINE_DIR: '{{.PIPELINE_DIR}}', RUN_LABEL: '{{.RUN_LABEL}}',
+                MSEQ_GLOB: '{{.MSEQ_GLOB}}', SWEEP_PAIR: '{{.SWEEP_PAIR}}'}
+
+  render:
+    desc: Only render the report from existing CSVs (RUN_DIR, PIPELINE_DIR, RUN_LABEL required)
+    cmds:
+      - task: _render
+        vars: {RUN_DIR: '{{.RUN_DIR}}', PIPELINE_DIR: '{{.PIPELINE_DIR}}', RUN_LABEL: '{{.RUN_LABEL}}'}

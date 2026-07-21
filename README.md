@@ -409,6 +409,22 @@ And under `results/error_models/<train_id>/`:
 `target_rel_abundance` is the normalised requested abundance; `realized_*` come
 from `samtools idxstats` on the true BAM (what was actually generated).
 
+## Benchmark report
+
+Once a run has completed, [`reports/`](reports/) turns its outputs into an interactive
+Quarto report — mis-mapping between ground-truth genomes, ground-truth vs detected
+abundance, an optional swept-pair view, and a performance-across-subsampling summary.
+Heavy parsing (truth tables, mapseq `*.mseq.gz`, reference BAMs) runs as a preprocessing
+step; both are driven by a Taskfile:
+
+```bash
+cd reports
+task subspecies-v4     # preprocess + render -> <run>/benchmark_report_template.html
+```
+
+See [`reports/README.md`](reports/README.md) for environments, parameters, and how to add
+a run (including WGS/multi-region runs).
+
 ## Parameters
 
 | Param | Default | Description |
