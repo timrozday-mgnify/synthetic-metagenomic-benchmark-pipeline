@@ -9,19 +9,24 @@ Requires PyYAML - run the scripts with `python` (not necessarily `python3`).
 Schema (see ../config.yaml for a filled-in template):
 
     train:    {id, fastq_1, fastq_2, platform}
-    reads:    {num_reads, mode, paired_end, read_length_mean, read_length_variance}
+    reads:    {num_reads, subsample?, paired_end, read_length_mean, read_length_variance}
+              # shared read-generation defaults; a generation mode may override any field.
     sweep:    {n_samples, steepness}
     database: {name, profilers: [aap|sylph, ...],
                rfam_covariance_model?, rfam_claninfo?}  # required if 'aap' in profilers
     aap:      {configs?: [path, ...], profile?}         # optional; nested-AAP engine/-c files
-    primers:  [ {pair_id, forward, reverse}, ... ] | path-to-TSV   # optional; in-silico PCR
-    panel:    [ {id, species, amplicon, ssu?, genome?, taxonomy?, kingdom?}, ... ]
+    generation_modes:                                   # each sweep sample is emitted once per mode
+              [ {name, source: genome|ssu|amplicon, mode: shotgun|amplicon|long,
+                 profiler?, primers?: [...]|path-to-TSV, reads?: {...}}, ... ]
+    panel:    [ {id, species, amplicon?, ssu?, genome?, taxonomy?, kingdom?}, ... ]
 
 Exactly one `species` must appear twice: that pair is the abundance-sweep target.
 
-When `primers:` is set, reads are generated from amplicons the pipeline extracts
-from each panel member's `genome:` (which becomes required), not from the
-pre-trimmed `amplicon:` FASTA; every primer pair is run as its own benchmark.
+A generation mode's `source` picks which panel FASTA feeds read generation
+(`genome`/`ssu`/`amplicon`). `mode: amplicon` from `genome`/`ssu` requires
+`primers:` (in-silico PCR, each pair run as its own benchmark); `source: amplicon`
+uses pre-trimmed FASTAs directly (no primers). `generation_modes:` is optional: a
+legacy config with `reads.mode` (+ optional top-level `primers:`) synthesizes one.
 """
 import math
 import sys
@@ -57,9 +62,13 @@ def load_config(path):
     aap_configs = (cfg.get("aap") or {}).get("configs")
     if aap_configs:
         cfg["aap"]["configs"] = [resolve(p) for p in aap_configs]
-    # `primers:` may be an inline list of pairs (passed through) or a path to a TSV.
+    # `primers:` (top-level, legacy) or per-mode may be an inline list of pairs
+    # (passed through) or a path to a TSV.
     if isinstance(cfg.get("primers"), str):
         cfg["primers"] = resolve(cfg["primers"])
+    for gm in cfg.get("generation_modes") or []:
+        if isinstance(gm.get("primers"), str):
+            gm["primers"] = resolve(gm["primers"])
 
     _validate(cfg)
     return cfg
@@ -87,14 +96,28 @@ def _validate(cfg):
         for key in ("rfam_covariance_model", "rfam_claninfo"):
             if not cfg["database"].get(key):
                 sys.exit(f"config: database needs `{key}:` (aap rRNA detection)")
-    use_primers = bool(cfg.get("primers"))
+
+    # Each generation mode picks a panel FASTA source; validate its shape and that
+    # every member carries the source field it needs.
+    for gm in generation_modes(cfg):
+        name = gm.get("name", "?")
+        src = gm.get("source")
+        if src not in ("genome", "ssu", "amplicon"):
+            sys.exit(f"config: generation mode '{name}' needs `source:` one of genome|ssu|amplicon")
+        rmode = gm.get("mode", "shotgun")
+        has_primers = bool(gm.get("primers"))
+        if rmode == "amplicon" and src in ("genome", "ssu") and not has_primers:
+            sys.exit(f"config: generation mode '{name}' (amplicon from {src}) needs `primers:`")
+        if src == "amplicon" and has_primers:
+            sys.exit(f"config: generation mode '{name}' uses pre-trimmed amplicons; remove `primers:`")
+        if gm.get("profiler") and gm["profiler"] not in profilers:
+            sys.exit(f"config: generation mode '{name}' profiler '{gm['profiler']}' "
+                     f"not in database.profilers {profilers}")
+        for m in panel:
+            if not m.get(src):
+                sys.exit(f"config: panel member '{m['id']}' needs `{src}:` (generation mode '{name}')")
+
     for m in panel:
-        # With `primers:`, reads come from amplicons extracted from `genome:`; without
-        # it, from the pre-trimmed `amplicon:` FASTA. One of the two is required.
-        if use_primers and not m.get("genome"):
-            sys.exit(f"config: panel member '{m['id']}' needs `genome:` (primer extraction source)")
-        if not use_primers and not m.get("amplicon"):
-            sys.exit(f"config: panel member '{m['id']}' needs `amplicon:`")
         if "aap" in profilers and not m.get("ssu"):
             sys.exit(f"config: panel member '{m['id']}' needs `ssu:` (aap profiling)")
         if "sylph" in profilers and not m.get("genome"):
@@ -108,6 +131,36 @@ def sweep_pair(cfg):
     doubled = next(sp for sp, n in counts.items() if n == 2)
     major, minor = (m["id"] for m in panel if m["species"] == doubled)
     return doubled, major, minor
+
+
+def generation_modes(cfg):
+    """Normalized list of read-generation modes (each sweep sample is emitted once
+    per mode). Falls back to a single mode synthesized from the legacy `reads.mode`
+    (+ optional top-level `primers:`) when `generation_modes:` is absent."""
+    modes = cfg.get("generation_modes")
+    if modes:
+        return modes
+    primers = cfg.get("primers")
+    rmode = cfg["reads"].get("mode", "shotgun")
+    return [{
+        "name": rmode,
+        "source": "genome" if primers else ("genome" if rmode == "shotgun" else "amplicon"),
+        "mode": rmode,
+        "profiler": cfg["database"]["profilers"][0],
+        **({"primers": primers} if primers else {}),
+    }]
+
+
+def mode_source_field(m):
+    """Panel FASTA field feeding read generation for this mode (genome|ssu|amplicon)."""
+    return m["source"]
+
+
+def mode_reads(cfg, m):
+    """Global `reads:` defaults overlaid with this mode's optional `reads:` override."""
+    reads = dict(cfg["reads"])
+    reads.update(m.get("reads") or {})
+    return reads
 
 
 def taxonomy(member):
@@ -230,6 +283,41 @@ def _selfcheck():
             assert "genome" in str(e), e
         else:
             raise AssertionError("expected SystemExit for missing genome under primers")
+
+        # generation_modes: fan-out source selection + per-mode reads merge.
+        gm_text = textwrap.dedent("""
+            train: {id: t, fastq_1: /abs/r1.fq, fastq_2: /abs/r2.fq, platform: hq-illumina}
+            reads: {num_reads: 100, subsample: none, paired_end: true, read_length_mean: 300, read_length_variance: 0}
+            sweep: {n_samples: 4, steepness: 6.0}
+            database: {name: db, profilers: [sylph, aap], rfam_covariance_model: /abs/ribo, rfam_claninfo: /abs/ribo.clan}
+            generation_modes:
+              - {name: wgs, source: genome, mode: shotgun, profiler: sylph, reads: {read_length_mean: 150}}
+              - {name: amp16s, source: ssu, mode: amplicon, profiler: aap, primers: [{pair_id: v4, forward: GTGYCAG, reverse: GGACTAC}]}
+            panel:
+              - {id: a, species: genus_a, genome: refs/a.fna, ssu: refs/a.16s.fa, amplicon: refs/a.amp.fa}
+              - {id: b, species: genus_b, genome: refs/b.fna, ssu: refs/b.16s.fa, amplicon: refs/b.amp.fa}
+              - {id: b2, species: genus_b, genome: refs/b2.fna, ssu: refs/b2.16s.fa, amplicon: refs/b2.amp.fa}
+        """)
+        p.write_text(gm_text)
+        cfg3 = load_config(p)
+        modes = generation_modes(cfg3)
+        assert [gm["name"] for gm in modes] == ["wgs", "amp16s"], modes
+        assert mode_source_field(modes[0]) == "genome" and mode_source_field(modes[1]) == "ssu"
+        assert mode_reads(cfg3, modes[0])["read_length_mean"] == 150, "per-mode override"
+        assert mode_reads(cfg3, modes[1])["read_length_mean"] == 300, "falls back to global"
+
+        # amplicon-from-ssu without primers -> exits.
+        p.write_text(gm_text.replace(
+            ", primers: [{pair_id: v4, forward: GTGYCAG, reverse: GGACTAC}]", ""))
+        try:
+            load_config(p)
+        except SystemExit as e:
+            assert "primers" in str(e), e
+        else:
+            raise AssertionError("expected SystemExit for amplicon-from-ssu without primers")
+
+        # legacy fallback: no generation_modes -> single mode from reads.mode.
+        assert generation_modes(cfg)[0]["source"] == "amplicon", "legacy amplicon fallback"
     print("selfcheck OK")
 
 
