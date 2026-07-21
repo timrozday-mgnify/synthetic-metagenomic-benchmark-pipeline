@@ -17,10 +17,19 @@ def main():
     p.add_argument("--tax", required=True)
     p.add_argument("--otu", required=True)
     p.add_argument("--mscluster", required=True)
+    # Rfam rRNA-detection DBs (params.rrnas_rfam_*). Absolute host paths; AAP fails
+    # with "file() ... cannot be empty" if these are unset, so emit them when given.
+    p.add_argument("--rfam-covariance-model", dest="rfam_cm")
+    p.add_argument("--rfam-claninfo", dest="rfam_claninfo")
     p.add_argument("--output", required=True)
     a = p.parse_args()
 
     ap = os.path.abspath
+    rfam_lines = ""
+    if a.rfam_cm:
+        rfam_lines += f"    rrnas_rfam_covariance_model = '{a.rfam_cm}'\n"
+    if a.rfam_claninfo:
+        rfam_lines += f"    rrnas_rfam_claninfo = '{a.rfam_claninfo}'\n"
     with open(a.output, "w") as fh:
         fh.write(
             "params {\n"
@@ -35,6 +44,7 @@ def main():
             "            run_asv = false\n"
             "        }\n"
             "    }\n"
+            f"{rfam_lines}"
             "}\n"
         )
 

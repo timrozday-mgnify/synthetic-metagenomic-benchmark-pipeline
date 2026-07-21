@@ -126,6 +126,8 @@ by a sample is built (`build_databases` subworkflow → `SYLPH_BUILD_DB` /
 ```yaml
 databases:
   community_v4:                     # build from sequences
+    rfam_covariance_model: /dbs/rfam/ribo              # aap only: Rfam .cm dir
+    rfam_claninfo: /dbs/rfam/ribo/ribo.clan_info       # aap only: Rfam clan-info file
     sequences:
       - id: bacteroides_fragilis
         genome: references/genomes/CR626927.1.fasta.gz   # for a sylph DB
@@ -150,6 +152,10 @@ Per-entry rules:
   `sequences[].taxonomy` (a `Kingdom;Genus;Species` string) are required for an `aap`
   (mapseq) collection. One collection can serve both if every entry has all three.
   `ssu` must be a pre-extracted full-length 16S FASTA (no barrnap step).
+- `rfam_covariance_model` (an Rfam `.cm` directory) and `rfam_claninfo` (the
+  `ribo.clan_info` file) are **required for an `aap` collection** — the nested
+  amplicon-analysis-pipeline needs them for rRNA detection and aborts with
+  `file() ... cannot be empty` if unset. Both are pass-through host paths.
 - `path:` points at a directory laid out exactly like this pipeline publishes to
   `<outdir>/databases/<name>/` (`<name>.syldb` and/or `<name>.mapseq.{fasta,tax,otu}`
   + `<name>.mapseq.fasta.mscluster`), so a `databases/<name>/` dir from a prior run is

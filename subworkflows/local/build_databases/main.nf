@@ -105,8 +105,17 @@ workflow BUILD_DATABASES {
         .join(MAPSEQ_OTU.out.otu.map { meta, otu -> [ meta.id, otu ] }, by: 0)
         .join(MAPSEQ_CLUSTER.out.mscluster.map { meta, ms -> [ meta.id, ms ] }, by: 0)
 
+    // Rfam DBs ride alongside as absolute-path strings (pass-through to the nested
+    // AAP run; main.nf guarantees both are set for any 'aap' collection).
+    ch_rfam = ch_b.build.filter { 'aap' in it.profilers }
+        .mix(ch_b.prebuilt.filter { 'aap' in it.profilers })
+        .map { spec -> [ spec.name, spec.rfam_cm.toString(), spec.rfam_claninfo.toString() ] }
+
+    // [ name, fasta, tax, otu, mscluster, rfam_cm, rfam_claninfo ]
+    ch_mapseq_dbs = ch_built_mapseq.mix(ch_pre_mapseq).join(ch_rfam, by: 0)
+
     emit:
     sylph_dbs  = ch_built_sylph.mix(ch_pre_sylph)
-    mapseq_dbs = ch_built_mapseq.mix(ch_pre_mapseq)
+    mapseq_dbs = ch_mapseq_dbs
     versions   = ch_versions
 }

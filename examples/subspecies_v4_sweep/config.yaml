@@ -32,6 +32,10 @@ database:
   profilers: [aap]             # [aap], [sylph], or [sylph, aap]
                                #   aap  -> each panel member needs `ssu` (+ taxonomy)
                                #   sylph-> each panel member needs `genome`
+  # Rfam rRNA-detection DBs the nested amplicon-analysis-pipeline needs (required
+  # when 'aap' in profilers). covariance_model is a directory; claninfo a file.
+  rfam_covariance_model: /PATH/TO/rfam/ribo             # dir of Rfam .cm models
+  rfam_claninfo: /PATH/TO/rfam/ribo/ribo.clan_info      # Rfam clan-info file
 
 # One entry per genome. Exactly one `species` must appear twice - that pair is the
 # abundance-sweep target (major = first listed, minor = second). `taxonomy` is

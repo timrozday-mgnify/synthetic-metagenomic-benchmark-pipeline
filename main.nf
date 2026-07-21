@@ -76,8 +76,16 @@ workflow {
         if (d.path && d.sequences) {
             error "database '${name}': set either 'path' or 'sequences', not both"
         }
+        // Rfam rRNA-detection DBs the nested AAP run needs (params.rrnas_rfam_*);
+        // collection-level and required whenever the collection feeds 'aap'.
+        def rfamCm   = d.rfam_covariance_model ? resolveFile(d.rfam_covariance_model) : null
+        def rfamClan = d.rfam_claninfo         ? resolveFile(d.rfam_claninfo)         : null
+        if ('aap' in profs && (!rfamCm || !rfamClan)) {
+            error "database '${name}': profiler 'aap' requires 'rfam_covariance_model' and 'rfam_claninfo'"
+        }
         if (d.path) {
-            dbSpecs << [ name: name, profilers: profs, prebuilt_dir: resolveFile(d.path), sequences: null ]
+            dbSpecs << [ name: name, profilers: profs, prebuilt_dir: resolveFile(d.path), sequences: null,
+                         rfam_cm: rfamCm, rfam_claninfo: rfamClan ]
         }
         else if (d.sequences) {
             def seqs = d.sequences.collect { s ->
@@ -86,7 +94,8 @@ workflow {
                   ssu:      s.ssu    ? resolveFile(s.ssu)    : null,
                   taxonomy: s.taxonomy ]
             }
-            dbSpecs << [ name: name, profilers: profs, prebuilt_dir: null, sequences: seqs ]
+            dbSpecs << [ name: name, profilers: profs, prebuilt_dir: null, sequences: seqs,
+                         rfam_cm: rfamCm, rfam_claninfo: rfamClan ]
         }
         else {
             error "database '${name}': must define 'sequences:' or 'path:'"

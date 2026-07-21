@@ -64,6 +64,8 @@ databases:
     - id: bacteroides_uniformis_strain2
       ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/subspecies_v4_sweep/references/16S/bacteroides_uniformis_strain2.ssu.fasta
       taxonomy: Bacteria;Bacteroides;uniformis
+    rfam_covariance_model: /PATH/TO/rfam/ribo
+    rfam_claninfo: /PATH/TO/rfam/ribo/ribo.clan_info
 samples:
 - sample: S01_a0.00
   train_id: sc2200627

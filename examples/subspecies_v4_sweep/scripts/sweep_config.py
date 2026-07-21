@@ -11,7 +11,8 @@ Schema (see ../config.yaml for a filled-in template):
     train:    {id, fastq_1, fastq_2, platform}
     reads:    {num_reads, mode, paired_end, read_length_mean, read_length_variance}
     sweep:    {n_samples, steepness}
-    database: {name, profilers: [aap|sylph, ...]}
+    database: {name, profilers: [aap|sylph, ...],
+               rfam_covariance_model?, rfam_claninfo?}  # required if 'aap' in profilers
     panel:    [ {id, species, amplicon, ssu?, genome?, taxonomy?, kingdom?}, ... ]
 
 Exactly one `species` must appear twice: that pair is the abundance-sweep target.
@@ -44,6 +45,9 @@ def load_config(path):
         for key in ("amplicon", "ssu", "genome"):
             if member.get(key):
                 member[key] = resolve(member[key])
+    for key in ("rfam_covariance_model", "rfam_claninfo"):
+        if cfg.get("database", {}).get(key):
+            cfg["database"][key] = resolve(cfg["database"][key])
 
     _validate(cfg)
     return cfg
@@ -67,6 +71,10 @@ def _validate(cfg):
                  f"pair); doubled={doubled}, >2={over}")
 
     profilers = cfg["database"]["profilers"]
+    if "aap" in profilers:
+        for key in ("rfam_covariance_model", "rfam_claninfo"):
+            if not cfg["database"].get(key):
+                sys.exit(f"config: database needs `{key}:` (aap rRNA detection)")
     for m in panel:
         if not m.get("amplicon"):
             sys.exit(f"config: panel member '{m['id']}' needs `amplicon:`")
@@ -109,7 +117,12 @@ def database_block(cfg):
             seq["ssu"] = m["ssu"]
             seq["taxonomy"] = taxonomy(m)
         sequences.append(seq)
-    return {db["name"]: {"sequences": sequences}}
+    entry = {"sequences": sequences}
+    # aap needs the Rfam rRNA-detection DBs (main.nf requires both for an aap DB).
+    if "aap" in profilers:
+        entry["rfam_covariance_model"] = db["rfam_covariance_model"]
+        entry["rfam_claninfo"] = db["rfam_claninfo"]
+    return {db["name"]: entry}
 
 
 def logistic_fracs(n, k):

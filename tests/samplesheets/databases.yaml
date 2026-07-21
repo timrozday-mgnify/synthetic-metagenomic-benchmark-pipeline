@@ -8,6 +8,9 @@ databases:
       - id: genomeB
         genome: tests/data/genomeB.fasta
   ampA:                        # mapseq amplicon DB built from 16S + explicit taxonomy
+    # rfam DBs required for aap; stub run never reads them, any existing paths pass checkIfExists.
+    rfam_covariance_model: tests/data
+    rfam_claninfo: tests/data/genomeA.fasta
     sequences:
       - id: genomeA
         ssu: tests/data/genomeA.fasta

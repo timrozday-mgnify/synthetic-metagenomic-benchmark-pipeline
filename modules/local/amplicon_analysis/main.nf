@@ -14,7 +14,9 @@ process RUN_AAP {
     input:
     // Optional inputs are stageAs'd to distinct fixed names so the shared NO_FILE
     // placeholder doesn't collide across slots. `use_built` selects the DB source.
-    tuple val(meta), path(reads), val(use_built), path(aap_config, stageAs: 'aap_config_in'), path(mapseq_fasta, stageAs: 'mapseq_db.fasta'), path(mapseq_tax, stageAs: 'mapseq_db.tax'), path(mapseq_otu, stageAs: 'mapseq_db.otu'), path(mapseq_mscluster, stageAs: 'mapseq_db.mscluster')
+    // rfam_cm / rfam_claninfo are absolute host paths (val, not staged): the nested
+    // AAP run reads them directly (this process is executor 'local', no container).
+    tuple val(meta), path(reads), val(use_built), path(aap_config, stageAs: 'aap_config_in'), path(mapseq_fasta, stageAs: 'mapseq_db.fasta'), path(mapseq_tax, stageAs: 'mapseq_db.tax'), path(mapseq_otu, stageAs: 'mapseq_db.otu'), path(mapseq_mscluster, stageAs: 'mapseq_db.mscluster'), val(rfam_cm), val(rfam_claninfo)
 
     output:
     tuple val(meta), path("aap_out/**"), emit: results
@@ -33,7 +35,7 @@ process RUN_AAP {
     def dbname     = meta.database ?: 'community'
     def cfg_arg    = use_built ? '-c aap.config' : (params.aap_config ? "-c ${aap_config}" : '')
     """
-    ${use_built ? "write_aap_config.py --name '${dbname}' --fasta ${mapseq_fasta} --tax ${mapseq_tax} --otu ${mapseq_otu} --mscluster ${mapseq_mscluster} --output aap.config" : "true"}
+    ${use_built ? "write_aap_config.py --name '${dbname}' --fasta ${mapseq_fasta} --tax ${mapseq_tax} --otu ${mapseq_otu} --mscluster ${mapseq_mscluster} --rfam-covariance-model '${rfam_cm}' --rfam-claninfo '${rfam_claninfo}' --output aap.config" : "true"}
 
     # AAP samplesheet: sample,fastq_1,fastq_2,single_end (absolute paths to staged reads).
     printf 'sample,fastq_1,fastq_2,single_end\\n' > aap_samplesheet.csv

@@ -111,13 +111,15 @@ workflow PROFILE {
     ch_aap_built = ch_aap.built
         .map { meta, reads -> [ meta.database, meta, reads ] }
         .combine(ch_mapseq_dbs, by: 0)
-        .map { name, meta, reads, fasta, tax, otu, mscluster ->
-            [ meta, reads, true, no_file, fasta, tax, otu, mscluster ]
+        .map { name, meta, reads, fasta, tax, otu, mscluster, rfam_cm, rfam_claninfo ->
+            [ meta, reads, true, no_file, fasta, tax, otu, mscluster, rfam_cm, rfam_claninfo ]
         }
 
+    // Passthrough branch supplies its own rfam DBs via params.aap_config, so the
+    // rfam slots are empty (write_aap_config.py isn't run for this branch).
     ch_aap_other = ch_aap.other.map { meta, reads ->
         [ meta, reads, false, (params.aap_config ? file(params.aap_config, checkIfExists: true) : no_file),
-          no_file, no_file, no_file, no_file ]
+          no_file, no_file, no_file, no_file, '', '' ]
     }
 
     RUN_AAP(ch_aap_built.mix(ch_aap_other))
