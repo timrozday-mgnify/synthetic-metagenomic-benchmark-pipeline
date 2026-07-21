@@ -53,6 +53,31 @@ export APPTAINER_TMPDIR=/scratch/$USER/apptainer_tmp
 nextflow run main.nf -profile singularity --input samplesheet.yaml --outdir results
 ```
 
+The amplicon path runs the EBI amplicon-analysis-pipeline as a nested `nextflow
+run` on the host. It does **not** inherit the outer `-profile`, so tell it which
+engine to use via `--aap_configs` (an ordered list of `-c` files). Write an
+`aap_singularity.config`:
+
+```groovy
+singularity.enabled    = true
+singularity.autoMounts = true
+```
+
+then add `--aap_configs aap_singularity.config` to the run. `NXF_SINGULARITY_CACHEDIR`
+(exported above) is inherited by the nested run. For local development the nested
+run has no engine by default — pass `--aap_profile docker` (or an `aap_configs`
+file with `docker.enabled = true`).
+
+These two settings can also live in a map-form samplesheet (top-level keys, next to
+`databases:`/`samples:`), which overrides the params:
+
+```yaml
+aap_configs: [/path/to/aap_singularity.config]   # ordered extra -c files
+aap_profile: null                                 # optional -profile (usually unset)
+databases: { ... }
+samples:   [ ... ]
+```
+
 ## Samplesheet
 
 A YAML list, one entry per synthetic sample (`tests/samplesheets/test.yaml` is a
@@ -357,8 +382,9 @@ from `samtools idxstats` on the true BAM (what was actually generated).
 | `--chunks` | `1` | Default number of chunks to split generation into (per-sample override via samplesheet `chunks`). |
 | `--sylph_databases` | `[:]` | Named sylph databases (see Profiling). |
 | `--aap_revision` | `main` | Revision of the amplicon-analysis-pipeline for the nested run. |
-| `--aap_profile` | `docker` | `-profile` for the nested AAP run. |
-| `--aap_config` | `null` | Extra `-c` config for the nested AAP run (MAPseq databases etc.). |
+| `--aap_profile` | `null` | Optional `-profile` for the nested AAP run; omitted when null (set the engine via `--aap_configs` instead). |
+| `--aap_config` | `null` | Single `-c` DB-passthrough config for the nested AAP run (MAPseq databases etc.). |
+| `--aap_configs` | `[]` | Ordered extra `-c` config files forwarded to the nested AAP run (engine/site config); comma-separated on the CLI. |
 | `--error_model_candidates` | `AdditiveContext(5),AdditiveContext(7),AdditiveContext(9)` | Candidate skiver component strings; the min-AIC model is kept. |
 | `--error_model_components` | `null` | Force a single component string (skips the AIC search). |
 | `--smb_skiver_tag` / `--smb_genome_blender_tag` | `latest` | Container image tags. |

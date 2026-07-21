@@ -85,7 +85,7 @@ def main():
     # One combined samplesheet: the `databases:` block the pipeline builds the DB
     # from + the sweep samples (training is deduped by train_id, so `--step all`
     # trains once). Set `reads.subsample` in config.yaml to sweep depth per sample.
-    doc = {"databases": sc.database_block(cfg), "samples": rows}
+    doc = {"databases": sc.database_block(cfg), **sc.aap_settings(cfg), "samples": rows}
     with open(HERE / "samplesheet.yaml", "w") as fh:
         yaml.safe_dump(doc, fh, sort_keys=False, default_flow_style=False)
 

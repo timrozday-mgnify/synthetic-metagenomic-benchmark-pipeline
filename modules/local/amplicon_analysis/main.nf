@@ -33,7 +33,12 @@ process RUN_AAP {
     def single_end = paired ? 'false' : 'true'
     // A pipeline-built mapseq DB wins over the pass-through params.aap_config.
     def dbname     = meta.database ?: 'community'
-    def cfg_arg    = use_built ? '-c aap.config' : (params.aap_config ? "-c ${aap_config}" : '')
+    def db_cfg     = use_built ? '-c aap.config' : (params.aap_config ? "-c ${aap_config}" : '')
+    // Engine + extra -c files come from meta (samplesheet aap_configs/aap_profile or the
+    // params fallback, resolved to absolute paths in main.nf). DB config first, so later
+    // files override earlier and the engine config wins. -profile only when requested.
+    def extra_cfg  = (meta.aap_configs ?: []).collect { "-c ${file(it, checkIfExists: true)}" }.join(' ')
+    def prof_arg   = meta.aap_profile ? "-profile ${meta.aap_profile}" : ''
     """
     ${use_built ? "write_aap_config.py --name '${dbname}' --fasta ${mapseq_fasta} --tax ${mapseq_tax} --otu ${mapseq_otu} --mscluster ${mapseq_mscluster} --rfam-covariance-model '${rfam_cm}' --rfam-claninfo '${rfam_claninfo}' --output aap.config" : "true"}
 
@@ -43,10 +48,10 @@ process RUN_AAP {
 
     nextflow run ebi-metagenomics/amplicon-analysis-pipeline \\
         -r ${params.aap_revision} \\
-        -profile ${params.aap_profile} \\
+        ${prof_arg} \\
         --input aap_samplesheet.csv \\
         --outdir aap_out \\
-        ${cfg_arg}
+        ${db_cfg} ${extra_cfg}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

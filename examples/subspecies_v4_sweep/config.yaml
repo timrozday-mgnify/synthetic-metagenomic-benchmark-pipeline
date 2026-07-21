@@ -25,6 +25,14 @@ sweep:
   n_samples: 20
   steepness: 6.0               # higher -> more samples bunched near the 0/1 extremes
 
+# Optional: the nested amplicon-analysis-pipeline runs on the host and does NOT
+# inherit the outer -profile. On HPC point it at an engine config (emitted verbatim
+# into samplesheet.yaml's top-level aap_configs/aap_profile). Relative paths resolve
+# against this file's dir. Omit for a local Docker run (or set profile: docker).
+# aap:
+#   configs: [aap_singularity.config]   # { singularity.enabled = true; singularity.autoMounts = true }
+#   profile: null                       # or 'docker'
+
 # In-pipeline profiler database, defined here and emitted into samplesheet.yaml's
 # `databases:` block: the pipeline builds it during the run (no out-of-band step).
 database:

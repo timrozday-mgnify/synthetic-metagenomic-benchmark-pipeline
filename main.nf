@@ -22,6 +22,16 @@ def parseSubsamples(v) {
     list ?: [null]
 }
 
+// Resolve nested-AAP `-c` config files to absolute path strings (a YAML list, or a
+// comma-separated string from the CLI). Relative paths resolve against projectDir.
+def parseAapConfigs(v) {
+    def list = (v == null) ? [] : (v instanceof List ? v : v.toString().tokenize(','))
+    list.findAll { it?.toString()?.trim() }.collect { p ->
+        def s = p.toString().trim()
+        (s.startsWith('/') || s =~ /^[a-z]+:\/\//) ? s : "${workflow.projectDir}/${s}".toString()
+    }
+}
+
 workflow {
     main:
     if (!params.input) {
@@ -52,6 +62,11 @@ workflow {
         error "Samplesheet ${params.input} must be a YAML list, or a map with 'samples:' (and optional 'databases:')"
     }
     ch_rows = Channel.fromList(rows)
+
+    // Optional samplesheet-level nested-AAP settings (map form); fall back to params.
+    // Global for the run (the container engine is a site-wide setting, not per-sample).
+    def effAapConfigs = parseAapConfigs((loaded instanceof Map && loaded.aap_configs != null) ? loaded.aap_configs : params.aap_configs)
+    def effAapProfile = (loaded instanceof Map ? loaded.aap_profile : null) ?: params.aap_profile
 
     //
     // Named sequence collections -> profiler DBs. A collection is built (or its
@@ -128,6 +143,8 @@ workflow {
                 profiler:  (row.profiler ?: ''),
                 database:  (row.database ?: ''),
                 subsamples: parseSubsamples(row.subsample),
+                aap_configs: effAapConfigs,
+                aap_profile: effAapProfile,
             ]
             def genomesCsv = resolveFile(row.genomes_csv)
             // Resolve the FASTA files referenced by the genomes CSV so Nextflow stages them.
@@ -188,6 +205,8 @@ workflow {
                 mode:     (row.mode ?: 'paired'),
                 profiler: (row.profiler ?: ''),
                 database: (row.database ?: ''),
+                aap_configs: effAapConfigs,
+                aap_profile: effAapProfile,
             ]
             [ meta, reads ]
         }

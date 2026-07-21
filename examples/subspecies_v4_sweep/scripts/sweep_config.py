@@ -13,6 +13,7 @@ Schema (see ../config.yaml for a filled-in template):
     sweep:    {n_samples, steepness}
     database: {name, profilers: [aap|sylph, ...],
                rfam_covariance_model?, rfam_claninfo?}  # required if 'aap' in profilers
+    aap:      {configs?: [path, ...], profile?}         # optional; nested-AAP engine/-c files
     panel:    [ {id, species, amplicon, ssu?, genome?, taxonomy?, kingdom?}, ... ]
 
 Exactly one `species` must appear twice: that pair is the abundance-sweep target.
@@ -48,6 +49,9 @@ def load_config(path):
     for key in ("rfam_covariance_model", "rfam_claninfo"):
         if cfg.get("database", {}).get(key):
             cfg["database"][key] = resolve(cfg["database"][key])
+    aap_configs = (cfg.get("aap") or {}).get("configs")
+    if aap_configs:
+        cfg["aap"]["configs"] = [resolve(p) for p in aap_configs]
 
     _validate(cfg)
     return cfg
@@ -125,6 +129,19 @@ def database_block(cfg):
     return {db["name"]: entry}
 
 
+def aap_settings(cfg):
+    """Top-level samplesheet keys for the nested amplicon-analysis-pipeline run
+    (container engine / extra `-c` configs). Emitted only when `aap:` is set in
+    config.yaml; the pipeline falls back to its params otherwise."""
+    aap = cfg.get("aap") or {}
+    out = {}
+    if aap.get("configs"):
+        out["aap_configs"] = aap["configs"]
+    if aap.get("profile"):
+        out["aap_profile"] = aap["profile"]
+    return out
+
+
 def logistic_fracs(n, k):
     """n fractions in [0,1], symmetric, denser near the 0/1 extremes (logistic
     spacing). Endpoints are rescaled to land exactly on 0 and 1."""
@@ -143,7 +160,8 @@ def _selfcheck():
         train: {id: t, fastq_1: reads/r1.fq, fastq_2: /abs/r2.fq, platform: hq-illumina}
         reads: {num_reads: 100, mode: amplicon, paired_end: true, read_length_mean: 300, read_length_variance: 0}
         sweep: {n_samples: 4, steepness: 6.0}
-        database: {name: community_v4, profilers: [aap]}
+        database: {name: community_v4, profilers: [aap], rfam_covariance_model: /abs/ribo, rfam_claninfo: /abs/ribo.clan}
+        aap: {configs: [engine.config, /abs/site.config], profile: singularity}
         panel:
           - {id: a, species: genus_a, amplicon: refs/a.fa, ssu: refs/a.16s.fa}
           - {id: b, species: genus_b, amplicon: refs/b.fa, ssu: refs/b.16s.fa}
@@ -163,6 +181,10 @@ def _selfcheck():
         assert seqs[0]["taxonomy"] == "Bacteria;Genus;a" and "genome" not in seqs[0], seqs
 
         assert sweep_pair(cfg) == ("genus_b", "b", "b2"), sweep_pair(cfg)
+
+        aap = aap_settings(cfg)
+        assert aap["aap_configs"] == [str(base / "engine.config"), "/abs/site.config"], aap
+        assert aap["aap_profile"] == "singularity", aap
 
         fr = logistic_fracs(4, 6.0)
         assert abs(fr[0]) < 1e-9 and abs(fr[-1] - 1) < 1e-9, fr
