@@ -101,7 +101,7 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
-  subsample: &id001
+  subsample:
   - none
   - 100000
   - 500000
@@ -118,7 +118,10 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
-  subsample: *id001
+  subsample:
+  - none
+  - 100000
+  - 500000
 - sample: S03_a0.01.wgs
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -132,7 +135,10 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
-  subsample: *id001
+  subsample:
+  - none
+  - 100000
+  - 500000
 - sample: S04_a0.01.wgs
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -146,7 +152,10 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
-  subsample: *id001
+  subsample:
+  - none
+  - 100000
+  - 500000
 - sample: S05_a0.03.wgs
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -160,7 +169,10 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
-  subsample: *id001
+  subsample:
+  - none
+  - 100000
+  - 500000
 - sample: S06_a0.05.wgs
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -174,7 +186,10 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
-  subsample: *id001
+  subsample:
+  - none
+  - 100000
+  - 500000
 - sample: S07_a0.10.wgs
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -188,7 +203,10 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
-  subsample: *id001
+  subsample:
+  - none
+  - 100000
+  - 500000
 - sample: S08_a0.17.wgs
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -202,7 +220,10 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
-  subsample: *id001
+  subsample:
+  - none
+  - 100000
+  - 500000
 - sample: S09_a0.28.wgs
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -216,7 +237,10 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
-  subsample: *id001
+  subsample:
+  - none
+  - 100000
+  - 500000
 - sample: S10_a0.42.wgs
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -230,7 +254,10 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
-  subsample: *id001
+  subsample:
+  - none
+  - 100000
+  - 500000
 - sample: S11_a0.58.wgs
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -244,7 +271,10 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
-  subsample: *id001
+  subsample:
+  - none
+  - 100000
+  - 500000
 - sample: S12_a0.72.wgs
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -258,7 +288,10 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
-  subsample: *id001
+  subsample:
+  - none
+  - 100000
+  - 500000
 - sample: S13_a0.83.wgs
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -272,7 +305,10 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
-  subsample: *id001
+  subsample:
+  - none
+  - 100000
+  - 500000
 - sample: S14_a0.90.wgs
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -286,7 +322,10 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
-  subsample: *id001
+  subsample:
+  - none
+  - 100000
+  - 500000
 - sample: S15_a0.95.wgs
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -300,7 +339,10 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
-  subsample: *id001
+  subsample:
+  - none
+  - 100000
+  - 500000
 - sample: S16_a0.97.wgs
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -314,7 +356,10 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
-  subsample: *id001
+  subsample:
+  - none
+  - 100000
+  - 500000
 - sample: S17_a0.99.wgs
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -328,7 +373,10 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
-  subsample: *id001
+  subsample:
+  - none
+  - 100000
+  - 500000
 - sample: S18_a0.99.wgs
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -342,7 +390,10 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
-  subsample: *id001
+  subsample:
+  - none
+  - 100000
+  - 500000
 - sample: S19_a1.00.wgs
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -356,7 +407,10 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
-  subsample: *id001
+  subsample:
+  - none
+  - 100000
+  - 500000
 - sample: S20_a1.00.wgs
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -370,7 +424,10 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
-  subsample: *id001
+  subsample:
+  - none
+  - 100000
+  - 500000
 - sample: S01_a0.00.amplicon_16s
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -384,8 +441,11 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
-  subsample: *id001
-  primers: &id002
+  subsample:
+  - none
+  - 100000
+  - 500000
+  primers:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
@@ -402,8 +462,14 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
-  subsample: *id001
-  primers: *id002
+  subsample:
+  - none
+  - 100000
+  - 500000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
 - sample: S03_a0.01.amplicon_16s
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -417,8 +483,14 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
-  subsample: *id001
-  primers: *id002
+  subsample:
+  - none
+  - 100000
+  - 500000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
 - sample: S04_a0.01.amplicon_16s
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -432,8 +504,14 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
-  subsample: *id001
-  primers: *id002
+  subsample:
+  - none
+  - 100000
+  - 500000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
 - sample: S05_a0.03.amplicon_16s
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -447,8 +525,14 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
-  subsample: *id001
-  primers: *id002
+  subsample:
+  - none
+  - 100000
+  - 500000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
 - sample: S06_a0.05.amplicon_16s
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -462,8 +546,14 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
-  subsample: *id001
-  primers: *id002
+  subsample:
+  - none
+  - 100000
+  - 500000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
 - sample: S07_a0.10.amplicon_16s
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -477,8 +567,14 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
-  subsample: *id001
-  primers: *id002
+  subsample:
+  - none
+  - 100000
+  - 500000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
 - sample: S08_a0.17.amplicon_16s
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -492,8 +588,14 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
-  subsample: *id001
-  primers: *id002
+  subsample:
+  - none
+  - 100000
+  - 500000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
 - sample: S09_a0.28.amplicon_16s
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -507,8 +609,14 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
-  subsample: *id001
-  primers: *id002
+  subsample:
+  - none
+  - 100000
+  - 500000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
 - sample: S10_a0.42.amplicon_16s
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -522,8 +630,14 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
-  subsample: *id001
-  primers: *id002
+  subsample:
+  - none
+  - 100000
+  - 500000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
 - sample: S11_a0.58.amplicon_16s
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -537,8 +651,14 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
-  subsample: *id001
-  primers: *id002
+  subsample:
+  - none
+  - 100000
+  - 500000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
 - sample: S12_a0.72.amplicon_16s
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -552,8 +672,14 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
-  subsample: *id001
-  primers: *id002
+  subsample:
+  - none
+  - 100000
+  - 500000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
 - sample: S13_a0.83.amplicon_16s
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -567,8 +693,14 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
-  subsample: *id001
-  primers: *id002
+  subsample:
+  - none
+  - 100000
+  - 500000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
 - sample: S14_a0.90.amplicon_16s
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -582,8 +714,14 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
-  subsample: *id001
-  primers: *id002
+  subsample:
+  - none
+  - 100000
+  - 500000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
 - sample: S15_a0.95.amplicon_16s
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -597,8 +735,14 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
-  subsample: *id001
-  primers: *id002
+  subsample:
+  - none
+  - 100000
+  - 500000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
 - sample: S16_a0.97.amplicon_16s
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -612,8 +756,14 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
-  subsample: *id001
-  primers: *id002
+  subsample:
+  - none
+  - 100000
+  - 500000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
 - sample: S17_a0.99.amplicon_16s
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -627,8 +777,14 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
-  subsample: *id001
-  primers: *id002
+  subsample:
+  - none
+  - 100000
+  - 500000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
 - sample: S18_a0.99.amplicon_16s
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -642,8 +798,14 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
-  subsample: *id001
-  primers: *id002
+  subsample:
+  - none
+  - 100000
+  - 500000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
 - sample: S19_a1.00.amplicon_16s
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -657,8 +819,14 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
-  subsample: *id001
-  primers: *id002
+  subsample:
+  - none
+  - 100000
+  - 500000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
 - sample: S20_a1.00.amplicon_16s
   train_id: sc2200627
   train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
@@ -672,5 +840,11 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
-  subsample: *id001
-  primers: *id002
+  subsample:
+  - none
+  - 100000
+  - 500000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT

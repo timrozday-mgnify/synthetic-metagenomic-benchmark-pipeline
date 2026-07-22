@@ -36,6 +36,19 @@ from pathlib import Path
 import yaml
 
 
+class _NoAliasDumper(yaml.SafeDumper):
+    # PyYAML emits *anchors for reused dict objects (e.g. the shared `subsample`
+    # block across all samples); Nextflow's SnakeYAML caps non-scalar aliases at
+    # 50 and dies with >50. Inlining every occurrence sidesteps the limit.
+    def ignore_aliases(self, data):
+        return True
+
+
+def dump_yaml(doc, fh):
+    yaml.dump(doc, fh, Dumper=_NoAliasDumper, sort_keys=False,
+              default_flow_style=False)
+
+
 def load_config(path):
     """Parse config.yaml, resolve panel/train paths (relative -> against the
     config file's dir), validate, and return the dict (with `_dir` added)."""

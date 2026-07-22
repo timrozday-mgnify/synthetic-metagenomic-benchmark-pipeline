@@ -48,7 +48,7 @@ def main():
     ]
     doc = {"databases": sc.database_block(cfg), **sc.aap_settings(cfg), "samples": rows}
     with open(HERE / "profile_samplesheet.yaml", "w") as fh:
-        yaml.safe_dump(doc, fh, sort_keys=False, default_flow_style=False)
+        sc.dump_yaml(doc, fh)
 
     print(f"Wrote profile_samplesheet.yaml: {len(rows)} rows (one per generated "
           f"sample, each with its generation-mode profiler) against '{db_name}', "

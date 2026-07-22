@@ -19,7 +19,6 @@ import csv
 import sys
 from pathlib import Path
 
-import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "scripts"))
 import sweep_config as sc
@@ -95,7 +94,7 @@ def main():
     # trains once). Set `reads.subsample` in config.yaml to sweep depth per sample.
     doc = {"databases": sc.database_block(cfg), **sc.aap_settings(cfg), "samples": rows}
     with open(HERE / "samplesheet.yaml", "w") as fh:
-        yaml.safe_dump(doc, fh, sort_keys=False, default_flow_style=False)
+        sc.dump_yaml(doc, fh)
 
     print(f"Wrote samplesheet.yaml ({len(rows)} samples = {n} sweep x "
           f"{len(modes)} mode(s) [{', '.join(gm['name'] for gm in modes)}], "
