@@ -6,9 +6,11 @@ genomes**, **ground-truth vs detected abundance**, an optional **swept-pair** vi
 a **performance-across-subsampling** summary. Interactive Plotly plots with tooltips.
 
 The template is generic — it works for amplicon (mapseq) and WGS (competitive mapping)
-runs, single or multiple amplified regions, with or without an abundance sweep. Sections
-that have no data (e.g. no swept pair, no per-read profiler assignments) are omitted
-automatically.
+runs, single or multiple amplified regions, with or without an abundance sweep. When a
+run has several **assays** (e.g. multiple amplicon primer sets and/or a WGS arm, each a
+`<sweep_point>.<assay>` dir), every visual section is split into one tab per assay so the
+same panel can be compared across primers/WGS. Sections and sources that have no data
+(e.g. no swept pair, no per-read profiler assignments, no sylph) are omitted automatically.
 
 ## Layout
 
@@ -31,14 +33,17 @@ Preprocessing walks the run tree once and writes four tidy tables into the run d
 
 | File | Contents |
 |------|----------|
-| `abundance.csv` | long: `sample, depth, sweep_x, genome_id, is_sweep_pair, target/realized_rel_abundance, detected_profiler_rel_abundance, detected_reference_rel_abundance` |
-| `mismapping.csv` | long: `sample, depth, source, truth_genome, assigned_genome, reads, frac_of_truth` |
-| `summary.csv` | per `depth × source`: `l1_error_per_sample, pearson_r, mismapping_rate, n_reads` |
-| `meta.json` | swept pair, depths, samples, sample→sweep_x map, detection sources |
+| `abundance.csv` | long: `sample, assay, depth, sweep_x, genome_id, is_sweep_pair, target/realized_rel_abundance, detected_profiler_rel_abundance, detected_reference_rel_abundance, detected_sylph_rel_abundance` |
+| `mismapping.csv` | long: `sample, assay, depth, source, truth_genome, assigned_genome, reads, frac_of_truth` |
+| `summary.csv` | per `assay × depth × source`: `l1_error_per_sample, pearson_r, mismapping_rate, pair_mismapping_rate, n_reads` |
+| `meta.json` | swept pair, assays, depths, samples, sample→sweep_x map, detection sources |
 
 The report then reads those CSVs (all heavy compute is already done) and builds the plots.
 
-Two detection sources are joined against the ground truth per `(sample, depth)` cell:
+Each sample dir is a `<sweep_point>.<assay>` cell (e.g. `S10_a0.42.amplicon_515YF-806BR_16s.515-YF-806BR`
+or `S10_a0.42.wgs`); the sweep point is shared across assays, the assay label (`515-YF-806BR`,
+`WGS`, …) is the facet. Up to three detection sources are joined against the ground truth
+per cell:
 
 - **profiler** — per-read mapseq assignments (`*.mseq.gz`); `query` encodes the origin
   genome, `dbhit` the assigned genome. Amplicon (amplicon-analysis-pipeline) path.
@@ -46,8 +51,13 @@ Two detection sources are joined against the ground truth per `(sample, depth)` 
   and each reference contig is `<genome>:<contig>`. Works for WGS too. In runs where
   reads are mapped to their origin reference this matrix is diagonal by construction; it
   becomes informative under competitive mapping.
+- **sylph** — the WGS sylph profile (`*.sylph_profile.tsv`); abundance-only (no per-read
+  assignments, so no confusion matrix). Sylph reports reference **accessions**, mapped
+  back to community `genome_id`s via the run's `samplesheet.yaml` (`id`↔`genome` fasta
+  basename); `--samplesheet` overrides its location.
 
-Either source is optional per cell, so a run missing one still produces what it can.
+Every source is optional per cell, so a run missing one (or a whole assay missing a
+source) still produces what it can.
 
 ## Running it
 

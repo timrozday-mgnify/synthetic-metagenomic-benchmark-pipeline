@@ -72,9 +72,34 @@ MISMAP = pd.read_csv(_resolve(mismapping_csv))
 SUMMARY = pd.read_csv(_resolve(summary_csv))
 META = json.loads(_resolve(meta_json).read_text())
 
+# Back-compat: older CSVs have no `assay` column (single-assay layout).
+for _df in (ABUNDANCE, MISMAP, SUMMARY):
+    if not _df.empty and "assay" not in _df.columns:
+        _df["assay"] = "reads"
+
 SWEEP_PAIR = META.get("sweep_pair", [])
-SOURCES = META.get("sources", sorted(MISMAP["source"].unique()) if not MISMAP.empty else [])
-SOURCE_LABEL = {"profiler": "Profiler assignments", "reference": "Reference BAM"}
+SOURCE_ORDER = ["profiler", "reference", "sylph"]
+SOURCE_LABEL = {"profiler": "Profiler assignments", "reference": "Reference BAM",
+                "sylph": "Sylph profile"}
+ABUND_COL = {"profiler": "detected_profiler_rel_abundance",
+             "reference": "detected_reference_rel_abundance",
+             "sylph": "detected_sylph_rel_abundance"}
+# Assays present, primers first and WGS-style whole-genome assays last.
+ASSAYS = META.get("assays") or sorted(ABUNDANCE["assay"].unique().tolist())
+
+
+def abund_sources(assay):
+    """Detection sources with any abundance for this assay, in canonical order."""
+    sub = ABUNDANCE[ABUNDANCE["assay"] == assay]
+    return [s for s in SOURCE_ORDER if ABUND_COL[s] in sub.columns and sub[ABUND_COL[s]].notna().any()]
+
+
+def mismap_sources(assay):
+    """Detection sources with a confusion matrix (per-read assignments) for this assay."""
+    if MISMAP.empty:
+        return []
+    sub = MISMAP[MISMAP["assay"] == assay]
+    return [s for s in SOURCE_ORDER if s in set(sub["source"])]
 
 
 def depth_order(depths):
@@ -98,9 +123,11 @@ display(Markdown(f"# {title_label}"))
 This report benchmarks a synthetic metagenomic run where reads are simulated from a
 panel of known genomes at controlled abundances, then profiled. Because the ground
 truth is known per read, it quantifies both **mis-mapping between genomes** and the
-**accuracy of detected abundances**, summarised across every subsampling depth.
+**accuracy of detected abundances**, summarised across every assay and subsampling depth.
 
-Two independent detection sources are compared where available:
+When a run contains several **assays** (e.g. multiple amplicon primer sets and/or a WGS
+arm), each is reported in its own tab so the same panel can be compared across them. Up
+to three detection sources are compared where available:
 
 - **Profiler assignments** — the profiler's own per-read calls (mapseq for amplicon
   runs). Measures what the profiler itself gets right or wrong.
@@ -108,6 +135,8 @@ Two independent detection sources are compared where available:
   read is mapped to its origin reference this is diagonal by construction; it becomes
   an informative mis-mapping signal for competitive mapping (e.g. WGS against a
   multi-genome reference).
+- **Sylph profile** — sylph's per-genome abundance estimates (WGS). Abundance-only, so
+  it appears in the abundance and summary sections but not the confusion matrices.
 
 ```{python}
 #| echo: false
@@ -116,22 +145,24 @@ pair_txt = " vs ".join(SWEEP_PAIR) if SWEEP_PAIR else "none"
 display(Markdown(
     f"**Panel:** {META.get('n_genomes', ABUNDANCE['genome_id'].nunique())} genomes &nbsp;·&nbsp; "
     f"**Sweep points:** {n_samples} &nbsp;·&nbsp; "
+    f"**Assays:** {', '.join(ASSAYS)} &nbsp;·&nbsp; "
     f"**Depths:** {', '.join(DEPTHS)} &nbsp;·&nbsp; "
     f"**Swept pair:** {pair_txt} &nbsp;·&nbsp; "
-    f"**Detection sources:** {', '.join(SOURCE_LABEL.get(s, s) for s in SOURCES)}"
+    f"**Detection sources:** {', '.join(SOURCE_LABEL.get(s, s) for s in META.get('sources', []))}"
 ))
 ```
 
 ## Mis-mapping between genomes
 
-Aggregated across all sweep points at the **{python} DEFAULT_DEPTH** depth. The matrix
-is row-normalised: each row is a true origin genome, each column the genome its reads
-were assigned to, so off-diagonal mass is mis-mapping.
+Aggregated across all sweep points at the **{python} DEFAULT_DEPTH** depth, one tab per
+assay. Each matrix is row-normalised: rows are true origin genomes, columns the genome
+their reads were assigned to, so off-diagonal mass is mis-mapping.
 
 ```{python}
 #| echo: false
-def confusion_matrix(source, depth):
-    sub = MISMAP[(MISMAP["source"] == source) & (MISMAP["depth"] == depth)]
+def confusion_matrix(source, depth, assay):
+    sub = MISMAP[(MISMAP["source"] == source) & (MISMAP["depth"] == depth)
+                 & (MISMAP["assay"] == assay)]
     if sub.empty:
         return None
     counts = sub.groupby(["truth_genome", "assigned_genome"])["reads"].sum().reset_index()
@@ -142,8 +173,8 @@ def confusion_matrix(source, depth):
     return mat, row_frac, genomes
 
 
-def confusion_heatmap(source, depth):
-    res = confusion_matrix(source, depth)
+def confusion_heatmap(source, depth, assay):
+    res = confusion_matrix(source, depth, assay)
     if res is None:
         return None
     mat, row_frac, genomes = res
@@ -164,8 +195,8 @@ def confusion_heatmap(source, depth):
     return fig
 
 
-def per_genome_mismap_bar(source, depth):
-    res = confusion_matrix(source, depth)
+def per_genome_mismap_bar(source, depth, assay):
+    res = confusion_matrix(source, depth, assay)
     if res is None:
         return None
     mat, row_frac, genomes = res
@@ -191,16 +222,23 @@ def per_genome_mismap_bar(source, depth):
 ```{python}
 #| echo: false
 #| output: asis
-for source in SOURCES:
-    print(f"### {SOURCE_LABEL.get(source, source)}\n")
-    hm = confusion_heatmap(source, DEFAULT_DEPTH)
-    bar = per_genome_mismap_bar(source, DEFAULT_DEPTH)
-    if hm is None:
-        display(Markdown(f"_No {source} data at the {DEFAULT_DEPTH} depth._\n"))
+for assay in ASSAYS:
+    print(f"### {assay}\n")
+    sources = mismap_sources(assay)
+    if not sources:
+        display(Markdown(f"_No per-read assignment (confusion) data for {assay}._\n"))
+        print("\n")
         continue
-    display(hm)
-    display(Markdown("\n**Per-genome mis-mapping rate** (1 − correctly-assigned fraction):\n"))
-    display(bar)
+    for source in sources:
+        if len(sources) > 1:
+            display(Markdown(f"**{SOURCE_LABEL.get(source, source)}**\n"))
+        hm = confusion_heatmap(source, DEFAULT_DEPTH, assay)
+        if hm is None:
+            display(Markdown(f"_No {source} data at the {DEFAULT_DEPTH} depth._\n"))
+            continue
+        display(hm)
+        display(Markdown("\n**Per-genome mis-mapping rate** (1 − correctly-assigned fraction):\n"))
+        display(per_genome_mismap_bar(source, DEFAULT_DEPTH, assay))
     print("\n")
 ```
 
@@ -209,13 +247,14 @@ for source in SOURCES:
 ## Ground-truth vs detected abundance
 
 Detected relative abundance against the realized ground truth for every genome, at the
-**{python} DEFAULT_DEPTH** depth (log–log; the dashed line is perfect agreement). Points
-far below the diagonal are under-detected, above are over-detected.
+**{python} DEFAULT_DEPTH** depth (log–log; the dashed line is perfect agreement), one tab
+per assay. Points far below the diagonal are under-detected, above are over-detected.
 
 ```{python}
 #| echo: false
-def truth_vs_detected(source_col, depth):
-    sub = ABUNDANCE[(ABUNDANCE["depth"] == depth) & ABUNDANCE[source_col].notna()].copy()
+def truth_vs_detected(source_col, depth, assay):
+    sub = ABUNDANCE[(ABUNDANCE["depth"] == depth) & (ABUNDANCE["assay"] == assay)
+                    & ABUNDANCE[source_col].notna()].copy()
     if sub.empty:
         return None
     sub["detected"] = sub[source_col].clip(lower=1e-6)
@@ -253,29 +292,25 @@ def truth_vs_detected(source_col, depth):
 ```{python}
 #| echo: false
 #| output: asis
-_col = {"profiler": "detected_profiler_rel_abundance", "reference": "detected_reference_rel_abundance"}
-for source in SOURCES:
-    print(f"### {SOURCE_LABEL.get(source, source)}\n")
-    fig = truth_vs_detected(_col[source], DEFAULT_DEPTH)
-    if fig is None:
-        display(Markdown(f"_No {source} detection at the {DEFAULT_DEPTH} depth._\n"))
-    else:
-        display(fig)
+for assay in ASSAYS:
+    print(f"### {assay}\n")
+    sources = abund_sources(assay)
+    if not sources:
+        display(Markdown(f"_No detected abundance for {assay} at the {DEFAULT_DEPTH} depth._\n"))
+        print("\n")
+        continue
+    for source in sources:
+        if len(sources) > 1:
+            display(Markdown(f"**{SOURCE_LABEL.get(source, source)}**\n"))
+        fig = truth_vs_detected(ABUND_COL[source], DEFAULT_DEPTH, assay)
+        if fig is None:
+            display(Markdown(f"_No {source} detection at the {DEFAULT_DEPTH} depth._\n"))
+        else:
+            display(fig)
     print("\n")
 ```
 
 :::
-
-```{python}
-#| echo: false
-#| output: asis
-if not SWEEP_PAIR:
-    display(Markdown(
-        "## Swept pair\n\n_No swept pair detected — every genome holds a constant target "
-        "abundance across samples, so the abundance-sweep section is omitted. "
-        "This section populates automatically for runs that sweep a pair's abundance ratio._"
-    ))
-```
 
 ```{python}
 #| echo: false
@@ -286,24 +321,42 @@ HAS_SWEEP = bool(SWEEP_PAIR) and ABUNDANCE["sweep_x"].notna().any()
 ```{python}
 #| echo: false
 #| output: asis
-# The swept-pair section only renders when a pair with a varying x-axis exists.
-if HAS_SWEEP:
+if not HAS_SWEEP:
     display(Markdown(
-        "## Swept pair\n\n"
-        f"Ground-truth and detected abundance of the two swept genomes "
-        f"(**{SWEEP_PAIR[0]}** and **{SWEEP_PAIR[1]}**) across the abundance sweep, at "
-        f"the {DEFAULT_DEPTH} depth. Lines are the realized ground truth; markers are "
-        "detected. Where the two genomes are near-identical, detected abundance tracks "
-        "their *combined* signal rather than the true split."
+        "## Swept pair\n\n_No swept pair detected — every genome holds a constant target "
+        "abundance across samples, so the abundance-sweep section is omitted. "
+        "This section populates automatically for runs that sweep a pair's abundance ratio._"
     ))
 ```
 
 ```{python}
 #| echo: false
+#| output: asis
+# The swept-pair section only renders when a pair with a varying x-axis exists.
 if HAS_SWEEP:
-    det_col = "detected_profiler_rel_abundance" if "profiler" in SOURCES else "detected_reference_rel_abundance"
-    pair = ABUNDANCE[(ABUNDANCE["depth"] == DEFAULT_DEPTH)
+    display(Markdown(
+        "## Swept pair\n\n"
+        f"Ground-truth and detected abundance of the two swept genomes "
+        f"(**{SWEEP_PAIR[0]}** and **{SWEEP_PAIR[1]}**) across the abundance sweep, "
+        f"one tab per assay and a sub-tab per subsampling depth. Lines are the realized ground "
+        "truth; markers are detected. Where the two genomes are near-identical, detected "
+        "abundance tracks their *combined* signal rather than the true split."
+    ))
+```
+
+```{python}
+#| echo: false
+_SRC_SYMBOL = {"profiler": "circle-open", "reference": "x", "sylph": "diamond-open"}
+
+
+def swept_pair_abundance(assay, depth):
+    srcs = abund_sources(assay)  # every detection source with abundance for this assay
+    if not srcs:
+        return None
+    pair = ABUNDANCE[(ABUNDANCE["depth"] == depth) & (ABUNDANCE["assay"] == assay)
                      & ABUNDANCE["genome_id"].isin(SWEEP_PAIR)].sort_values("sweep_x")
+    if pair.empty:
+        return None
     fig = go.Figure()
     for i, g in enumerate(SWEEP_PAIR):
         gp = pair[pair["genome_id"] == g]
@@ -312,35 +365,33 @@ if HAS_SWEEP:
             x=gp["sweep_x"], y=gp["realized_rel_abundance"], mode="lines",
             name=f"{g} (truth)", line=dict(color=color, width=2),
             hovertemplate=f"{g}<br>x=%{{x:.3f}}<br>truth=%{{y:.4f}}<extra></extra>"))
-        fig.add_trace(go.Scatter(
-            x=gp["sweep_x"], y=gp[det_col], mode="markers",
-            name=f"{g} (detected)", marker=dict(color=color, size=9, symbol="circle-open"),
-            hovertemplate=f"{g}<br>x=%{{x:.3f}}<br>detected=%{{y:.4f}}<extra></extra>"))
+        for source in srcs:  # sylph is abundance-only, so it shows up here (not in cross-mapping)
+            fig.add_trace(go.Scatter(
+                x=gp["sweep_x"], y=gp[ABUND_COL[source]], mode="markers",
+                name=f"{g} (detected, {source})",
+                marker=dict(color=color, size=9, symbol=_SRC_SYMBOL.get(source, "circle-open")),
+                hovertemplate=(f"{g} · {source}<br>x=%{{x:.3f}}<br>"
+                               "detected=%{y:.4f}<extra></extra>")))
     fig.update_layout(
         template="simple_white", height=460, width=760,
         xaxis=dict(title="sweep x (major-genome fraction)"),
         yaxis=dict(title="relative abundance"),
         legend=dict(orientation="h", y=1.12), margin=dict(l=10, r=10, t=10, b=10))
-    display(fig)
-```
+    return fig
 
-```{python}
-#| echo: false
-#| output: asis
-if HAS_SWEEP and "profiler" in SOURCES:
-    display(Markdown(
-        "\n**Cross-mapping between the pair across the sweep** — the fraction of each "
-        "swept genome's reads the profiler assigns to its partner. High values mean the "
-        "two are hard to tell apart.\n"))
-```
 
-```{python}
-#| echo: false
-if HAS_SWEEP and "profiler" in SOURCES:
-    xmap = MISMAP[(MISMAP["source"] == "profiler") & (MISMAP["depth"] == DEFAULT_DEPTH)
+def swept_pair_crossmap(assay, depth):
+    srcs = mismap_sources(assay)
+    if not srcs:
+        return None
+    source = srcs[0]  # prefer profiler, then reference
+    xmap = MISMAP[(MISMAP["source"] == source) & (MISMAP["depth"] == depth)
+                  & (MISMAP["assay"] == assay)
                   & (MISMAP["truth_genome"].isin(SWEEP_PAIR))
                   & (MISMAP["assigned_genome"].isin(SWEEP_PAIR))
                   & (MISMAP["truth_genome"] != MISMAP["assigned_genome"])].copy()
+    if xmap.empty:
+        return None, source
     sx = ABUNDANCE.drop_duplicates("sample").set_index("sample")["sweep_x"]
     xmap["sweep_x"] = xmap["sample"].map(sx)
     xmap = xmap.sort_values("sweep_x")
@@ -358,16 +409,51 @@ if HAS_SWEEP and "profiler" in SOURCES:
         xaxis=dict(title="sweep x (major-genome fraction)"),
         yaxis=dict(title="fraction mis-assigned to partner", tickformat=".0%"),
         legend=dict(orientation="h", y=1.12), margin=dict(l=10, r=10, t=10, b=10))
-    display(fig)
+    return fig, source
 ```
+
+::: {.panel-tabset}
+
+```{python}
+#| echo: false
+#| output: asis
+if HAS_SWEEP:
+    for assay in ASSAYS:
+        print(f"### {assay}\n")
+        print("::: {.panel-tabset}\n")
+        for depth in DEPTHS:  # one sub-tab per subsampling depth
+            print(f"#### {depth}\n")
+            fig = swept_pair_abundance(assay, depth)
+            if fig is None:
+                display(Markdown(
+                    f"_No detected abundance for the swept pair in {assay} at the {depth} depth._\n"))
+                print("\n")
+                continue
+            display(fig)
+            cross = swept_pair_crossmap(assay, depth)
+            if cross is not None:
+                cfig, csource = cross
+                if cfig is not None:
+                    display(Markdown(
+                        f"\n**Cross-mapping between the pair across the sweep** "
+                        f"({SOURCE_LABEL.get(csource, csource)}) — the fraction of each swept "
+                        "genome's reads assigned to its partner. High values mean the two are "
+                        "hard to tell apart.\n"))
+                    display(cfig)
+            print("\n")
+        print(":::\n")
+```
+
+:::
 
 ## Performance across subsampling
 
-How abundance accuracy and mis-mapping hold up as sequencing depth changes. `pearson_r`
-and `l1_error_per_sample` measure detected-vs-realized abundance agreement;
-`mismapping_rate` is the overall off-diagonal read fraction; `pair_mismapping_rate` is
-the fraction of the swept pair's reads assigned to their partner sub-species (blank when
-there is no swept pair).
+How abundance accuracy and mis-mapping hold up as sequencing depth changes, per assay and
+source. `pearson_r` and `l1_error_per_sample` measure detected-vs-realized abundance
+agreement; `mismapping_rate` is the overall off-diagonal read fraction (blank for
+abundance-only sources like sylph); `pair_mismapping_rate` is the fraction of the swept
+pair's reads assigned to their partner sub-species (blank when there is no swept pair or
+no confusion matrix).
 
 ```{python}
 #| echo: false
@@ -375,14 +461,16 @@ _has_pair_mm = "pair_mismapping_rate" in SUMMARY.columns and SUMMARY["pair_misma
 if not SUMMARY.empty:
     disp = SUMMARY.copy()
     disp["source"] = disp["source"].map(lambda s: SOURCE_LABEL.get(s, s))
-    rename = {"depth": "Depth", "source": "Source", "l1_error_per_sample": "L1 error",
-              "pearson_r": "Pearson r", "mismapping_rate": "Mis-mapping",
-              "pair_mismapping_rate": "Pair mis-mapping", "n_reads": "Reads"}
+    rename = {"assay": "Assay", "depth": "Depth", "source": "Source",
+              "l1_error_per_sample": "L1 error", "pearson_r": "Pearson r",
+              "mismapping_rate": "Mis-mapping", "pair_mismapping_rate": "Pair mis-mapping",
+              "n_reads": "Reads"}
     if not _has_pair_mm:
         disp = disp.drop(columns=["pair_mismapping_rate"], errors="ignore")
     disp = disp.rename(columns=rename)
     disp["Depth"] = pd.Categorical(disp["Depth"], categories=DEPTHS, ordered=True)
-    disp = disp.sort_values(["Source", "Depth"])
+    disp["Assay"] = pd.Categorical(disp["Assay"], categories=ASSAYS, ordered=True)
+    disp = disp.sort_values(["Assay", "Source", "Depth"])
     fmt = {"L1 error": "{:.4f}", "Pearson r": "{:.3f}", "Mis-mapping": "{:.2%}",
            "Reads": "{:,.0f}"}
     if _has_pair_mm:
@@ -399,26 +487,30 @@ if not SUMMARY.empty:
     if _has_pair_mm:
         metrics.append(("pair_mismapping_rate", "Pair mis-mapping rate", ".2%"))
     order = {d: i for i, d in enumerate(DEPTHS)}
+    series = (SUMMARY[["assay", "source"]].drop_duplicates()
+              .sort_values(["assay", "source"]).itertuples(index=False))
+    series = list(series)
     fig = go.Figure()
-    for source in SUMMARY["source"].unique():
-        s = SUMMARY[SUMMARY["source"] == source].copy()
+    for assay, source in series:
+        s = SUMMARY[(SUMMARY["assay"] == assay) & (SUMMARY["source"] == source)].copy()
         s = s.sort_values("depth", key=lambda c: c.map(order))
-        for metric, label, _fmt in metrics:
+        label = f"{assay} · {SOURCE_LABEL.get(source, source)}"
+        for metric, mlabel, _fmt in metrics:
             fig.add_trace(go.Scatter(
                 x=s["depth"], y=s[metric], mode="lines+markers",
-                name=f"{SOURCE_LABEL.get(source, source)} · {label}",
+                name=f"{label} · {mlabel}",
                 visible=(metric == "pearson_r"),
-                hovertemplate=f"%{{x}}<br>{label}=%{{y:.4f}}<extra></extra>"))
-    n_src = SUMMARY["source"].nunique()
+                hovertemplate=f"{label}<br>%{{x}}<br>{mlabel}=%{{y:.4f}}<extra></extra>"))
+    n_series = len(series)
     buttons = []
-    for mi, (metric, label, _fmt) in enumerate(metrics):
-        vis = [False] * (n_src * len(metrics))
-        for si in range(n_src):
+    for mi, (metric, mlabel, _fmt) in enumerate(metrics):
+        vis = [False] * (n_series * len(metrics))
+        for si in range(n_series):
             vis[si * len(metrics) + mi] = True
-        buttons.append(dict(label=label, method="update",
-                            args=[{"visible": vis}, {"yaxis": {"title": label}}]))
+        buttons.append(dict(label=mlabel, method="update",
+                            args=[{"visible": vis}, {"yaxis": {"title": mlabel}}]))
     fig.update_layout(
-        template="simple_white", height=440, width=760,
+        template="simple_white", height=460, width=820,
         xaxis=dict(title="depth", categoryorder="array", categoryarray=DEPTHS),
         yaxis=dict(title="Pearson r"),
         updatemenus=[dict(buttons=buttons, direction="down", x=1.0, xanchor="right",

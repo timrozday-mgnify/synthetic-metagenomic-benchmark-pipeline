@@ -40,9 +40,41 @@ import pandas as pd
 TRUTH_GLOB = "*.truth.tsv"
 MSEQ_GLOB_DEFAULT = "profiling/aap/*/taxonomy-summary/*/*.mseq.gz"
 BAM_GLOB = "*.sorted.bam"
+SYLPH_GLOB = "*.sylph_profile.tsv"
 
 # `S10_a0.42` -> the swept fraction encoded in the sample-dir suffix.
 SWEEP_X_RE = re.compile(r"_a([0-9]*\.?[0-9]+)$")
+
+# A pipeline sample dir is `<sweep_point>.<assay>`, e.g.
+# `S10_a0.42.amplicon_515YF-806BR_16s.515-YF-806BR` or `S10_a0.42.wgs`. The sweep
+# point (`S10_a0.42`) is shared across assays; the assay suffix must start with a
+# letter so the sweep fraction's own decimals aren't mistaken for it.
+SAMPLE_ASSAY_RE = re.compile(r"^(?P<sample>.*_a[0-9]*\.?[0-9]+)\.(?P<assay>[A-Za-z].*)$")
+
+# Abundance is compared for up to three independent detection sources.
+SOURCE_ORDER = ["profiler", "reference", "sylph"]
+ABUND_COL = {
+    "profiler": "detected_profiler_rel_abundance",
+    "reference": "detected_reference_rel_abundance",
+    "sylph": "detected_sylph_rel_abundance",
+}
+
+
+def assay_label(raw: str) -> str:
+    """Assay dir suffix -> short label. `wgs` -> `WGS`; amplicon suffixes end in the
+    primer token (e.g. `...16s.515-YF-806BR` -> `515-YF-806BR`)."""
+    if raw == "wgs":
+        return "WGS"
+    return raw.rsplit(".", 1)[-1]
+
+
+def split_sample_assay(dirname: str) -> tuple[str, str]:
+    """Sample dir name -> (sweep_point, assay_label). Runs without an assay suffix
+    (older single-assay layout) fall back to one `reads` assay."""
+    m = SAMPLE_ASSAY_RE.match(dirname)
+    if m:
+        return m.group("sample"), assay_label(m.group("assay"))
+    return dirname, "reads"
 
 
 def truth_genome_from_query(query: str) -> str:
@@ -112,22 +144,52 @@ def parse_bam(path: Path) -> tuple[Counter, Counter]:
     return detected, confusion
 
 
+def load_accession_map(samplesheet: Path | None) -> dict[str, str]:
+    """Pipeline samplesheet `id`/`genome` pairs -> {ref_accession: genome_id}. The
+    accession is the genome fasta basename sans extension — exactly what sylph reports
+    in its `genome_id` column — so it maps sylph rows back to community genome ids."""
+    if not samplesheet or not samplesheet.exists():
+        return {}
+    acc2genome: dict[str, str] = {}
+    last_id = None
+    for line in samplesheet.read_text().splitlines():
+        s = line.strip()
+        m = re.match(r"-?\s*id:\s*(\S+)", s)
+        if m:
+            last_id = m.group(1)
+            continue
+        m = re.match(r"genome:\s*(\S+)", s)
+        if m and last_id:
+            acc2genome[Path(m.group(1)).stem] = last_id
+    return acc2genome
+
+
+def parse_sylph(path: Path, acc2genome: dict[str, str]) -> Counter:
+    """A sylph profile TSV -> per-genome detected abundance (sequence abundance),
+    accessions folded to community genome ids. Abundance-only: sylph gives no per-read
+    assignments, so there is no confusion matrix."""
+    df = pd.read_csv(path, sep="\t")
+    counts: Counter = Counter()
+    for acc, ab in zip(df["genome_id"].astype(str), df["predicted_rel_abundance"].astype(float)):
+        counts[acc2genome.get(acc, acc)] += ab
+    return counts
+
+
 def find_cells(pipeline_root: Path) -> list[dict]:
-    """Discover (sample, depth) cells: each sample dir + its subsample_<N> subdirs."""
+    """Discover (sample, assay, depth) cells: each sample dir + its subsample_<N> subdirs.
+    The dir name splits into a sweep point (shared across assays) and an assay label."""
     cells = []
     for sample_dir in sorted(p for p in pipeline_root.iterdir() if p.is_dir()):
         if not list(sample_dir.glob(TRUTH_GLOB)):
             continue  # skip databases/, error_models/, pipeline_info/ etc.
-        sample = sample_dir.name
+        sample, assay = split_sample_assay(sample_dir.name)
         m = SWEEP_X_RE.search(sample)
         sweep_x = float(m.group(1)) if m else None
-        cells.append({"sample": sample, "depth": "full", "dir": sample_dir, "sweep_x": sweep_x})
+        base = {"sample": sample, "assay": assay, "sweep_x": sweep_x}
+        cells.append({**base, "depth": "full", "dir": sample_dir})
         for sub in sorted(sample_dir.glob("subsample_*")):
             if sub.is_dir() and list(sub.glob(TRUTH_GLOB)):
-                cells.append(
-                    {"sample": sample, "depth": sub.name.replace("subsample_", "sub"),
-                     "dir": sub, "sweep_x": sweep_x}
-                )
+                cells.append({**base, "depth": sub.name.replace("subsample_", "sub"), "dir": sub})
     return cells
 
 
@@ -137,31 +199,39 @@ def rel(counts: Counter) -> dict[str, float]:
 
 
 def detect_sweep_pair(abundance: pd.DataFrame, override: str | None) -> list[str]:
-    """Genome_ids whose target abundance varies across samples (the swept pair)."""
+    """Genome_ids whose target abundance varies across sweep points (the swept pair).
+    Variation is checked *within* each assay, then unioned: different assays can
+    normalise target abundance differently (e.g. amplicon vs WGS truth tables), so
+    pooling assays would make every genome look like it varies."""
     if override:
         return [g.strip() for g in override.split(",") if g.strip()]
-    full = abundance[abundance["depth"] == "full"]
-    varying = [
-        g for g, sub in full.groupby("genome_id")
+    full = abundance[abundance["depth"] == "full"].copy()
+    if "assay" not in full.columns:
+        full["assay"] = "reads"
+    varying = {
+        g for (_assay, g), sub in full.groupby(["assay", "genome_id"])
         if sub["target_rel_abundance"].dropna().nunique() > 1
-    ]
+    }
     return sorted(varying)
 
 
 def build_tables(run_dir: Path, pipeline_dir: str, mseq_glob: str,
-                 sweep_pair_override: str | None, run_label: str) -> dict:
+                 sweep_pair_override: str | None, run_label: str,
+                 acc2genome: dict[str, str] | None = None) -> dict:
     pipeline_root = run_dir / pipeline_dir
     if not pipeline_root.is_dir():
         raise ValueError(f"pipeline dir not found: {pipeline_root} (set --pipeline-dir)")
     cells = find_cells(pipeline_root)
     if not cells:
         raise ValueError(f"no cells with a {TRUTH_GLOB} found under {pipeline_root}")
+    acc2genome = acc2genome or {}
 
     abundance_rows: list[dict] = []
     mismap_rows: list[dict] = []
 
     for cell in cells:
-        cdir, sample, depth, sweep_x = cell["dir"], cell["sample"], cell["depth"], cell["sweep_x"]
+        cdir, sample, assay = cell["dir"], cell["sample"], cell["assay"]
+        depth, sweep_x = cell["depth"], cell["sweep_x"]
         truth = read_truth(next(iter(cdir.glob(TRUTH_GLOB))))
 
         prof_detected, prof_conf = Counter(), Counter()
@@ -174,12 +244,16 @@ def build_tables(run_dir: Path, pipeline_dir: str, mseq_glob: str,
             d, c = parse_bam(bam)
             ref_detected += d
             ref_conf += c
+        syl_detected: Counter = Counter()
+        for syl in cdir.glob(SYLPH_GLOB):
+            syl_detected += parse_sylph(syl, acc2genome)
 
-        prof_rel, ref_rel = rel(prof_detected), rel(ref_detected)
-        genomes = set(truth["genome_id"]) | set(prof_rel) | set(ref_rel)
+        prof_rel, ref_rel, syl_rel = rel(prof_detected), rel(ref_detected), rel(syl_detected)
+        genomes = set(truth["genome_id"]) | set(prof_rel) | set(ref_rel) | set(syl_rel)
         tmap = truth.set_index("genome_id")
         for g in sorted(genomes):
-            row = {"sample": sample, "depth": depth, "sweep_x": sweep_x, "genome_id": g}
+            row = {"sample": sample, "assay": assay, "depth": depth, "sweep_x": sweep_x,
+                   "genome_id": g}
             if g in tmap.index:
                 row["target_rel_abundance"] = float(tmap.at[g, "target_rel_abundance"])
                 row["realized_rel_abundance"] = float(tmap.at[g, "realized_rel_abundance"])
@@ -188,6 +262,7 @@ def build_tables(run_dir: Path, pipeline_dir: str, mseq_glob: str,
                 row["realized_rel_abundance"] = 0.0
             row["detected_profiler_rel_abundance"] = prof_rel.get(g) if prof_detected else None
             row["detected_reference_rel_abundance"] = ref_rel.get(g) if ref_detected else None
+            row["detected_sylph_rel_abundance"] = syl_rel.get(g) if syl_detected else None
             abundance_rows.append(row)
 
         for source, conf in (("profiler", prof_conf), ("reference", ref_conf)):
@@ -196,7 +271,7 @@ def build_tables(run_dir: Path, pipeline_dir: str, mseq_glob: str,
                 per_truth[t] += n
             for (t, a), n in conf.items():
                 mismap_rows.append({
-                    "sample": sample, "depth": depth, "source": source,
+                    "sample": sample, "assay": assay, "depth": depth, "source": source,
                     "truth_genome": t, "assigned_genome": a, "reads": n,
                     "frac_of_truth": n / per_truth[t] if per_truth[t] else 0.0,
                 })
@@ -207,18 +282,23 @@ def build_tables(run_dir: Path, pipeline_dir: str, mseq_glob: str,
     abundance["is_sweep_pair"] = abundance["genome_id"].isin(sweep_pair)
 
     summary = build_summary(abundance, mismapping, sweep_pair)
+    sources = [s for s in SOURCE_ORDER
+               if abundance[ABUND_COL[s]].notna().any()
+               or (not mismapping.empty and s in set(mismapping["source"]))]
+    assays = sorted(abundance["assay"].unique().tolist())
     meta = {
         "run_label": run_label,
         "run_dir": str(run_dir),
         "pipeline_dir": pipeline_dir,
         "sweep_pair": sweep_pair,
+        "assays": assays,
         "depths": sorted(abundance["depth"].unique().tolist()),
         "samples": sorted(abundance["sample"].unique().tolist()),
         "sample_sweep_x": (
             abundance.dropna(subset=["sweep_x"]).drop_duplicates("sample")
             .set_index("sample")["sweep_x"].to_dict()
         ),
-        "sources": sorted(mismapping["source"].unique().tolist()) if not mismapping.empty else [],
+        "sources": sources,
         "n_genomes": int(abundance["genome_id"].nunique()),
     }
     return {"abundance": abundance, "mismapping": mismapping, "summary": summary, "meta": meta}
@@ -226,36 +306,42 @@ def build_tables(run_dir: Path, pipeline_dir: str, mseq_glob: str,
 
 def build_summary(abundance: pd.DataFrame, mismapping: pd.DataFrame,
                   sweep_pair: list[str]) -> pd.DataFrame:
-    """Per (depth, source): abundance accuracy, overall mis-mapping rate, and the
-    within-pair mis-mapping rate (swept genomes assigned to their partner) across the sweep."""
+    """Per (assay, depth, source): abundance accuracy, overall mis-mapping rate, and the
+    within-pair mis-mapping rate (swept genomes assigned to their partner) across the sweep.
+    Sources without a confusion matrix (e.g. sylph) get abundance metrics only."""
     pair = set(sweep_pair)
     rows = []
-    for depth in sorted(abundance["depth"].unique()):
-        adep = abundance[abundance["depth"] == depth]
-        for source, col in (("profiler", "detected_profiler_rel_abundance"),
-                            ("reference", "detected_reference_rel_abundance")):
-            pts = adep.dropna(subset=[col])
-            if pts.empty:
-                continue
-            detected = pts[col].to_numpy(dtype=float)
-            realized = pts["realized_rel_abundance"].to_numpy(dtype=float)
-            l1 = 0.5 * abs(detected - realized).sum() / max(pts["sample"].nunique(), 1)
-            pearson = pts[[col, "realized_rel_abundance"]].corr().iloc[0, 1]
-            mm = mismapping[(mismapping["depth"] == depth) & (mismapping["source"] == source)]
-            total = mm["reads"].sum()
-            offdiag = mm[mm["truth_genome"] != mm["assigned_genome"]]["reads"].sum()
-            # Within-pair mis-mapping: swept-pair reads assigned to the *other* pair member.
-            pair_reads = mm[mm["truth_genome"].isin(pair)]["reads"].sum() if pair else 0
-            pair_cross = mm[mm["truth_genome"].isin(pair) & mm["assigned_genome"].isin(pair)
-                            & (mm["truth_genome"] != mm["assigned_genome"])]["reads"].sum()
-            rows.append({
-                "depth": depth, "source": source,
-                "l1_error_per_sample": l1,
-                "pearson_r": pearson,
-                "mismapping_rate": (offdiag / total) if total else 0.0,
-                "pair_mismapping_rate": (pair_cross / pair_reads) if pair_reads else np.nan,
-                "n_reads": int(total),
-            })
+    for assay in sorted(abundance["assay"].unique()):
+        aass = abundance[abundance["assay"] == assay]
+        for depth in sorted(aass["depth"].unique()):
+            adep = aass[aass["depth"] == depth]
+            for source in SOURCE_ORDER:
+                col = ABUND_COL[source]
+                pts = adep.dropna(subset=[col])
+                if pts.empty:
+                    continue
+                detected = pts[col].to_numpy(dtype=float)
+                realized = pts["realized_rel_abundance"].to_numpy(dtype=float)
+                l1 = 0.5 * abs(detected - realized).sum() / max(pts["sample"].nunique(), 1)
+                pearson = pts[[col, "realized_rel_abundance"]].corr().iloc[0, 1]
+                mm = mismapping[(mismapping["assay"] == assay) & (mismapping["depth"] == depth)
+                                & (mismapping["source"] == source)] if not mismapping.empty \
+                    else mismapping
+                total = mm["reads"].sum() if "reads" in mm.columns else 0
+                offdiag = mm[mm["truth_genome"] != mm["assigned_genome"]]["reads"].sum()
+                # Within-pair mis-mapping: swept-pair reads assigned to the *other* member.
+                pair_reads = mm[mm["truth_genome"].isin(pair)]["reads"].sum() if pair and total else 0
+                pair_cross = mm[mm["truth_genome"].isin(pair) & mm["assigned_genome"].isin(pair)
+                                & (mm["truth_genome"] != mm["assigned_genome"])]["reads"].sum() \
+                    if total else 0
+                rows.append({
+                    "assay": assay, "depth": depth, "source": source,
+                    "l1_error_per_sample": l1,
+                    "pearson_r": pearson,
+                    "mismapping_rate": (offdiag / total) if total else np.nan,
+                    "pair_mismapping_rate": (pair_cross / pair_reads) if pair_reads else np.nan,
+                    "n_reads": int(total),
+                })
     return pd.DataFrame(rows)
 
 
@@ -270,8 +356,9 @@ def write_outputs(tables: dict, output_dir: Path) -> None:
 def print_summary(tables: dict) -> None:
     meta, summary = tables["meta"], tables["summary"]
     print(f"run: {meta['run_label'] or meta['run_dir']}")
-    print(f"cells: {len(meta['samples'])} samples x {len(meta['depths'])} depths "
-          f"({meta['depths']}), {meta['n_genomes']} genomes")
+    print(f"cells: {len(meta['samples'])} samples x {len(meta['assays'])} assays "
+          f"x {len(meta['depths'])} depths ({meta['depths']}), {meta['n_genomes']} genomes")
+    print(f"assays: {meta['assays']}")
     print(f"sweep pair: {meta['sweep_pair'] or 'none detected'}")
     print(f"detection sources: {meta['sources']}")
     if not summary.empty:
@@ -307,6 +394,25 @@ def run_demo() -> None:
     ])
     assert detect_sweep_pair(ab, None) == ["P"], detect_sweep_pair(ab, None)
     assert detect_sweep_pair(ab, "Q,R") == ["Q", "R"]
+
+    # Sample-dir -> (sweep point, assay) split, and the older no-suffix layout.
+    assert split_sample_assay("S10_a0.42.amplicon_515YF-806BR_16s.515-YF-806BR") == \
+        ("S10_a0.42", "515-YF-806BR"), split_sample_assay("S10_a0.42.amplicon_515YF-806BR_16s.515-YF-806BR")
+    assert split_sample_assay("S10_a0.42.wgs") == ("S10_a0.42", "WGS")
+    assert split_sample_assay("S10_a0.42") == ("S10_a0.42", "reads")
+
+    # sylph accession -> genome_id via a samplesheet, incl. a `.fa` (not `.fasta`) genome.
+    import tempfile
+    ss = Path(tempfile.mkdtemp()) / "samplesheet.yaml"
+    ss.write_text(
+        "    - id: bacteroides_uniformis\n"
+        "      genome: /refs/genomes/FNPN01.fasta\n"
+        "    - id: bacteroides_uniformis_strain2\n"
+        "      genome: /refs/genomes/BU_JCM13286_NT5170.1.fa\n"
+    )
+    amap = load_accession_map(ss)
+    assert amap == {"FNPN01": "bacteroides_uniformis",
+                    "BU_JCM13286_NT5170.1": "bacteroides_uniformis_strain2"}, amap
     print("demo: OK")
 
 
@@ -319,6 +425,9 @@ def main() -> None:
                     help="Per-cell glob for gzipped mapseq files.")
     ap.add_argument("--sweep-pair", default=None,
                     help="Override auto-detected swept pair, e.g. 'id1,id2'.")
+    ap.add_argument("--samplesheet", type=Path, default=None,
+                    help="Pipeline samplesheet.yaml for sylph accession->genome_id mapping "
+                         "(default: <run-dir>/samplesheet.yaml if present).")
     ap.add_argument("--run-label", default="", help="Human-readable run label for meta.json.")
     ap.add_argument("--output-dir", type=Path, help="Where to write the CSVs (default: --run-dir).")
     ap.add_argument("--demo", action="store_true", help="Run self-check and exit.")
@@ -330,8 +439,10 @@ def main() -> None:
     if not args.run_dir:
         ap.error("--run-dir is required (or use --demo)")
 
+    samplesheet = args.samplesheet or (args.run_dir / "samplesheet.yaml")
+    acc2genome = load_accession_map(samplesheet)
     tables = build_tables(args.run_dir, args.pipeline_dir, args.mseq_glob,
-                          args.sweep_pair, args.run_label)
+                          args.sweep_pair, args.run_label, acc2genome)
     write_outputs(tables, args.output_dir or args.run_dir)
     print_summary(tables)
 
