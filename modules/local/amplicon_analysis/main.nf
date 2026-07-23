@@ -11,6 +11,8 @@
 // Runs on the host (executor 'local', no container) so it reuses the host
 // nextflow + container engine — AAP manages its own containers/DBs internally.
 // mapseq_databases and other AAP params come from the optional -c config.
+// An optional custom PIMENTO primer library (params.aap_std_primer_library) is forwarded
+// as --std_primer_library so PIMENTO matches against known primers instead of its bundled set.
 process RUN_AAP {
     tag "${metas[0].database ?: 'community'} (${metas.size()})"
     label 'process_single'
@@ -47,6 +49,9 @@ process RUN_AAP {
     // files override earlier and the engine config wins. -profile only when requested.
     def extra_cfg  = (meta.aap_configs ?: []).collect { "-c ${file(it, checkIfExists: true)}" }.join(' ')
     def prof_arg   = meta.aap_profile ? "-profile ${meta.aap_profile}" : ''
+    // Optional custom PIMENTO primer library. Global param, absolute host path (executor local,
+    // nested run reads it directly). null => aap falls back to PIMENTO's bundled library.
+    def primer_lib_arg = params.aap_std_primer_library ? "--std_primer_library ${file(params.aap_std_primer_library, type: 'dir', checkIfExists: true)}" : ''
     // One CSV row per sample: [id, single_end, fastq_1, fastq_2] (absolute read paths).
     // Emit one printf per row (leading indentation is harmless for commands, unlike a
     // heredoc body) so the samplesheet has no stray whitespace.
@@ -68,6 +73,7 @@ process RUN_AAP {
         ${prof_arg} \\
         --input aap_samplesheet.csv \\
         --outdir aap_out \\
+        ${primer_lib_arg} \\
         ${db_cfg} ${extra_cfg}
 
     # Report contract is *.mseq.gz; AAP emits uncompressed .mseq. Idempotent (no-op if gz).

@@ -65,6 +65,9 @@ Images above are `ghcr.io/timrozday-mgnify/<image>:${params.<image>_tag}`. Third
 tools use pinned biocontainers via the singularity/docker ternary: `SYLPH_BUILD_DB`
 (sylph 0.9.0) and `MAPSEQ_CLUSTER` (mapseq 2.1.1b). `RUN_AAP` runs on the host
 (`executor local`) and launches the nested EBI amplicon-analysis-pipeline itself.
+Setting `params.aap_std_primer_library` (a directory) forwards it to the nested run as
+`--std_primer_library` so PIMENTO matches known primers instead of its bundled set;
+null => bundled set. It's global (not per-sample) and passed as an absolute host path.
 
 ## Key implementation notes
 

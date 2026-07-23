@@ -380,6 +380,35 @@ then majority-votes each cluster's taxonomy into the `.otu` table. The standalon
 docker and additionally runs `barrnap` to predict 16S for any genome missing a
 pre-extracted copy.
 
+### Custom PIMENTO primers
+
+By default AAP infers amplicon primers automatically with PIMENTO. To make PIMENTO
+match against a *known* primer set instead, point `--aap_std_primer_library` at a
+directory; it is forwarded verbatim to the nested AAP run as `--std_primer_library`.
+It's a single global param (applies to every AAP sample in the run) and defaults to
+`null` (PIMENTO's bundled library). The directory must follow PIMENTO's format:
+
+- One or more `<region>_primers.fasta` files (the `<region>` part is just a label).
+- Primer sequences written **5'→3' verbatim** (e.g. 806BR = `GGACTACNVGGGTWTCTAAT`);
+  IUPAC degenerate bases are fine.
+- Header hygiene: a **forward** record's header must contain an uppercase `F` and **no**
+  `R`; a **reverse** record's header must contain an uppercase `R` and **no** `F`. PIMENTO
+  keys strand off `F`/`R` in the header (and complements any record whose header contains
+  `R`), so a name carrying both — like the pair id `515-YF-806BR` — must **not** be used.
+  Use e.g. `>515F` / `>806R`.
+- PIMENTO matches with a fuzzy ≥0.60 read-proportion threshold, so the primers must
+  actually be present on the reads. The default `ampliconhunter_args` keeps primers on the
+  synthetic reads (no `--trim-primers`), so this holds for the standard benchmark path.
+
+Example `v4_primers.fasta`:
+
+```
+>515F
+GTGYCAGCMGCCGCGGTAA
+>806R
+GGACTACNVGGGTWTCTAAT
+```
+
 ## Outputs
 
 Published under `results/<sample>/`:
@@ -439,6 +468,7 @@ a run (including WGS/multi-region runs).
 | `--aap_profile` | `null` | Optional `-profile` for the nested AAP run; omitted when null (set the engine via `--aap_configs` instead). |
 | `--aap_config` | `null` | Single `-c` DB-passthrough config for the nested AAP run (MAPseq databases etc.). |
 | `--aap_configs` | `[]` | Ordered extra `-c` config files forwarded to the nested AAP run (engine/site config); comma-separated on the CLI. |
+| `--aap_std_primer_library` | `null` | Directory of custom PIMENTO primers, forwarded to the nested AAP run as `--std_primer_library`. When null, AAP uses PIMENTO's bundled library. See *Custom PIMENTO primers* below. |
 | `--error_model_candidates` | `AdditiveContext(5),AdditiveContext(7),AdditiveContext(9)` | Candidate skiver component strings; the min-AIC model is kept. |
 | `--error_model_components` | `null` | Force a single component string (skips the AIC search). |
 | `--smb_skiver_tag` / `--smb_genome_blender_tag` | `latest` | Container image tags. |
