@@ -1,0 +1,126 @@
+# Config for the negative-binomial abundance-sample benchmark. This one file is the
+# single source of truth for all the helper scripts (generate_samplesheet.py,
+# generate_profile_samplesheet.py, scripts/build_profiling_dbs.py) - no paths or
+# metadata are hard-coded in Python. Relative paths resolve against this file's dir.
+#
+# Edit the two train FASTQ paths and the panel's reference paths, then `./run.sh`.
+
+train:
+  id: sc2200627
+  # Real reads the sequencing-error model is trained from (once, shared by all samples).
+  fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina        # 2x300 MiSeq amplicon tails may fit 'lq-illumina' better
+
+reads:                         # shared read-generation defaults; a mode may override any
+  num_reads: 1000000           # 500k pairs x 2 (pipeline counts paired reads as pairs*2)
+  subsample: [none, 100000, 500000]  # depths swept per sample (absolute read counts;
+                               #   `none` = full depth). Omit this line for full depth only.
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+
+# Abundance sampling. Each panel genome is drawn INDEPENDENTLY per sample in two
+# steps, so every one of the n_samples samples is a different random community:
+#   1. Bernoulli(presence) decides whether the genome is present at all.
+#   2. if present, its abundance ~ NegBinom(mean, dispersion); if absent, it's 0.
+# Draws are seeded for reproducibility. NB is parameterized by mean + dispersion
+# (size r): variance = mean + mean^2/r.
+#   - small dispersion (r ~ 0.1-1) => overdispersed/patchy: some genomes dominate,
+#     many drawn to zero (present but low that sample).
+#   - large dispersion (r >> mean)  => Poisson-like: abundances cluster near the mean.
+# `presence` is the probability a genome shows up at all (1.0 = always present, the
+# default if omitted); lower it to make presence/absence itself vary across samples.
+# A genome may override `presence` and/or `nb: {mean?, dispersion?}` inline in `panel`
+# (e.g. always-present dominant taxon, or a rare one). A sample that ends up all-zero
+# is redrawn.
+sampling:
+  n_samples: 20
+  seed: 1
+  presence: 0.8                 # Bernoulli p that each genome is present in a sample
+  negative_binomial:
+    mean: 20
+    dispersion: 1.0
+
+# Read-generation modes. EVERY sample is emitted once per mode (2 modes below
+# => 2x the samplesheet rows, e.g. S01.wgs and S01.amplicon_16s), each with its own
+# genomes CSV (sharing the sample's drawn abundances) and read settings. Per mode:
+#   name     : suffix appended to each sample id + its genomes CSV
+#   source   : which panel FASTA feeds read generation - genome | ssu | amplicon
+#   mode     : pipeline read mode - shotgun (WGS) | amplicon | long
+#   primers  : REQUIRED when mode=amplicon and source is genome/ssu (in-silico PCR via
+#              AmpliconHunter; each pair published as its own benchmark <sample>.<pair>).
+#              Omit for source=amplicon (pre-trimmed FASTAs used directly) or shotgun.
+#              Inline list of {pair_id, forward, reverse}, or a path to a pair TSV.
+#   profiler : profiler for this mode's samples (must be in database.profilers below)
+#   reads    : optional overrides of the shared `reads:` defaults (e.g. WGS read length)
+# The four supported combos: genomes+shotgun (wgs); genomes+primers+amplicon;
+# 16S(ssu)+primers+amplicon; pre-trimmed amplicon (source=amplicon, no primers).
+generation_modes:
+  - name: wgs
+    source: genome
+    mode: shotgun
+    profiler: sylph
+    reads: {read_length_mean: 150}
+  - name: amplicon_16s
+    source: ssu
+    mode: amplicon
+    profiler: aap
+    primers:
+      - {pair_id: 515-YF-806BR, forward: GTGYCAGCMGCCGCGGTAA, reverse: GGACTACNVGGGTWTCTAAT}
+
+# Optional: the nested amplicon-analysis-pipeline runs on the host and does NOT
+# inherit the outer -profile. On HPC point it at an engine config (emitted verbatim
+# into samplesheet.yaml's top-level aap_configs/aap_profile). Relative paths resolve
+# against this file's dir. Omit for a local Docker run (or set profile: docker).
+# aap:
+#   configs: [aap_singularity.config]   # { singularity.enabled = true; singularity.autoMounts = true }
+#   profile: null                       # or 'docker'
+
+# In-pipeline profiler database, defined here and emitted into samplesheet.yaml's
+# `databases:` block: the pipeline builds it during the run (no out-of-band step).
+database:
+  name: community_nb
+  profilers: [sylph, aap]      # union across generation_modes: sylph profiles wgs,
+                               #   aap profiles amplicon. [aap], [sylph], or [sylph, aap].
+                               #   aap  -> each panel member needs `ssu` (+ taxonomy)
+                               #   sylph-> each panel member needs `genome`
+  # Rfam rRNA-detection DBs the nested amplicon-analysis-pipeline needs (required
+  # when 'aap' in profilers). covariance_model is a directory; claninfo a file.
+  rfam_covariance_model: /PATH/TO/rfam/ribo             # dir of Rfam .cm models
+  rfam_claninfo: /PATH/TO/rfam/ribo/ribo.clan_info      # Rfam clan-info file
+
+# One entry per genome. Every genome is presence-gated then abundance-drawn from the
+# sampling block above (there is no sweep pair here - species may repeat freely).
+# `taxonomy` is derived from the `species` slug unless given; `kingdom: archaea` flips
+# the domain. Add `presence:` and/or `nb: {mean?, dispersion?}` to any member to
+# override the global presence/NB for that genome.
+#   amplicon : pre-trimmed 515-YF/806BR V4 FASTA (source: amplicon read generation)
+#   ssu      : pre-extracted full-length 16S FASTA (source: ssu generation + aap/mapseq DB)
+#   genome   : full genome assembly, .fasta[.gz] (source: genome/shotgun + primer PCR + sylph)
+#   taxonomy : optional 3-rank "Kingdom;Genus;species" override, e.g.
+#              taxonomy: "Bacteria;Bacteroides;fragilis"  (else derived from species)
+# Only the FASTA fields the configured generation_modes/profilers reference are
+# required. The two modes above use `genome` (wgs+sylph) and `ssu` (amplicon+aap);
+# `amplicon` is kept for a pre-trimmed-amplicon mode (source: amplicon).
+panel:
+  - {id: bacteroides_fragilis,        species: bacteroides_fragilis,        genome: references/genomes/bacteroides_fragilis.fasta,        amplicon: references/amplicons/bacteroides_fragilis.amplicons.fasta,        ssu: references/16S/bacteroides_fragilis.ssu.fasta}
+  - {id: bacteroides_thetaiotaomicron, species: bacteroides_thetaiotaomicron, genome: references/genomes/bacteroides_thetaiotaomicron.fasta, amplicon: references/amplicons/bacteroides_thetaiotaomicron.amplicons.fasta, ssu: references/16S/bacteroides_thetaiotaomicron.ssu.fasta}
+  - {id: bacteroides_uniformis,       species: bacteroides_uniformis,       genome: references/genomes/bacteroides_uniformis.fasta,       amplicon: references/amplicons/bacteroides_uniformis.amplicons.fasta,       ssu: references/16S/bacteroides_uniformis.ssu.fasta}
+  - {id: bacteroides_vulgatus,        species: bacteroides_vulgatus,        genome: references/genomes/bacteroides_vulgatus.fasta,        amplicon: references/amplicons/bacteroides_vulgatus.amplicons.fasta,        ssu: references/16S/bacteroides_vulgatus.ssu.fasta}
+  - {id: clostridium_bolteae,         species: clostridium_bolteae,         genome: references/genomes/clostridium_bolteae.fasta,         amplicon: references/amplicons/clostridium_bolteae.amplicons.fasta,         ssu: references/16S/clostridium_bolteae.ssu.fasta}
+  - {id: clostridium_perfringens,     species: clostridium_perfringens,     genome: references/genomes/clostridium_perfringens.fasta,     amplicon: references/amplicons/clostridium_perfringens.amplicons.fasta,     ssu: references/16S/clostridium_perfringens.ssu.fasta}
+  - {id: clostridium_ramosum,         species: clostridium_ramosum,         genome: references/genomes/clostridium_ramosum.fasta,         amplicon: references/amplicons/clostridium_ramosum.amplicons.fasta,         ssu: references/16S/clostridium_ramosum.ssu.fasta}
+  - {id: clostridium_saccharolyticum, species: clostridium_saccharolyticum, genome: references/genomes/clostridium_saccharolyticum.fasta, amplicon: references/amplicons/clostridium_saccharolyticum.amplicons.fasta, ssu: references/16S/clostridium_saccharolyticum.ssu.fasta}
+  - {id: collinsella_aerofaciens,     species: collinsella_aerofaciens,     genome: references/genomes/collinsella_aerofaciens.fasta,     amplicon: references/amplicons/collinsella_aerofaciens.amplicons.fasta,     ssu: references/16S/collinsella_aerofaciens.ssu.fasta}
+  - {id: coprococcus_comes,           species: coprococcus_comes,           genome: references/genomes/coprococcus_comes.fasta,           amplicon: references/amplicons/coprococcus_comes.amplicons.fasta,           ssu: references/16S/coprococcus_comes.ssu.fasta}
+  - {id: dorea_formicigenerans,       species: dorea_formicigenerans,       genome: references/genomes/dorea_formicigenerans.fasta,       amplicon: references/amplicons/dorea_formicigenerans.amplicons.fasta,       ssu: references/16S/dorea_formicigenerans.ssu.fasta}
+  - {id: eggerthella_lenta,           species: eggerthella_lenta,           genome: references/genomes/eggerthella_lenta.fasta,           amplicon: references/amplicons/eggerthella_lenta.amplicons.fasta,           ssu: references/16S/eggerthella_lenta.ssu.fasta}
+  - {id: eubacterium_rectale,         species: eubacterium_rectale,         genome: references/genomes/eubacterium_rectale.fasta,         amplicon: references/amplicons/eubacterium_rectale.amplicons.fasta,         ssu: references/16S/eubacterium_rectale.ssu.fasta}
+  - {id: fusobacterium_nucleatum,     species: fusobacterium_nucleatum,     genome: references/genomes/fusobacterium_nucleatum.fasta,     amplicon: references/amplicons/fusobacterium_nucleatum.amplicons.fasta,     ssu: references/16S/fusobacterium_nucleatum.ssu.fasta}
+  - {id: methanobrevibacter_smithii,  species: methanobrevibacter_smithii,  genome: references/genomes/methanobrevibacter_smithii.fasta,  amplicon: references/amplicons/methanobrevibacter_smithii.amplicons.fasta,  ssu: references/16S/methanobrevibacter_smithii.ssu.fasta, kingdom: archaea}
+  - {id: parabacteroides_merdae,      species: parabacteroides_merdae,      genome: references/genomes/parabacteroides_merdae.fasta,      amplicon: references/amplicons/parabacteroides_merdae.amplicons.fasta,      ssu: references/16S/parabacteroides_merdae.ssu.fasta}
+  - {id: roseburia_intestinalis,      species: roseburia_intestinalis,      genome: references/genomes/roseburia_intestinalis.fasta,      amplicon: references/amplicons/roseburia_intestinalis.amplicons.fasta,      ssu: references/16S/roseburia_intestinalis.ssu.fasta}
+  - {id: ruminococcus_gnavus,         species: ruminococcus_gnavus,         genome: references/genomes/ruminococcus_gnavus.fasta,         amplicon: references/amplicons/ruminococcus_gnavus.amplicons.fasta,         ssu: references/16S/ruminococcus_gnavus.ssu.fasta}
+  - {id: streptococcus_parasanguinis, species: streptococcus_parasanguinis, genome: references/genomes/streptococcus_parasanguinis.fasta, amplicon: references/amplicons/streptococcus_parasanguinis.amplicons.fasta, ssu: references/16S/streptococcus_parasanguinis.ssu.fasta}
+  - {id: streptococcus_salivarius,    species: streptococcus_salivarius,    genome: references/genomes/streptococcus_salivarius.fasta,    amplicon: references/amplicons/streptococcus_salivarius.amplicons.fasta,    ssu: references/16S/streptococcus_salivarius.ssu.fasta}
