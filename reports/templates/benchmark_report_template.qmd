@@ -246,41 +246,57 @@ for assay in ASSAYS:
 
 ## Inferred cross-mapping (abundance regression)
 
-For detection sources that report **abundances only** and have no per-read confusion
-matrix (sylph), mis-mapping is inferred from how detected abundances co-vary with the
-ground truth across sweep points. For each genome's detected abundance we fit a multiple
-linear regression on the ground-truth abundances of **all** genomes, with a little L2
-(ridge) regularisation to stay stable when two sub-species are near-identical. Everything
-is standardised, so a coefficient is on a correlation-like scale: the diagonal (a genome's
-own truth) should dominate, and any strong **off-diagonal** coefficient means another
-genome's true reads are leaking into this one's estimate — i.e. mis-mapping. Rows are the
-true origin genome, columns the genome whose abundance they inflate (same orientation as
-the confusion matrices above); the heatmap value is the coefficient and the tooltip gives
-its p-value. Shown at the **{python} DEFAULT_DEPTH** depth, one tab per assay.
+An abundance-only view of mis-mapping that needs no per-read truth: for each genome's
+**detected** abundance we regress it across sweep points on the **ground-truth**
+abundances of every genome whose truth actually varies over the sweep, with a little L2
+(ridge) regularisation for stability when two sub-species are near-identical. It is
+applied to the **AAP taxonomic profiles** (amplicon) and to **sylph** (WGS) — the former
+complements the per-read confusion matrix above; the latter is the only cross-mapping
+signal sylph offers.
+
+Predictors (rows) are the varying true genomes; only they carry sweep information — a
+genome held at constant abundance can predict nothing. Columns are every genome's detected
+abundance. A strong **diagonal** cell means a genome's detected abundance tracks its own
+truth; a strong **off-diagonal** cell means one genome's true reads move another's estimate
+— i.e. mis-mapping. The heatmap value is the regression coefficient (Δ detected relative
+abundance per 1 SD of true abundance; the response is left in abundance units so that a
+tiny background genome cannot be inflated into a false positive by the compositional
+sum-to-one constraint) and the tooltip gives its p-value. Shown at the
+**{python} DEFAULT_DEPTH** depth, one tab per assay. Where two sub-species are nearly
+identical their truths are collinear, so ridge splits the coefficient between them —
+read the pair's confusion matrix above for the definitive per-read rate.
 
 ```{python}
 #| echo: false
 import statsmodels.api as sm
 
+# ponytail: regression cross-mapping is only run for these sources; AAP profiler (amplicon)
+# and sylph (WGS). Reference BAM is diagonal by construction, so it is left out.
+REG_SOURCES = ("profiler", "sylph")
+REG_CV_FLOOR = 0.1  # ponytail: a genome's truth must vary this much (CV) to be a predictor;
+                    # 0.1 clears Poisson noise (~0.02) yet keeps any real sweep. Lower it if a
+                    # run sweeps genomes gently.
+
 
 def regression_sources(assay):
-    """Abundance-only sources (no confusion matrix) to infer cross-mapping for."""
-    have_mm = set(mismap_sources(assay))
-    return [s for s in abund_sources(assay) if s not in have_mm]
+    """Sources whose detected abundances we infer cross-mapping from for this assay."""
+    return [s for s in abund_sources(assay) if s in REG_SOURCES]
 
 
 def crossmap_regression(source, depth, assay, ridge_frac=0.1):
-    """Ridge-regularised regression of each genome's detected abundance on the
-    ground-truth abundances of all genomes. Returns (coef, pval, genomes) with
-    coef/pval oriented [true-origin genome (row), detected-abundance genome (col)].
+    """Ridge regression of each genome's detected abundance on the ground-truth
+    abundances of the genomes whose truth varies over the sweep. Returns
+    (coef, pval, preds, genomes): coef/pval are [varying true genome (row) ×
+    every genome's detected abundance (col)].
 
-    Standardises columns, then fits each output via OLS on the lambda-augmented
-    design (adds ridge to X'X yet still yields p-values); a strong off-diagonal
-    coefficient = another genome's truth predicting this output = mis-mapping.
+    Predictors are standardised (so coefficients compare across genomes); the
+    response is only centred, not scaled, so a near-constant background genome
+    cannot be blown into a false positive. Each output is fit via OLS on the
+    lambda-augmented design, which adds ridge to X'X yet still yields p-values.
     """
     col = ABUND_COL[source]
     sub = ABUNDANCE[(ABUNDANCE["depth"] == depth) & (ABUNDANCE["assay"] == assay)]
-    if sub.empty or col not in sub.columns:
+    if sub.empty or col not in sub.columns or sub[col].notna().sum() == 0:
         return None
     truth = sub.pivot_table(index="sample", columns="genome_id",
                             values="realized_rel_abundance").fillna(0.0)
@@ -289,49 +305,46 @@ def crossmap_regression(source, depth, assay, ridge_frac=0.1):
     genomes = list(truth.columns)
     if truth.shape[0] < 3:
         return None  # too few sweep points to regress
-    X = truth.to_numpy(float)
-    with np.errstate(invalid="ignore", divide="ignore"):
-        Xz = (X - X.mean(0)) / X.std(0, ddof=0)
-    keep = np.isfinite(Xz).all(0)  # drop genomes whose truth never varies
-    Xz, preds = Xz[:, keep], [g for g, k in zip(genomes, keep) if k]
+    cv = truth.std() / truth.mean().replace(0, np.nan)  # coefficient of variation per genome
+    preds = [g for g in genomes if cv.get(g, 0) > REG_CV_FLOOR]  # only genomes that vary
+    if not preds:
+        return None
+    X = truth[preds].to_numpy(float)
+    Xz = (X - X.mean(0)) / X.std(0, ddof=0)
     n, p = Xz.shape
-    if p < 2:
-        return None  # nothing to disentangle
     lam = ridge_frac * n  # ponytail: light L2; raise ridge_frac if near-identical genomes destabilise
     aug_X = np.vstack([Xz, np.sqrt(lam) * np.eye(p)])
-    coef = pd.DataFrame(np.nan, index=genomes, columns=genomes)
-    pval = pd.DataFrame(np.nan, index=genomes, columns=genomes)
+    coef = pd.DataFrame(np.nan, index=preds, columns=genomes)
+    pval = pd.DataFrame(np.nan, index=preds, columns=genomes)
     for g in genomes:
         y = out[g].to_numpy(float)
-        sd = y.std(ddof=0)
-        if sd == 0:
+        if y.std(ddof=0) == 0:
             continue  # this abundance never varies -> nothing to explain
-        yz = np.concatenate([(y - y.mean()) / sd, np.zeros(p)])
-        res = sm.OLS(yz, aug_X).fit()
+        yc = np.concatenate([y - y.mean(), np.zeros(p)])  # centred, not scaled
+        res = sm.OLS(yc, aug_X).fit()
         coef.loc[preds, g] = res.params
         pval.loc[preds, g] = res.pvalues
-    return coef, pval, genomes
+    return coef, pval, preds, genomes
 
 
 def crossmap_reg_heatmap(source, depth, assay):
     res = crossmap_regression(source, depth, assay)
     if res is None:
         return None
-    coef, pval, genomes = res
+    coef, pval, preds, genomes = res
     cmax = float(np.nanmax(np.abs(coef.values))) if np.isfinite(coef.values).any() else 1.0
-    cmax = max(cmax, 1.0)
     fig = go.Figure(go.Heatmap(
-        z=coef.values, x=genomes, y=genomes,
+        z=coef.values, x=genomes, y=preds,
         customdata=pval.values,
         colorscale="RdBu", reversescale=True, zmid=0, zmin=-cmax, zmax=cmax,
         colorbar=dict(title="coef"),
         hovertemplate=("true: %{y}<br>detected: %{x}<br>"
-                       "coef: %{z:.3f}<br>p: %{customdata:.2g}<extra></extra>"),
+                       "coef: %{z:.4f}<br>p: %{customdata:.2g}<extra></extra>"),
     ))
     fig.update_layout(
-        template="simple_white", height=640, width=760,
+        template="simple_white", height=max(220, 40 * len(preds) + 180), width=820,
         xaxis=dict(title="detected-abundance genome", tickangle=45, side="bottom"),
-        yaxis=dict(title="true genome", autorange="reversed"),
+        yaxis=dict(title="true genome (varying)", autorange="reversed"),
         margin=dict(l=10, r=10, t=10, b=10),
     )
     return fig
@@ -346,9 +359,7 @@ for assay in ASSAYS:
     print(f"### {assay}\n")
     sources = regression_sources(assay)
     if not sources:
-        display(Markdown(
-            f"_No abundance-only source needing regression inference for {assay} "
-            "(sources here already have a per-read confusion matrix)._\n"))
+        display(Markdown(f"_No AAP-profile or sylph abundance to regress for {assay}._\n"))
         print("\n")
         continue
     for source in sources:
@@ -357,7 +368,7 @@ for assay in ASSAYS:
         hm = crossmap_reg_heatmap(source, DEFAULT_DEPTH, assay)
         if hm is None:
             display(Markdown(
-                f"_Not enough varying sweep points to regress {source} at the "
+                f"_No genome's truth varies enough to regress {source} at the "
                 f"{DEFAULT_DEPTH} depth._\n"))
             continue
         display(hm)
