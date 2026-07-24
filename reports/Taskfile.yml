@@ -9,12 +9,18 @@ vars:
   BASICPYTHON_ENV: /Users/timrozday/.local/share/mamba/envs/basicpython
   TEMPLATE: '{{.ROOT_DIR}}/templates/benchmark_report_template.qmd'
   PREPROCESS: '{{.ROOT_DIR}}/scripts/benchmark_preprocess.py'
+  SUBSPECIES_INFER: '{{.ROOT_DIR}}/scripts/subspecies_infer.py'
+  SUBSPECIES_TEMPLATE: '{{.ROOT_DIR}}/templates/subspecies_inference_report.qmd'
 
 tasks:
   default:
-    desc: Preprocess + render every benchmark report
+    desc: Preprocess + render the sub-species B. uniformis V4 amplicon abundance sweep
     cmds:
-      - task: subspecies-v4
+      - task: report
+        vars:
+          RUN_DIR: subspecies_Buniformis_amplicon_v4
+          PIPELINE_DIR: results/subspecies_v4_sweep
+          RUN_LABEL: "Sub-species B. uniformis V4 amplicon abundance sweep"
 
   # --- building blocks --------------------------------------------------------
 
@@ -57,21 +63,86 @@ tasks:
           -P output_dir:"" \
           --output-dir "{{.RUN_DIR_ABS}}"
 
+  # --- sub-species inference (error-model mis-mapping + Bayesian composition) --
+
+  _mismapping:
+    internal: true
+    requires:
+      vars: [RUN_DIR, DB_FASTA, MODEL_PT]
+    vars:
+      RUN_DIR_ABS: '{{.DIR}}/{{.RUN_DIR}}'
+      PRIMERS: '{{.PRIMERS | default ""}}'
+    cmds:
+      - |
+        {{.BASICPYTHON_ENV}}/bin/python {{.SUBSPECIES_INFER}} mismapping \
+          --db-fasta "{{.RUN_DIR_ABS}}/{{.DB_FASTA}}" \
+          --model-pt "{{.RUN_DIR_ABS}}/{{.MODEL_PT}}" \
+          {{if .PRIMERS}}{{.PRIMERS}}{{end}} \
+          --output-dir "{{.RUN_DIR_ABS}}/subspecies_infer"
+
+  _infer:
+    internal: true
+    requires:
+      vars: [RUN_DIR, PIPELINE_DIR]
+    vars:
+      RUN_DIR_ABS: '{{.DIR}}/{{.RUN_DIR}}'
+      MODE: '{{.MODE | default "vi"}}'
+      ASSAY: '{{.ASSAY | default "515-YF-806BR"}}'
+      # USE_MISMAPPING=false runs the baseline control (no mis-mapping correction).
+      NO_MISMAPPING: '{{if eq .USE_MISMAPPING "false"}}--no-mismapping{{end}}'
+    cmds:
+      - |
+        {{.BASICPYTHON_ENV}}/bin/python {{.SUBSPECIES_INFER}} infer \
+          --run-dir "{{.RUN_DIR_ABS}}" \
+          --pipeline-dir "{{.PIPELINE_DIR}}" \
+          --mismap-dir "{{.RUN_DIR_ABS}}/subspecies_infer" \
+          --assay "{{.ASSAY}}" \
+          --mode "{{.MODE}}" \
+          {{.NO_MISMAPPING}} \
+          --output-dir "{{.RUN_DIR_ABS}}/subspecies_infer"
+
+  _render_infer:
+    internal: true
+    dir: '{{.DIR}}'
+    requires:
+      vars: [RUN_DIR]
+    vars:
+      RUN_DIR_ABS: '{{.DIR}}/{{.RUN_DIR}}'
+      MODE: '{{.MODE | default "vi"}}'
+    cmds:
+      - |
+        mamba run -p {{.QUARTO_ENV}} \
+          quarto render "{{.SUBSPECIES_TEMPLATE}}" \
+          -P run_label:"{{.RUN_LABEL}}" \
+          -P run_dir:"{{.RUN_DIR_ABS}}/subspecies_infer" \
+          -P mode:"{{.MODE}}" \
+          --output-dir "{{.RUN_DIR_ABS}}"
+
+  subspecies-infer:
+    desc: Estimate mis-mapping, infer true composition, render the inference report
+          (RUN_DIR, PIPELINE_DIR, DB_FASTA, MODEL_PT; optional MODE, PRIMERS, RUN_LABEL,
+          ASSAY [default 515-YF-806BR], USE_MISMAPPING=false for the no-correction baseline)
+    cmds:
+      - task: _mismapping
+        vars: {RUN_DIR: '{{.RUN_DIR}}', DB_FASTA: '{{.DB_FASTA}}', MODEL_PT: '{{.MODEL_PT}}',
+                PRIMERS: '{{.PRIMERS}}'}
+      - task: _infer
+        vars: {RUN_DIR: '{{.RUN_DIR}}', PIPELINE_DIR: '{{.PIPELINE_DIR}}', MODE: '{{.MODE}}',
+                ASSAY: '{{.ASSAY}}', USE_MISMAPPING: '{{.USE_MISMAPPING}}'}
+      - task: _render_infer
+        vars: {RUN_DIR: '{{.RUN_DIR}}', MODE: '{{.MODE}}', RUN_LABEL: '{{.RUN_LABEL}}'}
+
   # --- per-run tasks ----------------------------------------------------------
 
-  subspecies-v4:
-    desc: Preprocess + render the sub-species B. uniformis V4 amplicon abundance sweep
+  report:
+    desc: Preprocess + render a benchmark report (RUN_DIR, PIPELINE_DIR, RUN_LABEL required;
+          optional MSEQ_GLOB, SWEEP_PAIR)
     cmds:
       - task: _preprocess
-        vars:
-          RUN_DIR: subspecies_Buniformis_amplicon_v4
-          PIPELINE_DIR: results/subspecies_v4_sweep
-          RUN_LABEL: "Sub-species B. uniformis V4 amplicon abundance sweep"
+        vars: {RUN_DIR: '{{.RUN_DIR}}', PIPELINE_DIR: '{{.PIPELINE_DIR}}', RUN_LABEL: '{{.RUN_LABEL}}',
+                MSEQ_GLOB: '{{.MSEQ_GLOB}}', SWEEP_PAIR: '{{.SWEEP_PAIR}}'}
       - task: _render
-        vars:
-          RUN_DIR: subspecies_Buniformis_amplicon_v4
-          PIPELINE_DIR: results/subspecies_v4_sweep
-          RUN_LABEL: "Sub-species B. uniformis V4 amplicon abundance sweep"
+        vars: {RUN_DIR: '{{.RUN_DIR}}', PIPELINE_DIR: '{{.PIPELINE_DIR}}', RUN_LABEL: '{{.RUN_LABEL}}'}
 
   # Split entry points if you want to re-render without re-walking the run tree.
   preprocess:

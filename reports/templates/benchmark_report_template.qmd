@@ -579,6 +579,162 @@ if HAS_SWEEP:
 
 :::
 
+## Swept pair — mis-mapping-corrected (error-model inference)
+
+```{python}
+#| echo: false
+#| output: false
+# Optional error-model mis-mapping correction, produced by scripts/subspecies_infer.py
+# (`mismapping` + `infer`). Absent unless that stage has been run; the outputs live in
+# the run root (Taskfile default) or a `subspecies_infer/` subdir — search both.
+def _find_inf(name):
+    for base in (RUN_DIR, RUN_DIR / "subspecies_infer"):
+        if (base / name).exists():
+            return base / name
+    return None
+
+
+_inf_path = _find_inf("inferred_composition.csv")
+INFERRED = pd.read_csv(_inf_path) if _inf_path else None
+_mm_path = _find_inf("mismapping_matrix.csv")
+MMAT = pd.read_csv(_mm_path, index_col=0) if _mm_path else None
+```
+
+```{python}
+#| echo: false
+#| output: asis
+if INFERRED is None:
+    display(Markdown(
+        "_No inference outputs found. Run `task subspecies-infer` (or `subspecies_infer.py "
+        "mismapping` then `infer`) to populate this section._"))
+else:
+    assays_inf = ", ".join(sorted(INFERRED["assay"].unique()))
+    display(Markdown(
+        "Latent **true genome composition** inferred by correcting the raw mapseq profile for "
+        "reference-to-reference mis-mapping estimated analytically from the skiver error model "
+        "(`scripts/subspecies_infer.py`). Near-identical V4 makes mapseq blur the two swept "
+        f"strains together; the inference re-attributes those reads. Assay(s): **{assays_inf}** "
+        "(the mis-mapping matrix is amplicon-specific, so only the matching assay is corrected)."))
+```
+
+```{python}
+#| echo: false
+def swept_pair_inferred(depth):
+    """Truth (line), raw mapseq (open markers) and inferred (diamonds ± 90% CI) for the
+    swept pair across the sweep — the corrected analogue of the Swept-pair section."""
+    d = INFERRED[(INFERRED["depth"] == depth)
+                 & (INFERRED["genome_id"].isin(SWEEP_PAIR))].sort_values("sweep_x")
+    if d.empty:
+        return None
+    fig = go.Figure()
+    for i, g in enumerate(SWEEP_PAIR):
+        gp = d[d["genome_id"] == g]
+        color = PALETTE[i % len(PALETTE)]
+        fig.add_trace(go.Scatter(
+            x=gp["sweep_x"], y=gp["truth_rel_abundance"], mode="lines",
+            name=f"{g} (truth)", line=dict(color=color, width=2),
+            hovertemplate=f"{g}<br>x=%{{x:.3f}}<br>truth=%{{y:.4f}}<extra></extra>"))
+        fig.add_trace(go.Scatter(
+            x=gp["sweep_x"], y=gp["observed_rel_abundance"], mode="markers",
+            name=f"{g} (raw mapseq)",
+            marker=dict(color=color, size=8, symbol="circle-open"),
+            hovertemplate=f"{g} raw<br>x=%{{x:.3f}}<br>observed=%{{y:.4f}}<extra></extra>"))
+        fig.add_trace(go.Scatter(
+            x=gp["sweep_x"], y=gp["inferred_mean"], mode="markers",
+            name=f"{g} (inferred)", marker=dict(color=color, size=9, symbol="diamond"),
+            error_y=dict(type="data", array=(gp["inferred_hi"] - gp["inferred_mean"]),
+                         arrayminus=(gp["inferred_mean"] - gp["inferred_lo"]),
+                         visible=True, thickness=1, width=2),
+            hovertemplate=f"{g} inferred<br>x=%{{x:.3f}}<br>inferred=%{{y:.4f}}<extra></extra>"))
+    fig.update_layout(
+        template="simple_white", height=460, width=760,
+        xaxis=dict(title="sweep x (major-genome fraction)"),
+        yaxis=dict(title="relative abundance"),
+        legend=dict(orientation="h", y=1.15), margin=dict(l=10, r=10, t=10, b=10))
+    return fig
+```
+
+::: {.panel-tabset}
+
+```{python}
+#| echo: false
+#| output: asis
+if INFERRED is not None:
+    for depth in DEPTHS:
+        if not (INFERRED["depth"] == depth).any():
+            continue
+        print(f"### {depth}\n")
+        fig = swept_pair_inferred(depth)
+        if fig is None:
+            display(Markdown(f"_No swept-pair inference at the {depth} depth._\n"))
+        else:
+            display(fig)
+        print("\n")
+```
+
+:::
+
+```{python}
+#| echo: false
+#| output: asis
+# Whole-community accuracy to truth, raw mapseq vs inferred (per-sample L1 / total variation).
+if INFERRED is not None:
+    rows = []
+    for (assay, depth), g in INFERRED.groupby(["assay", "depth"]):
+        gg = g.dropna(subset=["truth_rel_abundance"])
+        n = max(gg["sample"].nunique(), 1)
+        rows.append({
+            "assay": assay, "depth": depth,
+            "L1_raw_mapseq": 0.5 * (gg["observed_rel_abundance"].fillna(0)
+                                    - gg["truth_rel_abundance"]).abs().sum() / n,
+            "L1_inferred": 0.5 * (gg["inferred_mean"]
+                                  - gg["truth_rel_abundance"]).abs().sum() / n})
+    l1 = pd.DataFrame(rows)
+    l1["improvement"] = l1["L1_raw_mapseq"] - l1["L1_inferred"]
+    display(Markdown(
+        "**Whole-community L1 error to truth (per sample), raw mapseq vs inferred** — lower is "
+        "better; a positive `improvement` means the mis-mapping correction helped."))
+    display(l1.round(4))
+```
+
+```{python}
+#| echo: false
+#| output: asis
+# Model-estimated genome-level mis-mapping (M aggregated over each genome's V4 references).
+if MMAT is not None:
+    refs = list(MMAT.columns)
+    rg = [r.split("|", 1)[0] for r in refs]
+    gs = sorted(set(rg))
+    z = MMAT.to_numpy()
+    agg = np.zeros((len(gs), len(gs)))
+    gi = {g: k for k, g in enumerate(gs)}
+    rows_by_g = {g: [k for k, r in enumerate(rg) if r == g] for g in gs}
+    for a in gs:
+        ra = rows_by_g[a]
+        for b in gs:
+            agg[gi[a], gi[b]] = z[np.ix_(ra, rows_by_g[b])].sum() / len(ra)
+    fig = go.Figure(go.Heatmap(z=agg, x=gs, y=gs, zmin=0, zmax=1, colorscale="Viridis",
+                               colorbar=dict(title="P")))
+    fig.update_layout(template="simple_white", height=560, width=680,
+                      title="Model-estimated mis-mapping (genome level, row=truth → col=assigned)",
+                      xaxis=dict(tickangle=-45), margin=dict(l=10, r=10, t=40, b=10))
+    display(Markdown(
+        "Reference-to-reference mis-mapping from the error model, aggregated to genome level "
+        f"({len(refs)} amplifiable V4 references over {len(gs)} genomes). Row *i* col *j* is the "
+        "probability a read truly from genome *i* is assigned to genome *j*; off-diagonal mass "
+        "(e.g. between the two *B. uniformis* strains) is what the inference above corrects for."))
+    display(fig)
+    # Largest off-diagonal confusion pairs (the matrix, communicated as a ranked table).
+    off = agg.copy()
+    np.fill_diagonal(off, 0.0)
+    pairs = [{"truth_genome": gs[i], "assigned_genome": gs[j], "P(assign)": float(off[i, j])}
+             for i, j in zip(*np.unravel_index(np.argsort(off, axis=None)[::-1], off.shape))
+             if off[i, j] > 1e-3][:12]
+    if pairs:
+        display(Markdown("**Largest off-diagonal mis-mapping pairs (genome level)**"))
+        display(pd.DataFrame(pairs).round(4))
+```
+
 ## Performance across subsampling
 
 How abundance accuracy and mis-mapping hold up as sequencing depth changes, per assay and

@@ -8,3 +8,10 @@ numpy==2.2.6
 plotly==6.7.0
 pysam==0.24.0
 PyYAML==6.0.2
+# subspecies_infer.py: error-model mis-mapping (loads skiver .pt -> needs torch+pyro;
+# context_error_models imports pyro, so pyro is mandatory anyway and numpyro would be
+# redundant), analytic pairwise alignment (edlib), and Pyro NUTS/VI/MLE inference.
+torch==2.6.0
+pyro-ppl==1.9.1
+edlib==1.3.9.post1
+scipy==1.15.2

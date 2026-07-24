@@ -1,0 +1,265 @@
+---
+title: "Sub-species composition inference"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-location: left
+    code-fold: true
+    code-tools: true
+    embed-resources: true
+execute:
+  warning: false
+jupyter:
+  kernelspec:
+    display_name: basicpython
+    language: python
+    name: basicpython
+params:
+  run_label: ""
+  run_dir: "."
+  mode: "vi"
+  mismapping_matrix_csv: "mismapping_matrix.csv"
+  translation_csv: "translation_table.csv"
+  refseq_index_csv: "refseq_index.csv"
+  composition_csv: "inferred_composition.csv"
+  diagnostics_csv: "inference_diagnostics.csv"
+  loss_csv: "loss_trace.csv"
+---
+
+```{python}
+#| tags: [parameters]
+#| include: false
+run_label = ""
+run_dir = "."
+mode = "vi"
+mismapping_matrix_csv = "mismapping_matrix.csv"
+translation_csv = "translation_table.csv"
+refseq_index_csv = "refseq_index.csv"
+composition_csv = "inferred_composition.csv"
+diagnostics_csv = "inference_diagnostics.csv"
+loss_csv = "loss_trace.csv"
+```
+
+```{python}
+#| echo: false
+#| output: false
+import json
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+from IPython.display import Markdown, display
+
+# Resolve run_dir whether rendered directly or from the Taskfile elsewhere.
+_cands = [Path(run_dir), *(p / run_dir for p in [Path.cwd(), *Path.cwd().parents])]
+RUN_DIR = next((p for p in _cands if (p / composition_csv).exists()
+                or (p / mismapping_matrix_csv).exists()), Path(run_dir))
+
+
+def _resolve(p):
+    p = Path(p)
+    return p if p.is_absolute() else RUN_DIR / p
+
+
+def _read(p):
+    fp = _resolve(p)
+    return pd.read_csv(fp) if fp.exists() else None
+
+
+M = pd.read_csv(_resolve(mismapping_matrix_csv), index_col=0) if _resolve(mismapping_matrix_csv).exists() else None
+T = pd.read_csv(_resolve(translation_csv), index_col=0) if _resolve(translation_csv).exists() else None
+IDX = _read(refseq_index_csv)
+COMP = _read(composition_csv)
+DIAG = _read(diagnostics_csv)
+LOSS = _read(loss_csv)
+```
+
+# `{python} run_label or str(RUN_DIR)`
+
+Latent true **genome** composition inferred from the observed amplicon (mapseq)
+profile, correcting for reference-to-reference mis-mapping estimated from the
+skiver error model. Inference mode: **`{python} mode`**.
+
+## Mis-mapping matrix
+
+Row-stochastic `M[a,b] = P(a read truly from reference *a* is assigned to *b*)`,
+estimated analytically from the error model's per-base likelihoods. Off-diagonal
+mass is confusion between near-identical references. Shown both per amplicon
+sequence and aggregated per genome.
+
+```{python}
+#| echo: false
+def _genome_of(name):
+    # refseq headers are 'genome|index|orig'; genome is the prefix.
+    return str(name).split("|")[0]
+
+
+def _aggregate_to_genome(M):
+    """Row-stochastic genome-level M: sum assigned mass over each target genome,
+    then uniformly average over the source genome's amplicon copies (matches T)."""
+    cols = pd.Index([_genome_of(c) for c in M.columns])
+    rows = pd.Index([_genome_of(r) for r in M.index])
+    by_col = M.T.groupby(cols).sum().T          # P(assigned to genome H | truly ref a)
+    return by_col.groupby(rows).mean()          # uniform avg over source genome's refs
+
+
+def _heatmap(mat, title, unit):
+    fig = px.imshow(mat.to_numpy(), x=list(mat.columns), y=list(mat.index),
+                    color_continuous_scale="Viridis", zmin=0, zmax=1,
+                    labels=dict(x=f"assigned {unit}", y=f"true {unit}", color="P"))
+    fig.update_layout(height=max(300, 22 * len(mat) + 160), title=title)
+    fig.show()
+
+
+def _confusion_pairs(mat, unit):
+    z = mat.to_numpy().copy()
+    np.fill_diagonal(z, 0.0)
+    pairs = [{f"true_{unit}": mat.index[i], f"assigned_{unit}": mat.columns[j],
+              "P": float(z[i, j])}
+             for i, j in zip(*np.unravel_index(np.argsort(z, axis=None)[::-1], z.shape))
+             if z[i, j] > 1e-4][:15]
+    if pairs:
+        display(Markdown(f"**Largest off-diagonal confusion pairs (per {unit})**"))
+        display(pd.DataFrame(pairs))
+    else:
+        display(Markdown(f"*No appreciable off-diagonal confusion per {unit} — well separated.*"))
+```
+
+### Per genome
+
+```{python}
+#| echo: false
+if M is None:
+    display(Markdown("*No mismapping matrix found.*"))
+else:
+    MG = _aggregate_to_genome(M)
+    _heatmap(MG, "Mis-mapping matrix M (per genome)", "genome")
+    _confusion_pairs(MG, "genome")
+```
+
+### Per amplicon sequence
+
+```{python}
+#| echo: false
+if M is None:
+    display(Markdown("*No mismapping matrix found.*"))
+else:
+    _heatmap(M, "Mis-mapping matrix M (per amplicon sequence)", "reference")
+    _confusion_pairs(M, "reference")
+```
+
+## Genome → reference translation
+
+`T[g,s]` maps each genome's true abundance onto the DB reference sequences it
+emits (16S copies that amplify with the primer pair).
+
+```{python}
+#| echo: false
+if IDX is not None:
+    per_genome = (IDX.groupby("genome")
+                  .agg(db_entries=("refseq", "size"),
+                       amplifiable=("amplifiable", "sum"))
+                  .reset_index())
+    per_genome["amplifiable_frac"] = per_genome["amplifiable"] / per_genome["db_entries"]
+    display(per_genome)
+elif T is not None:
+    display((T > 0).sum(axis=1).rename("amplifiable_refs").to_frame())
+```
+
+## Observed vs inferred vs true composition
+
+```{python}
+#| echo: false
+if COMP is None:
+    display(Markdown("*No inferred composition found.*"))
+else:
+    long = COMP.melt(
+        id_vars=[c for c in ["sample", "assay", "depth", "sweep_x", "genome_id"] if c in COMP],
+        value_vars=["observed_rel_abundance", "inferred_mean", "truth_rel_abundance"],
+        var_name="source", value_name="rel_abundance")
+    long["source"] = long["source"].map({"observed_rel_abundance": "observed (raw mapseq)",
+                                          "inferred_mean": "inferred (model)",
+                                          "truth_rel_abundance": "truth"})
+    facet = "sample" if COMP["sample"].nunique() > 1 else None
+    fig = px.bar(long, x="genome_id", y="rel_abundance", color="source",
+                 barmode="group", facet_col=facet,
+                 category_orders={"source": ["truth", "observed (raw mapseq)", "inferred (model)"]})
+    fig.update_layout(height=430, title="Composition per genome")
+    fig.update_xaxes(tickangle=-40)
+    fig.show()
+```
+
+```{python}
+#| echo: false
+if COMP is not None and COMP["truth_rel_abundance"].notna().any():
+    m = COMP.dropna(subset=["truth_rel_abundance"])
+    lim = float(max(m["truth_rel_abundance"].max(),
+                    m["inferred_mean"].max(), m["observed_rel_abundance"].max()) * 1.05 + 1e-3)
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=m["truth_rel_abundance"], y=m["observed_rel_abundance"],
+                             mode="markers", name="observed", marker=dict(color="#d1495b")))
+    fig.add_trace(go.Scatter(x=m["truth_rel_abundance"], y=m["inferred_mean"],
+                             mode="markers", name="inferred", marker=dict(color="#2e86ab")))
+    fig.add_trace(go.Scatter(x=[0, lim], y=[0, lim], mode="lines",
+                             line=dict(dash="dash", color="grey"), name="y=x"))
+    fig.update_layout(height=460, title="Accuracy vs truth (closer to y=x is better)",
+                      xaxis_title="true rel. abundance", yaxis_title="estimated rel. abundance")
+    fig.show()
+```
+
+### L1 error before vs after inference
+
+Total-variation distance to truth, per cell. Lower is better; a drop from
+*observed* to *inferred* means the mis-mapping correction helped.
+
+```{python}
+#| echo: false
+if COMP is not None and COMP["truth_rel_abundance"].notna().any():
+    keys = [c for c in ["sample", "assay", "depth", "sweep_x"] if c in COMP]
+    rows = []
+    for key, g in COMP.groupby(keys):
+        d = g.dropna(subset=["truth_rel_abundance"])
+        rows.append({**dict(zip(keys, key if isinstance(key, tuple) else (key,))),
+                     "L1_observed": 0.5 * (d["observed_rel_abundance"].fillna(0)
+                                           - d["truth_rel_abundance"]).abs().sum(),
+                     "L1_inferred": 0.5 * (d["inferred_mean"]
+                                           - d["truth_rel_abundance"]).abs().sum()})
+    l1 = pd.DataFrame(rows)
+    l1["improvement"] = l1["L1_observed"] - l1["L1_inferred"]
+    display(l1.round(4))
+```
+
+## Inference diagnostics
+
+```{python}
+#| echo: false
+if DIAG is not None:
+    def _fmt(v):
+        try:
+            return json.loads(v)
+        except Exception:
+            return v
+    show = DIAG.copy()
+    for c in ("r_hat", "n_eff"):
+        if c in show:
+            show[c] = show[c].map(lambda v: np.round(_fmt(v), 3) if isinstance(_fmt(v), list) else _fmt(v))
+    display(show)
+    if "max_r_hat" in DIAG:
+        worst = DIAG["max_r_hat"].map(_fmt).max()
+        verdict = "converged (all r̂ ≲ 1.05)" if worst and worst < 1.05 else "check convergence (r̂ high)"
+        display(Markdown(f"**NUTS convergence:** max r̂ = {worst:.3f} — {verdict}."))
+```
+
+```{python}
+#| echo: false
+if LOSS is not None and not LOSS.empty:
+    keys = [c for c in ["sample", "assay", "depth"] if c in LOSS]
+    LOSS["_cell"] = LOSS[keys].astype(str).agg(" · ".join, axis=1) if keys else "cell"
+    fig = px.line(LOSS, x="step", y="loss", color="_cell",
+                  title="SVI loss (−ELBO) per step")
+    fig.update_layout(height=380)
+    fig.show()
+```
