@@ -9,9 +9,9 @@ genomes dominant, some rare, some absent. Draws are seeded (`sampling.seed`) so 
 reproduces the same communities.
 
 - **Reads:** one set per entry in `config.yaml`'s `generation_modes:`. The shipped config
-  sweeps **two** modes — `wgs` (shotgun from genomes, 150 bp, profiled by sylph) and
+  sweeps **two** modes — `wgs` (shotgun from genomes, 150 bp, profiled by sylph + superresolution-shotgun) and
   `amplicon_16s` (V4 515-YF/806BR amplicons extracted from full-length 16S by in-silico PCR,
-  2×300 bp, profiled by aap) — so each of the 20 samples yields both a `.wgs` and a
+  2×300 bp, profiled by aap + superresolution-amplicon) — so each of the 20 samples yields both a `.wgs` and a
   `.amplicon_16s` sample (40 total). Both modes of a sample share its drawn abundances.
 - **Error model:** trained once from the real reads named in `config.yaml` (shared `train_id`).
 
@@ -100,10 +100,16 @@ nextflow run ../../main.nf -profile docker -c benchmark.config \
     --step profile --input profile_samplesheet.yaml --outdir "$OUTDIR" --seed 42
 ```
 
-`generate_profile_samplesheet.py` emits the same `databases:` block plus one row per already-
-generated sample, re-profiling each with the profiler its generation mode used (read from
-`samplesheet.yaml`), with `benchmark_dir` at `<results_dir>/<sample>`. See the root README's
-"Named sequence collections (`databases:`)".
+`generate_profile_samplesheet.py` emits the same `databases:` block plus one row per
+already-generated **sample x profiler** — each generation mode's `profiler:` plus its
+`extra_profilers:`, read from `samplesheet.yaml` — with `benchmark_dir` at
+`<results_dir>/<sample>`. See the root README's "Named sequence collections (`databases:`)".
+
+This is how the superresolution methods are benchmarked: `run.sh` does this pass
+automatically, so `sr_shotgun` profiles the wgs reads and `sr_amplicon` the amplicon
+reads that `--step all` already generated, each dropping its `<sample>.sr_profile.tsv`
+into the same benchmark dir as the sylph/aap profile. Add or drop methods by editing
+`extra_profilers:` (and `database.profilers`) in `config.yaml`.
 
 ## Building the profiler DB out-of-band (optional)
 

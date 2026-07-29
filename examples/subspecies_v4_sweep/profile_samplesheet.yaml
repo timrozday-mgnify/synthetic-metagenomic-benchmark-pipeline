@@ -92,159 +92,319 @@ samples:
   profiler: sylph
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S01_a0.00.wgs
   database: community_v4
+- sample: S01_a0.00.wgs
+  profiler: sr_shotgun
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S01_a0.00.wgs
+  database: community_v4
 - sample: S02_a0.00.wgs
   profiler: sylph
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S02_a0.00.wgs
+  database: community_v4
+- sample: S02_a0.00.wgs
+  profiler: sr_shotgun
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S02_a0.00.wgs
   database: community_v4
 - sample: S03_a0.01.wgs
   profiler: sylph
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S03_a0.01.wgs
   database: community_v4
+- sample: S03_a0.01.wgs
+  profiler: sr_shotgun
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S03_a0.01.wgs
+  database: community_v4
 - sample: S04_a0.01.wgs
   profiler: sylph
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S04_a0.01.wgs
+  database: community_v4
+- sample: S04_a0.01.wgs
+  profiler: sr_shotgun
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S04_a0.01.wgs
   database: community_v4
 - sample: S05_a0.03.wgs
   profiler: sylph
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S05_a0.03.wgs
   database: community_v4
+- sample: S05_a0.03.wgs
+  profiler: sr_shotgun
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S05_a0.03.wgs
+  database: community_v4
 - sample: S06_a0.05.wgs
   profiler: sylph
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S06_a0.05.wgs
+  database: community_v4
+- sample: S06_a0.05.wgs
+  profiler: sr_shotgun
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S06_a0.05.wgs
   database: community_v4
 - sample: S07_a0.10.wgs
   profiler: sylph
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S07_a0.10.wgs
   database: community_v4
+- sample: S07_a0.10.wgs
+  profiler: sr_shotgun
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S07_a0.10.wgs
+  database: community_v4
 - sample: S08_a0.17.wgs
   profiler: sylph
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S08_a0.17.wgs
+  database: community_v4
+- sample: S08_a0.17.wgs
+  profiler: sr_shotgun
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S08_a0.17.wgs
   database: community_v4
 - sample: S09_a0.28.wgs
   profiler: sylph
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S09_a0.28.wgs
   database: community_v4
+- sample: S09_a0.28.wgs
+  profiler: sr_shotgun
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S09_a0.28.wgs
+  database: community_v4
 - sample: S10_a0.42.wgs
   profiler: sylph
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S10_a0.42.wgs
+  database: community_v4
+- sample: S10_a0.42.wgs
+  profiler: sr_shotgun
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S10_a0.42.wgs
   database: community_v4
 - sample: S11_a0.58.wgs
   profiler: sylph
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S11_a0.58.wgs
   database: community_v4
+- sample: S11_a0.58.wgs
+  profiler: sr_shotgun
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S11_a0.58.wgs
+  database: community_v4
 - sample: S12_a0.72.wgs
   profiler: sylph
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S12_a0.72.wgs
+  database: community_v4
+- sample: S12_a0.72.wgs
+  profiler: sr_shotgun
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S12_a0.72.wgs
   database: community_v4
 - sample: S13_a0.83.wgs
   profiler: sylph
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S13_a0.83.wgs
   database: community_v4
+- sample: S13_a0.83.wgs
+  profiler: sr_shotgun
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S13_a0.83.wgs
+  database: community_v4
 - sample: S14_a0.90.wgs
   profiler: sylph
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S14_a0.90.wgs
+  database: community_v4
+- sample: S14_a0.90.wgs
+  profiler: sr_shotgun
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S14_a0.90.wgs
   database: community_v4
 - sample: S15_a0.95.wgs
   profiler: sylph
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S15_a0.95.wgs
   database: community_v4
+- sample: S15_a0.95.wgs
+  profiler: sr_shotgun
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S15_a0.95.wgs
+  database: community_v4
 - sample: S16_a0.97.wgs
   profiler: sylph
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S16_a0.97.wgs
+  database: community_v4
+- sample: S16_a0.97.wgs
+  profiler: sr_shotgun
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S16_a0.97.wgs
   database: community_v4
 - sample: S17_a0.99.wgs
   profiler: sylph
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S17_a0.99.wgs
   database: community_v4
+- sample: S17_a0.99.wgs
+  profiler: sr_shotgun
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S17_a0.99.wgs
+  database: community_v4
 - sample: S18_a0.99.wgs
   profiler: sylph
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S18_a0.99.wgs
+  database: community_v4
+- sample: S18_a0.99.wgs
+  profiler: sr_shotgun
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S18_a0.99.wgs
   database: community_v4
 - sample: S19_a1.00.wgs
   profiler: sylph
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S19_a1.00.wgs
   database: community_v4
+- sample: S19_a1.00.wgs
+  profiler: sr_shotgun
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S19_a1.00.wgs
+  database: community_v4
 - sample: S20_a1.00.wgs
   profiler: sylph
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S20_a1.00.wgs
+  database: community_v4
+- sample: S20_a1.00.wgs
+  profiler: sr_shotgun
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S20_a1.00.wgs
   database: community_v4
 - sample: S01_a0.00.amplicon_16s
   profiler: aap
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S01_a0.00.amplicon_16s
   database: community_v4
+- sample: S01_a0.00.amplicon_16s
+  profiler: sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S01_a0.00.amplicon_16s
+  database: community_v4
 - sample: S02_a0.00.amplicon_16s
   profiler: aap
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S02_a0.00.amplicon_16s
+  database: community_v4
+- sample: S02_a0.00.amplicon_16s
+  profiler: sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S02_a0.00.amplicon_16s
   database: community_v4
 - sample: S03_a0.01.amplicon_16s
   profiler: aap
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S03_a0.01.amplicon_16s
   database: community_v4
+- sample: S03_a0.01.amplicon_16s
+  profiler: sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S03_a0.01.amplicon_16s
+  database: community_v4
 - sample: S04_a0.01.amplicon_16s
   profiler: aap
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S04_a0.01.amplicon_16s
+  database: community_v4
+- sample: S04_a0.01.amplicon_16s
+  profiler: sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S04_a0.01.amplicon_16s
   database: community_v4
 - sample: S05_a0.03.amplicon_16s
   profiler: aap
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S05_a0.03.amplicon_16s
   database: community_v4
+- sample: S05_a0.03.amplicon_16s
+  profiler: sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S05_a0.03.amplicon_16s
+  database: community_v4
 - sample: S06_a0.05.amplicon_16s
   profiler: aap
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S06_a0.05.amplicon_16s
+  database: community_v4
+- sample: S06_a0.05.amplicon_16s
+  profiler: sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S06_a0.05.amplicon_16s
   database: community_v4
 - sample: S07_a0.10.amplicon_16s
   profiler: aap
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S07_a0.10.amplicon_16s
   database: community_v4
+- sample: S07_a0.10.amplicon_16s
+  profiler: sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S07_a0.10.amplicon_16s
+  database: community_v4
 - sample: S08_a0.17.amplicon_16s
   profiler: aap
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S08_a0.17.amplicon_16s
+  database: community_v4
+- sample: S08_a0.17.amplicon_16s
+  profiler: sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S08_a0.17.amplicon_16s
   database: community_v4
 - sample: S09_a0.28.amplicon_16s
   profiler: aap
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S09_a0.28.amplicon_16s
   database: community_v4
+- sample: S09_a0.28.amplicon_16s
+  profiler: sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S09_a0.28.amplicon_16s
+  database: community_v4
 - sample: S10_a0.42.amplicon_16s
   profiler: aap
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S10_a0.42.amplicon_16s
+  database: community_v4
+- sample: S10_a0.42.amplicon_16s
+  profiler: sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S10_a0.42.amplicon_16s
   database: community_v4
 - sample: S11_a0.58.amplicon_16s
   profiler: aap
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S11_a0.58.amplicon_16s
   database: community_v4
+- sample: S11_a0.58.amplicon_16s
+  profiler: sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S11_a0.58.amplicon_16s
+  database: community_v4
 - sample: S12_a0.72.amplicon_16s
   profiler: aap
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S12_a0.72.amplicon_16s
+  database: community_v4
+- sample: S12_a0.72.amplicon_16s
+  profiler: sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S12_a0.72.amplicon_16s
   database: community_v4
 - sample: S13_a0.83.amplicon_16s
   profiler: aap
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S13_a0.83.amplicon_16s
   database: community_v4
+- sample: S13_a0.83.amplicon_16s
+  profiler: sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S13_a0.83.amplicon_16s
+  database: community_v4
 - sample: S14_a0.90.amplicon_16s
   profiler: aap
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S14_a0.90.amplicon_16s
+  database: community_v4
+- sample: S14_a0.90.amplicon_16s
+  profiler: sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S14_a0.90.amplicon_16s
   database: community_v4
 - sample: S15_a0.95.amplicon_16s
   profiler: aap
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S15_a0.95.amplicon_16s
   database: community_v4
+- sample: S15_a0.95.amplicon_16s
+  profiler: sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S15_a0.95.amplicon_16s
+  database: community_v4
 - sample: S16_a0.97.amplicon_16s
   profiler: aap
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S16_a0.97.amplicon_16s
+  database: community_v4
+- sample: S16_a0.97.amplicon_16s
+  profiler: sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S16_a0.97.amplicon_16s
   database: community_v4
 - sample: S17_a0.99.amplicon_16s
   profiler: aap
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S17_a0.99.amplicon_16s
   database: community_v4
+- sample: S17_a0.99.amplicon_16s
+  profiler: sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S17_a0.99.amplicon_16s
+  database: community_v4
 - sample: S18_a0.99.amplicon_16s
   profiler: aap
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S18_a0.99.amplicon_16s
+  database: community_v4
+- sample: S18_a0.99.amplicon_16s
+  profiler: sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S18_a0.99.amplicon_16s
   database: community_v4
 - sample: S19_a1.00.amplicon_16s
   profiler: aap
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S19_a1.00.amplicon_16s
   database: community_v4
+- sample: S19_a1.00.amplicon_16s
+  profiler: sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S19_a1.00.amplicon_16s
+  database: community_v4
 - sample: S20_a1.00.amplicon_16s
   profiler: aap
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S20_a1.00.amplicon_16s
+  database: community_v4
+- sample: S20_a1.00.amplicon_16s
+  profiler: sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/subspecies_v4_sweep/S20_a1.00.amplicon_16s
   database: community_v4

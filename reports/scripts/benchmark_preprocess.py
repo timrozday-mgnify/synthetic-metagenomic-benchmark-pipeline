@@ -41,6 +41,8 @@ TRUTH_GLOB = "*.truth.tsv"
 MSEQ_GLOB_DEFAULT = "profiling/aap/*/taxonomy-summary/*/*.mseq.gz"
 BAM_GLOB = "*.sorted.bam"
 SYLPH_GLOB = "*.sylph_profile.tsv"
+# superresolution emits the same three-column contract, so parse_sylph reads it too.
+SR_GLOB = "*.sr_profile.tsv"
 
 # `S10_a0.42` -> the swept fraction encoded in the sample-dir suffix.
 SWEEP_X_RE = re.compile(r"_a([0-9]*\.?[0-9]+)$")
@@ -51,12 +53,13 @@ SWEEP_X_RE = re.compile(r"_a([0-9]*\.?[0-9]+)$")
 # letter so the sweep fraction's own decimals aren't mistaken for it.
 SAMPLE_ASSAY_RE = re.compile(r"^(?P<sample>.*_a[0-9]*\.?[0-9]+)\.(?P<assay>[A-Za-z].*)$")
 
-# Abundance is compared for up to three independent detection sources.
-SOURCE_ORDER = ["profiler", "reference", "sylph"]
+# Abundance is compared for up to four independent detection sources.
+SOURCE_ORDER = ["profiler", "reference", "sylph", "sr"]
 ABUND_COL = {
     "profiler": "detected_profiler_rel_abundance",
     "reference": "detected_reference_rel_abundance",
     "sylph": "detected_sylph_rel_abundance",
+    "sr": "detected_sr_rel_abundance",
 }
 
 
@@ -247,9 +250,14 @@ def build_tables(run_dir: Path, pipeline_dir: str, mseq_glob: str,
         syl_detected: Counter = Counter()
         for syl in cdir.glob(SYLPH_GLOB):
             syl_detected += parse_sylph(syl, acc2genome)
+        sr_detected: Counter = Counter()
+        for sr in cdir.glob(SR_GLOB):
+            sr_detected += parse_sylph(sr, acc2genome)
 
-        prof_rel, ref_rel, syl_rel = rel(prof_detected), rel(ref_detected), rel(syl_detected)
-        genomes = set(truth["genome_id"]) | set(prof_rel) | set(ref_rel) | set(syl_rel)
+        prof_rel, ref_rel = rel(prof_detected), rel(ref_detected)
+        syl_rel, sr_rel = rel(syl_detected), rel(sr_detected)
+        genomes = (set(truth["genome_id"]) | set(prof_rel) | set(ref_rel)
+                   | set(syl_rel) | set(sr_rel))
         tmap = truth.set_index("genome_id")
         for g in sorted(genomes):
             row = {"sample": sample, "assay": assay, "depth": depth, "sweep_x": sweep_x,
@@ -263,6 +271,7 @@ def build_tables(run_dir: Path, pipeline_dir: str, mseq_glob: str,
             row["detected_profiler_rel_abundance"] = prof_rel.get(g) if prof_detected else None
             row["detected_reference_rel_abundance"] = ref_rel.get(g) if ref_detected else None
             row["detected_sylph_rel_abundance"] = syl_rel.get(g) if syl_detected else None
+            row["detected_sr_rel_abundance"] = sr_rel.get(g) if sr_detected else None
             abundance_rows.append(row)
 
         for source, conf in (("profiler", prof_conf), ("reference", ref_conf)):

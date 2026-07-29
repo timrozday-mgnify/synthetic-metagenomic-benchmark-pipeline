@@ -78,12 +78,13 @@ for _df in (ABUNDANCE, MISMAP, SUMMARY):
         _df["assay"] = "reads"
 
 SWEEP_PAIR = META.get("sweep_pair", [])
-SOURCE_ORDER = ["profiler", "reference", "sylph"]
+SOURCE_ORDER = ["profiler", "reference", "sylph", "sr"]
 SOURCE_LABEL = {"profiler": "Profiler assignments", "reference": "Reference BAM",
-                "sylph": "Sylph profile"}
+                "sylph": "Sylph profile", "sr": "Superresolution profile"}
 ABUND_COL = {"profiler": "detected_profiler_rel_abundance",
              "reference": "detected_reference_rel_abundance",
-             "sylph": "detected_sylph_rel_abundance"}
+             "sylph": "detected_sylph_rel_abundance",
+             "sr": "detected_sr_rel_abundance"}
 # Assays present, primers first and WGS-style whole-genome assays last.
 ASSAYS = META.get("assays") or sorted(ABUNDANCE["assay"].unique().tolist())
 
@@ -127,7 +128,7 @@ truth is known per read, it quantifies both **mis-mapping between genomes** and 
 
 When a run contains several **assays** (e.g. multiple amplicon primer sets and/or a WGS
 arm), each is reported in its own tab so the same panel can be compared across them. Up
-to three detection sources are compared where available:
+to four detection sources are compared where available:
 
 - **Profiler assignments** — the profiler's own per-read calls (mapseq for amplicon
   runs). Measures what the profiler itself gets right or wrong.
@@ -137,6 +138,8 @@ to three detection sources are compared where available:
   multi-genome reference).
 - **Sylph profile** — sylph's per-genome abundance estimates (WGS). Abundance-only, so
   it appears in the abundance and summary sections but not the confusion matrices.
+- **Superresolution profile** — the superresolution pipelines' posterior mean composition
+  (`sr_shotgun` for WGS, `sr_amplicon` for 16S). Also abundance-only.
 
 ```{python}
 #| echo: false
@@ -271,8 +274,8 @@ read the pair's confusion matrix above for the definitive per-read rate.
 import statsmodels.api as sm
 
 # ponytail: regression cross-mapping is only run for these sources; AAP profiler (amplicon)
-# and sylph (WGS). Reference BAM is diagonal by construction, so it is left out.
-REG_SOURCES = ("profiler", "sylph")
+# sylph (WGS) and superresolution. Reference BAM is diagonal by construction, so it is left out.
+REG_SOURCES = ("profiler", "sylph", "sr")
 REG_CV_FLOOR = 0.1  # ponytail: a genome's truth must vary this much (CV) to be a predictor;
                     # 0.1 clears Poisson noise (~0.02) yet keeps any real sweep. Lower it if a
                     # run sweeps genomes gently.
@@ -479,7 +482,8 @@ if HAS_SWEEP:
 
 ```{python}
 #| echo: false
-_SRC_SYMBOL = {"profiler": "circle-open", "reference": "x", "sylph": "diamond-open"}
+_SRC_SYMBOL = {"profiler": "circle-open", "reference": "x", "sylph": "diamond-open",
+               "sr": "square-open"}
 
 
 def swept_pair_abundance(assay, depth):

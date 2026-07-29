@@ -165,12 +165,62 @@ def emission_distribution(model, seq: str) -> np.ndarray:
     return emit
 
 
-def _align_columns(a: str, b: str) -> list[tuple[int | None, int | None]]:
+_C2I_CACHE = None
+
+
+def _char_to_idx() -> np.ndarray:
+    """Cached ASCII->base-index (ACGT->0123) table from the skiver error model, so the
+    read scorer maps observed bases with the same convention as ``emission_distribution``."""
+    global _C2I_CACHE
+    if _C2I_CACHE is None:
+        if str(_SKIVER_LIB) not in sys.path:
+            sys.path.insert(0, str(_SKIVER_LIB))
+        from lib.error_application import _CHAR_TO_IDX  # noqa: E402
+        _C2I_CACHE = _CHAR_TO_IDX
+    return _C2I_CACHE
+
+
+def _oriented_score(read: str, read_idx: np.ndarray, ref_emit: np.ndarray,
+                    ref_seq: str, gap_penalty: float) -> float:
+    """Length-normalised log P(read | ref) for one read orientation. Aligns the ref
+    into the read (edlib infix, so read primer/overhang bases are free) and sums the
+    per-column emission log-prob; each indel column costs ``gap_penalty``."""
+    import math
+
+    total = 0.0
+    n = 0
+    for ai, bj in _align_columns(ref_seq, read, mode="HW"):
+        if ai is None or bj is None:
+            total -= gap_penalty
+        else:
+            total += math.log(ref_emit[ai, read_idx[bj]] + 1e-12)
+        n += 1
+    return total / n if n else float("-inf")
+
+
+def read_score(read: str, ref_emit: np.ndarray, ref_seq: str, gap_penalty: float) -> float:
+    """Best-orientation length-normalised raw log-likelihood of ``read`` under ``ref``.
+
+    Raw (not softmax'd across refs): keeps absolute fit, so off-target reads score low
+    under every reference and self-sort into the low-score background. ``ref_emit`` is
+    the precomputed ``emission_distribution(model, ref_seq)``.
+    """
+    c2i = _char_to_idx()
+    rev = revcomp(read)
+    fi = c2i[np.frombuffer(read.encode("ascii", "replace"), dtype=np.uint8)]
+    ri = c2i[np.frombuffer(rev.encode("ascii", "replace"), dtype=np.uint8)]
+    return max(_oriented_score(read, fi, ref_emit, ref_seq, gap_penalty),
+               _oriented_score(rev, ri, ref_emit, ref_seq, gap_penalty))
+
+
+def _align_columns(a: str, b: str, mode: str = "NW") -> list[tuple[int | None, int | None]]:
     """Align ``a`` (query) to ``b`` (target) with edlib; return aligned columns as
-    ``(ai, bj)`` where a gap is ``None``."""
+    ``(ai, bj)`` where a gap is ``None``. ``mode="HW"`` (infix) leaves target (``b``)
+    prefix/suffix overhangs free — used to align a reference into a read whose primer
+    bases overhang the amplicon."""
     import edlib
 
-    res = edlib.align(a, b, task="path")
+    res = edlib.align(a, b, task="path", mode=mode)
     cols: list[tuple[int | None, int | None]] = []
     ai = bj = 0
     for length, op in _parse_cigar(res["cigar"]):
@@ -302,6 +352,30 @@ def stage_mismapping(args) -> None:
     pd.DataFrame(M, index=refseqs, columns=refseqs).to_csv(out / "mismapping_matrix.csv")
     pd.DataFrame(T, index=genomes, columns=refseqs).to_csv(out / "translation_table.csv")
     pd.DataFrame(idx_rows).to_csv(out / "refseq_index.csv", index=False)
+    # Reference V4 amplicons — needed by `infer --score-hist` to score reads.
+    with open(out / "v4_amplicons.fasta", "w") as fh:
+        for h, s in zip(refseqs, v4):
+            fh.write(f">{h}\n{s}\n")
+
+    if args.score_components:
+        log.info("simulating score components (%d reads/ref, %d bins)", args.n_sim, args.sim_bins)
+        t0 = time.time()
+        D, bin_edges, M_sim = simulate_score_components(
+            model, v4, emits, args.gap_penalty, args.n_sim, args.sim_bins, args.seed,
+            progress=args.progress)
+        log.info("score components computed in %.1fs", time.time() - t0)
+        np.savez_compressed(out / "score_components.npz", D=D, bin_edges=bin_edges,
+                            refseqs=np.array(refseqs, dtype=object))
+        pd.DataFrame(M_sim, index=refseqs, columns=refseqs).to_csv(
+            out / "mismapping_matrix_sim.csv")
+        diff = np.abs(M - M_sim)
+        diag_a, diag_s = np.diag(M), np.diag(M_sim)
+        pd.DataFrame([{
+            "max_abs_diff": float(diff.max()),
+            "frobenius": float(np.linalg.norm(M - M_sim)),
+            "diag_corr": float(np.corrcoef(diag_a, diag_s)[0, 1]) if len(diag_a) > 1 else 1.0,
+        }]).to_csv(out / "mismapping_compare.csv", index=False)
+
     print(f"mismapping: {len(refseqs)} amplifiable refs / {len(records)} DB entries, "
           f"{len(genomes)} genomes -> {out}")
 
@@ -328,6 +402,59 @@ def _mismapping_by_simulation(model, refseqs, v4, args) -> np.ndarray:
     return M
 
 
+def simulate_score_components(model, v4: list[str], emits: list[np.ndarray],
+                              gap_penalty: float, n_sim: int, n_bins: int, seed: int,
+                              progress: bool = True):
+    """Simulate errored reads from each reference and score them against every reference.
+
+    Returns ``(D, bin_edges, M_sim)``:
+    - ``D[a, j, :]`` — the score histogram (normalised to sum 1) of reads truly from ``a``
+      scored against ``j``. This is the mis-mapping matrix ``M`` generalised from a matrix
+      of means to a tensor of full score distributions; it is the model's per-reference
+      mixture component.
+    - ``bin_edges`` — shared score bins (from the pooled simulated-score range), reused by
+      ``observed_score_histograms`` so observed and predicted histograms align. Observed
+      off-target reads scoring below the range pile into bin 0 (the background).
+    - ``M_sim[a, j]`` — argmax confusion (fraction of ``a``'s reads whose best-scoring ref
+      is ``j``), row-stochastic; the empirical counterpart of the analytic ``M`` for the
+      "is the closed-form sufficient?" check.
+    """
+    from lib.error_application import apply_batch
+
+    rng = np.random.default_rng(seed)
+    n = len(v4)
+    # Simulated reads are generated forward from v4[a]; score forward orientation only.
+    c2i = _char_to_idx()
+    scores = np.empty((n, n_sim, n), dtype=np.float64)  # [source a, read, target j]
+    rows = _progress(range(n), total=n, desc=f"score-components {n} refs",
+                     enabled=progress, unit="ref")
+    for a in rows:
+        reads = apply_batch(model, [(f"r{a}_{i}", v4[a], True) for i in range(n_sim)],
+                            rng, emit_quality=False)
+        for i, rec in enumerate(reads):
+            ridx = c2i[np.frombuffer(rec.sequence.encode("ascii", "replace"), dtype=np.uint8)]
+            for j in range(n):
+                scores[a, i, j] = _oriented_score(rec.sequence, ridx, emits[j], v4[j],
+                                                  gap_penalty)
+
+    lo, hi = np.percentile(scores, [0.1, 99.9])
+    bin_edges = np.linspace(lo, hi, n_bins + 1)
+    D = np.zeros((n, n, n_bins), dtype=np.float64)
+    for a in range(n):
+        for j in range(n):
+            D[a, j], _ = np.histogram(scores[a, :, j], bins=bin_edges)
+    D += 1e-6                                   # avoid zero-prob bins under the mixture
+    D /= D.sum(axis=2, keepdims=True)
+
+    best = scores.argmax(axis=2)                # [n, n_sim] best-scoring ref per read
+    M_sim = np.zeros((n, n), dtype=np.float64)
+    for a in range(n):
+        for j in best[a]:
+            M_sim[a, j] += 1.0
+    M_sim /= M_sim.sum(axis=1, keepdims=True)
+    return D, bin_edges, M_sim
+
+
 # ── Observed abundances from mseq ─────────────────────────────────────────────
 
 
@@ -350,12 +477,74 @@ def observed_refseq_counts(cell_dir: Path, mseq_glob: str, refseqs: list[str]) -
     return counts
 
 
+def _iter_fastq(path: Path):
+    """Yield uppercased read sequences from a (optionally gzipped) FASTQ."""
+    opener = gzip.open if str(path).endswith(".gz") else open
+    with opener(path, "rt") as fh:
+        while True:
+            if not fh.readline():          # header (or EOF)
+                break
+            seq = fh.readline().strip().upper()
+            fh.readline()                  # '+'
+            fh.readline()                  # qual
+            if seq:
+                yield seq
+
+
+def _score_bin(score: float, bin_edges: np.ndarray) -> int:
+    """Bin index of ``score`` on ``bin_edges``, clamped to the valid range."""
+    k = int(np.searchsorted(bin_edges, score, side="right")) - 1
+    return min(max(k, 0), bin_edges.shape[0] - 2)
+
+
+def observed_score_histograms(cell_dir: Path, read_glob: str, v4_seqs: list[str],
+                              emits: list[np.ndarray], bin_edges: np.ndarray,
+                              gap_penalty: float, max_reads: int, rng) -> tuple[np.ndarray, int]:
+    """Per-reference score histograms ``H[S,K]`` and read count ``N`` for one cell.
+
+    For each read, score it against every reference (best of both orientations, decided
+    once per read against ref 0 — strand is global across the same-strand 16S refs) and
+    tally the score into that reference's histogram on the shared ``bin_edges``. Reads are
+    subsampled to ``max_reads`` (a distribution estimate needs far fewer than the full
+    depth, and the scorer is O(reads x refs)). ``ponytail:`` per-read orientation detected
+    once via ref 0; large community DBs would also want a top-K ref prefilter.
+    """
+    S, K = len(v4_seqs), bin_edges.shape[0] - 1
+    c2i = _char_to_idx()
+    reads = [seq for path in sorted(cell_dir.glob(read_glob)) for seq in _iter_fastq(path)]
+    if max_reads and len(reads) > max_reads:
+        reads = [reads[i] for i in rng.choice(len(reads), size=max_reads, replace=False)]
+
+    H = np.zeros((S, K), dtype=np.float64)
+    for seq in reads:
+        rev = revcomp(seq)
+        fi = c2i[np.frombuffer(seq.encode("ascii", "replace"), dtype=np.uint8)]
+        ri = c2i[np.frombuffer(rev.encode("ascii", "replace"), dtype=np.uint8)]
+        if _oriented_score(rev, ri, emits[0], v4_seqs[0], gap_penalty) > \
+                _oriented_score(seq, fi, emits[0], v4_seqs[0], gap_penalty):
+            rd, ridx = rev, ri
+        else:
+            rd, ridx = seq, fi
+        for j in range(S):
+            sc = _oriented_score(rd, ridx, emits[j], v4_seqs[j], gap_penalty)
+            H[j, _score_bin(sc, bin_edges)] += 1.0
+    return H, len(reads)
+
+
 # ── Pyro inference ────────────────────────────────────────────────────────────
 
 
 def composition_model(M, T, alpha, N, y_obs=None, likelihood="dirichlet_multinomial",
-                      use_mismapping=True, s_sigma=0.3, od_loc=1.1, od_scale=1.0):
+                      use_mismapping=True, s_sigma=0.3, od_loc=1.1, od_scale=1.0,
+                      comp_scale=None):
     """Generative model of the observed per-reference counts.
+
+    ``likelihood="score_hist"`` is the per-reference score-distribution model: ``M`` carries
+    the simulated component tensor ``D[S,S,K]`` and ``y_obs`` the observed score histograms
+    ``H[S,K]``. Each reference's histogram is Multinomial over ``K`` score bins with
+    probabilities ``p[j] = Σ_a r_true[a]·D[a,j]``. Because every read feeds all ``S``
+    histograms, these are a *composite* likelihood — downweighted by ``1/comp_scale``
+    (default ``S``) so the posterior isn't spuriously tight.
 
     ``theta`` is the true **read-space** genome composition; ``T`` rows sum to 1
     (within-genome copy distribution) so ``r_true = theta@T`` has genome-marginal
@@ -378,6 +567,20 @@ def composition_model(M, T, alpha, N, y_obs=None, likelihood="dirichlet_multinom
 
     r_true = theta @ T
     r_true = r_true / r_true.sum()
+
+    if likelihood == "score_hist":
+        import pyro.poutine as poutine
+
+        D, H_obs = M, y_obs                       # M := D[S,S,K], y_obs := H[S,K]
+        S = D.shape[0]
+        p = torch.einsum("a,ajk->jk", r_true, D)  # [S,K] predicted per-ref bin probs
+        p = p / p.sum(-1, keepdim=True)
+        total = int(round(float(H_obs[0].sum()))) if H_obs is not None else int(N)
+        c = float(comp_scale) if comp_scale else float(S)   # composite downweight
+        with poutine.scale(scale=1.0 / c), pyro.plate("refs", S):
+            pyro.sample("H", dist.Multinomial(total_count=total, probs=p), obs=H_obs)
+        return
+
     if use_mismapping:
         # Mis-mapping scale applied to M before it acts on r_true.
         s = pyro.sample("s", dist.LogNormal(torch.tensor(0.0, dtype=dt),
@@ -415,15 +618,16 @@ def _fit(mode, M, T, alpha, N, y_obs, likelihood, theta_init, args, desc=""):
     import torch
     from pyro.infer.autoguide.initialization import init_to_value
 
-    use_mm = getattr(args, "use_mismapping", True)
+    use_mm = getattr(args, "use_mismapping", True) and likelihood != "score_hist"
     show = getattr(args, "progress", True)
-    mk = {"y_obs": y_obs, "likelihood": likelihood, "use_mismapping": use_mm}
+    mk = {"y_obs": y_obs, "likelihood": likelihood, "use_mismapping": use_mm,
+          "comp_scale": getattr(args, "comp_scale", None)}
 
     pyro.clear_param_store()
     init = {"theta": theta_init}
     if use_mm:
         init["s"] = torch.tensor(1.0, dtype=M.dtype)
-    if likelihood != "multinomial":
+    if likelihood == "dirichlet_multinomial":
         init["conc_frac"] = torch.tensor(3.0, dtype=M.dtype)  # ~exp(od_loc), prior median
 
     def _summ(samples):
@@ -482,13 +686,32 @@ def stage_infer(args) -> None:
     _bp = _load_module("benchmark_preprocess", _HERE / "benchmark_preprocess.py")
 
     mm_dir = args.mismap_dir
-    M_df = pd.read_csv(mm_dir / "mismapping_matrix.csv", index_col=0)
     T_df = pd.read_csv(mm_dir / "translation_table.csv", index_col=0)
-    refseqs = list(M_df.columns)
     genomes = list(T_df.index)
-    M = torch.tensor(M_df.to_numpy(), dtype=torch.float64)
+
+    score_hist = getattr(args, "score_hist", False)
+    if score_hist:
+        # Observed variable = per-reference score histograms; "M" positional := the
+        # simulated component tensor D[S,S,K]. Need the model + ref amplicons to score reads.
+        npz = np.load(mm_dir / "score_components.npz", allow_pickle=True)
+        D, bin_edges = npz["D"], npz["bin_edges"]
+        refseqs = [str(r) for r in npz["refseqs"]]
+        model = _load_error_model(args.model_pt, args.use_vi)
+        v4_map = dict(read_fasta(mm_dir / "v4_amplicons.fasta"))
+        v4_seqs = [v4_map[r] for r in refseqs]
+        emits = [emission_distribution(model, s) for s in v4_seqs]
+        M = torch.tensor(D, dtype=torch.float64)
+        likelihood, use_mm_eff = "score_hist", False
+        rng = np.random.default_rng(args.seed)
+    else:
+        M_df = pd.read_csv(mm_dir / "mismapping_matrix.csv", index_col=0)
+        refseqs = list(M_df.columns)
+        M = torch.tensor(M_df.to_numpy(), dtype=torch.float64)
+        likelihood, use_mm_eff = args.likelihood, args.use_mismapping
+
     T = torch.tensor(T_df.loc[genomes, refseqs].to_numpy(), dtype=torch.float64)
     refseq_genome = {r: genome_of_header(r) for r in refseqs}
+    g_of_ref = np.array([genomes.index(refseq_genome[r]) for r in refseqs])
 
     pipeline_root = args.run_dir / args.pipeline_dir
     cells = _bp.find_cells(pipeline_root)
@@ -500,28 +723,40 @@ def stage_infer(args) -> None:
                          + (f" for assay {args.assay}" if args.assay else ""))
 
     log.info("inference: %d cell(s), %d genomes, %d references, mode=%s likelihood=%s%s",
-             len(cells), len(genomes), len(refseqs), args.mode, args.likelihood,
-             "" if args.use_mismapping else " (no mis-mapping correction)")
+             len(cells), len(genomes), len(refseqs), args.mode, likelihood,
+             "" if use_mm_eff else " (no mis-mapping correction)")
 
     comp_rows: list[dict] = []
     diag_rows: list[dict] = []
     loss_rows: list[dict] = []
     for ci, cell in enumerate(cells, 1):
         cname = f"{cell['sample']}.{cell['assay']}/{cell['depth']}"
-        counts = observed_refseq_counts(cell["dir"], args.mseq_glob, refseqs)
-        total = sum(counts.values())
-        if total == 0:
-            log.info("[%d/%d] %s: no reads, skipping", ci, len(cells), cname)
-            continue
+        if score_hist:
+            H_obs, total = observed_score_histograms(
+                cell["dir"], args.read_glob, v4_seqs, emits, bin_edges,
+                args.gap_penalty, args.max_reads, rng)
+            if total == 0:
+                log.info("[%d/%d] %s: no reads, skipping", ci, len(cells), cname)
+                continue
+            obs_for_fit = torch.tensor(H_obs, dtype=torch.float64)
+            # Per-ref proxy for init/baseline: upper-half score-mass (reads scoring well
+            # against ref j) — a rough hard-assignment stand-in, not the inference itself.
+            w = H_obs[:, H_obs.shape[1] // 2:].sum(1)
+            ref_rel = w / w.sum() if w.sum() > 0 else np.full(len(refseqs), 1.0 / len(refseqs))
+        else:
+            counts = observed_refseq_counts(cell["dir"], args.mseq_glob, refseqs)
+            total = sum(counts.values())
+            if total == 0:
+                log.info("[%d/%d] %s: no reads, skipping", ci, len(cells), cname)
+                continue
+            y = np.array([counts.get(r, 0) for r in refseqs], dtype=np.float64)
+            ref_rel = y / total
+            obs_for_fit = torch.tensor(ref_rel, dtype=torch.float64)
         log.info("[%d/%d] %s: %d reads", ci, len(cells), cname, total)
-        y = np.array([counts.get(r, 0) for r in refseqs], dtype=np.float64)
-        y_rel = torch.tensor(y / total, dtype=torch.float64)
 
-        # Observed genome composition (collapse dbhit->genome): baseline + init.
-        obs_genome = defaultdict(float)
-        for r, c in counts.items():
-            obs_genome[refseq_genome[r]] += c / total
-        theta_obs = np.array([obs_genome.get(g, 0.0) for g in genomes])
+        # Observed genome composition (collapse ref->genome): baseline + init.
+        theta_obs = np.zeros(len(genomes))
+        np.add.at(theta_obs, g_of_ref, ref_rel)
         theta_init = torch.tensor(np.clip(theta_obs, 1e-4, None), dtype=torch.float64)
         theta_init = theta_init / theta_init.sum()
 
@@ -529,7 +764,7 @@ def stage_infer(args) -> None:
         truth_map = truth.set_index("genome_id")["realized_rel_abundance"].to_dict()
 
         samples, point, diag, losses = _fit(
-            args.mode, M, T, args.alpha, float(total), y_rel, args.likelihood,
+            args.mode, M, T, args.alpha, float(total), obs_for_fit, likelihood,
             theta_init, args, desc=f"[{ci}/{len(cells)}] {cname}")
         inferred = point.numpy()
         lo = hi = [np.nan] * len(genomes)
@@ -545,8 +780,8 @@ def stage_infer(args) -> None:
                               "inferred_mean": float(inferred[i]),
                               "inferred_lo": float(lo[i]), "inferred_hi": float(hi[i]),
                               "truth_rel_abundance": float(truth_map.get(g, 0.0))})
-        diag_rows.append({**tag, "mode": args.mode, "likelihood": args.likelihood,
-                          "use_mismapping": args.use_mismapping, "n_reads": int(total),
+        diag_rows.append({**tag, "mode": args.mode, "likelihood": likelihood,
+                          "use_mismapping": use_mm_eff, "n_reads": int(total),
                           **{k: json.dumps(v) for k, v in diag.items()}})
         if losses is not None:
             for step, loss in enumerate(losses):
@@ -604,6 +839,20 @@ def demo_mismapping() -> None:
     # identical refs -> ~half mass each
     Mid = build_mismapping_matrix([emits[0], emits[0]], [a, a], gap_penalty=4.0)
     assert abs(Mid[0, 1] - 0.5) < 1e-6, Mid
+
+    # read_score: a read equal to ref a scores higher under a than under distant c.
+    assert read_score(a, emits[0], a, 4.0) > read_score(a, emits[2], c, 4.0)
+
+    # simulated score components: shapes, normalisation, and argmax confusion structure.
+    D, edges, M_sim = simulate_score_components(model, [a, b, c], emits, gap_penalty=4.0,
+                                                n_sim=120, n_bins=16, seed=0, progress=False)
+    assert D.shape == (3, 3, 16) and edges.shape == (17,)
+    assert np.allclose(D.sum(2), 1.0), D.sum(2)
+    assert np.allclose(M_sim.sum(1), 1.0) and (np.diag(M_sim) > 0.5).all(), M_sim
+    # a-reads' score distribution against near-identical b overlaps a's self-distribution
+    # far more than against distant c (histogram intersection).
+    ov = lambda p, q: float(np.minimum(p, q).sum())
+    assert ov(D[0, 0], D[0, 1]) > ov(D[0, 0], D[0, 2]), D[0]
     print("demo mismapping: OK")
 
 
@@ -643,6 +892,41 @@ def demo_infer() -> None:
     assert err_inf < err_naive, (err_inf, err_naive)
     print(f"demo infer: L1 naive={err_naive:.3f} -> inferred={err_inf:.3f} OK")
 
+    # ── score-histogram likelihood ───────────────────────────────────────────
+    # Same 3-genome / 4-ref setup. Build synthetic per-source score components D[a,j,K]
+    # (reads from a score high against confusable refs) and observed histograms H = N·(r_true@D).
+    K, S = 10, 4
+    close = np.array([[1.0, 0.1, 0.1, 0.1],
+                      [0.1, 1.0, 0.9, 0.1],    # refs 1<->2 confusable copies
+                      [0.1, 0.9, 1.0, 0.1],
+                      [0.1, 0.1, 0.1, 1.0]])
+    D = np.full((S, S, K), 1e-3)
+    for aa in range(S):
+        for jj in range(S):
+            D[aa, jj, int(round(close[aa, jj] * (K - 1)))] += 1.0
+    D /= D.sum(2, keepdims=True)
+    r_true_np = (theta_true @ T).numpy(); r_true_np /= r_true_np.sum()
+    p_hist = np.einsum("a,ajk->jk", r_true_np, D)          # [S,K]
+    Nreads = 5000
+    H_obs = np.round(p_hist / p_hist.sum(1, keepdims=True) * Nreads)
+
+    w = H_obs[:, K // 2:].sum(1); ref_rel = w / w.sum()
+    theta_obs2 = np.zeros(3)
+    np.add.at(theta_obs2, T.argmax(0).numpy(), ref_rel)
+    theta_obs2 /= theta_obs2.sum()
+
+    args2 = argparse.Namespace(mode="vi", num_samples=200, warmup=0, steps=1500, lr=0.05,
+                               progress=False, comp_scale=None)
+    _, point2, _, losses2 = _fit("vi", torch.tensor(D), T, 0.5, float(Nreads),
+                                 torch.tensor(H_obs), "score_hist",
+                                 torch.tensor(np.clip(theta_obs2, 1e-4, None)) /
+                                 np.clip(theta_obs2, 1e-4, None).sum(), args2)
+    err_naive2 = float(np.abs(theta_obs2 - theta_true.numpy()).sum())
+    err_inf2 = float(np.abs(point2.numpy() - theta_true.numpy()).sum())
+    assert losses2[-1] < losses2[0], (losses2[0], losses2[-1])
+    assert err_inf2 <= err_naive2 + 1e-3, (err_inf2, err_naive2)
+    print(f"demo infer score_hist: L1 naive={err_naive2:.3f} -> inferred={err_inf2:.3f} OK")
+
 
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
@@ -669,7 +953,12 @@ def main() -> None:
     m.add_argument("--method", choices=["likelihood", "simulate"], default="likelihood")
     m.add_argument("--gap-penalty", type=float, default=4.0,
                    help="LLR added per alignment gap column (likelihood method)")
-    m.add_argument("--n-sim", type=int, default=500, help="reads/ref for --method simulate")
+    m.add_argument("--n-sim", type=int, default=500,
+                   help="reads/ref for --method simulate and for --score-components")
+    m.add_argument("--score-components", action="store_true",
+                   help="also simulate per-reference score-distribution components D[S,S,K] "
+                        "(-> score_components.npz) for `infer --score-hist`")
+    m.add_argument("--sim-bins", type=int, default=40, help="score-histogram bins K")
     m.add_argument("--seed", type=int, default=0)
     m.add_argument("-o", "--output-dir", type=Path)
     m.add_argument("--demo", action="store_true")
@@ -693,6 +982,21 @@ def main() -> None:
                      help="baseline control: infer without the mis-mapping correction "
                           "(r_obs = r_true, no s term)")
     inf.set_defaults(use_mismapping=True)
+    # Score-histogram path: observed variable = per-reference alignment-score distributions,
+    # fit against simulated components (score_components.npz from `mismapping --score-components`).
+    inf.add_argument("--score-hist", action="store_true",
+                     help="use per-reference score-distribution likelihood instead of mseq counts")
+    inf.add_argument("--model-pt", type=Path, help="error model (required for --score-hist)")
+    inf.add_argument("--use-vi", action="store_true", help="use the model's VI posterior mean")
+    inf.add_argument("--read-glob", default="*_R1.fastq.gz",
+                     help="per-cell read file glob (--score-hist)")
+    inf.add_argument("--max-reads", type=int, default=20000,
+                     help="subsample reads/cell for the score histograms (--score-hist)")
+    inf.add_argument("--gap-penalty", type=float, default=4.0,
+                     help="log-prob penalty per alignment gap when scoring reads (--score-hist)")
+    inf.add_argument("--comp-scale", type=float, default=None,
+                     help="composite-likelihood downweight c (default = #references)")
+    inf.add_argument("--seed", type=int, default=0)
     inf.add_argument("--alpha", type=float, default=0.5, help="Dirichlet prior concentration")
     inf.add_argument("--num-samples", type=int, default=500)
     inf.add_argument("--warmup", type=int, default=500)
@@ -716,9 +1020,12 @@ def main() -> None:
     else:
         if args.demo:
             return demo_infer()
-        for req in ("run_dir", "mismap_dir", "output_dir"):
-            if getattr(args, req) is None:
-                ap.error(f"--{req.replace('_', '-')} required")
+        req = ["run_dir", "mismap_dir", "output_dir"]
+        if args.score_hist:
+            req.append("model_pt")
+        for r in req:
+            if getattr(args, r) is None:
+                ap.error(f"--{r.replace('_', '-')} required")
         stage_infer(args)
 
 

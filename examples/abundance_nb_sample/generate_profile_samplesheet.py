@@ -4,9 +4,10 @@ already written by an earlier run, without regenerating them.
 
 Reuses the same config.yaml as generate_samplesheet.py: it emits the same
 `databases:` block (so the pipeline builds the DB) and one `samples:` row per
-already-generated sample, re-profiling each with the profiler its generation mode
-used (read from samplesheet.yaml), so a wgs sample re-runs sylph and an amplicon
-sample re-runs aap - without regenerating the reads.
+already-generated sample x profiler, read from samplesheet.yaml: each mode's primary
+`profiler:` plus any `extra_profilers:`. So a wgs sample re-runs sylph and
+sr_shotgun, an amplicon sample re-runs aap and sr_amplicon - all against the same
+reads, each writing its own profile into that sample's benchmark dir.
 
     python generate_profile_samplesheet.py [results_dir] [config.yaml]
     nextflow run ../../main.nf -profile docker --step profile \\
@@ -25,12 +26,15 @@ DEFAULT_RESULTS_DIR = HERE.parent.parent / "results" / "abundance_nb_sample"
 
 
 def generated_samples(samplesheet):
-    """(sample_id, profiler) for each row of the generate samplesheet.yaml, so each
-    sample re-profiles with the profiler its generation mode used."""
+    """(sample_id, profiler) for each row of the generate samplesheet.yaml x each of
+    that row's profilers (its generation mode's `profiler:` + `extra_profilers:`), so
+    every method is benchmarked against the same generated reads."""
     if not samplesheet.exists():
         sys.exit(f"{samplesheet} not found - run generate_samplesheet.py first.")
     doc = yaml.safe_load(samplesheet.read_text())
-    return [(s["sample"], s["profiler"]) for s in doc["samples"]]
+    return [(s["sample"], p)
+            for s in doc["samples"]
+            for p in [s["profiler"], *(s.get("extra_profilers") or [])]]
 
 
 def main():
@@ -51,7 +55,7 @@ def main():
         nc.dump_yaml(doc, fh)
 
     print(f"Wrote profile_samplesheet.yaml: {len(rows)} rows (one per generated "
-          f"sample, each with its generation-mode profiler) against '{db_name}', "
+          f"sample x profiler) against '{db_name}', "
           f"benchmark_dir root {results_dir}")
 
 

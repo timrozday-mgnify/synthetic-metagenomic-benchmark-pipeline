@@ -72,12 +72,15 @@ tasks:
     vars:
       RUN_DIR_ABS: '{{.DIR}}/{{.RUN_DIR}}'
       PRIMERS: '{{.PRIMERS | default ""}}'
+      # SCORE_HIST=true also simulates the per-reference score components for `infer --score-hist`.
+      SCORE_COMPONENTS: '{{if eq .SCORE_HIST "true"}}--score-components{{end}}'
     cmds:
       - |
         {{.BASICPYTHON_ENV}}/bin/python {{.SUBSPECIES_INFER}} mismapping \
           --db-fasta "{{.RUN_DIR_ABS}}/{{.DB_FASTA}}" \
           --model-pt "{{.RUN_DIR_ABS}}/{{.MODEL_PT}}" \
           {{if .PRIMERS}}{{.PRIMERS}}{{end}} \
+          {{.SCORE_COMPONENTS}} \
           --output-dir "{{.RUN_DIR_ABS}}/subspecies_infer"
 
   _infer:
@@ -90,6 +93,9 @@ tasks:
       ASSAY: '{{.ASSAY | default "515-YF-806BR"}}'
       # USE_MISMAPPING=false runs the baseline control (no mis-mapping correction).
       NO_MISMAPPING: '{{if eq .USE_MISMAPPING "false"}}--no-mismapping{{end}}'
+      # SCORE_HIST=true uses the per-reference score-distribution likelihood (needs MODEL_PT
+      # and `mismapping --score-components`).
+      SCORE_HIST_ARGS: '{{if eq .SCORE_HIST "true"}}--score-hist --model-pt "{{.RUN_DIR_ABS}}/{{.MODEL_PT}}"{{end}}'
     cmds:
       - |
         {{.BASICPYTHON_ENV}}/bin/python {{.SUBSPECIES_INFER}} infer \
@@ -99,6 +105,7 @@ tasks:
           --assay "{{.ASSAY}}" \
           --mode "{{.MODE}}" \
           {{.NO_MISMAPPING}} \
+          {{.SCORE_HIST_ARGS}} \
           --output-dir "{{.RUN_DIR_ABS}}/subspecies_infer"
 
   _render_infer:
@@ -121,14 +128,16 @@ tasks:
   subspecies-infer:
     desc: Estimate mis-mapping, infer true composition, render the inference report
           (RUN_DIR, PIPELINE_DIR, DB_FASTA, MODEL_PT; optional MODE, PRIMERS, RUN_LABEL,
-          ASSAY [default 515-YF-806BR], USE_MISMAPPING=false for the no-correction baseline)
+          ASSAY [default 515-YF-806BR], USE_MISMAPPING=false for the no-correction baseline,
+          SCORE_HIST=true for the per-reference score-distribution likelihood)
     cmds:
       - task: _mismapping
         vars: {RUN_DIR: '{{.RUN_DIR}}', DB_FASTA: '{{.DB_FASTA}}', MODEL_PT: '{{.MODEL_PT}}',
-                PRIMERS: '{{.PRIMERS}}'}
+                PRIMERS: '{{.PRIMERS}}', SCORE_HIST: '{{.SCORE_HIST}}'}
       - task: _infer
         vars: {RUN_DIR: '{{.RUN_DIR}}', PIPELINE_DIR: '{{.PIPELINE_DIR}}', MODE: '{{.MODE}}',
-                ASSAY: '{{.ASSAY}}', USE_MISMAPPING: '{{.USE_MISMAPPING}}'}
+                ASSAY: '{{.ASSAY}}', USE_MISMAPPING: '{{.USE_MISMAPPING}}',
+                SCORE_HIST: '{{.SCORE_HIST}}', MODEL_PT: '{{.MODEL_PT}}'}
       - task: _render_infer
         vars: {RUN_DIR: '{{.RUN_DIR}}', MODE: '{{.MODE}}', RUN_LABEL: '{{.RUN_LABEL}}'}
 

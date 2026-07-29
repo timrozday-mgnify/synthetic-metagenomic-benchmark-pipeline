@@ -1,0 +1,54 @@
+# Superresolution profiling: both flavours, both reference sources.
+#   S1 - shotgun reads, sr_shotgun, references built from the sample's own genomes.
+#   S2 - amplicon reads, sr_amplicon, references built from the sample's own 16S
+#        (ssuA/ssuB: two V4-flanked 16S copies per genome). No `primers:` — the
+#        genomes CSV is used directly, which is what makes `self` references correct
+#        here (the CSV points at exactly the FASTAs the reads came from). The nested
+#        amplicon pipeline runs its OWN in-silico PCR over those references, which is
+#        why they must carry real 515F/806R sites.
+#   S3 - shotgun reads, sr_shotgun, references built from the named `srA` collection
+#        (the whole panel, including genomes absent from this sample).
+databases:
+  srA:
+    sequences:
+      - id: genomeA
+        genome: tests/data/genomeA.fasta
+        ssu: tests/data/genomeA.fasta
+      - id: genomeB
+        genome: tests/data/genomeB.fasta
+        ssu: tests/data/genomeB.fasta
+
+samples:
+  - sample: S1
+    train_id: natA
+    train_fastq_1: tests/data/natural_R1.fastq.gz
+    train_fastq_2: tests/data/natural_R2.fastq.gz
+    platform: hq-illumina
+    genomes_csv: tests/data/genomes_S1.csv
+    num_reads: 2000
+    mode: shotgun
+    profiler: sr_shotgun
+    database: self
+
+  - sample: S2
+    train_id: natA
+    train_fastq_1: tests/data/natural_R1.fastq.gz
+    train_fastq_2: tests/data/natural_R2.fastq.gz
+    platform: hq-illumina
+    genomes_csv: tests/data/genomes_S2_ssu.csv
+    num_reads: 2000
+    mode: amplicon
+    read_length_mean: 200
+    profiler: sr_amplicon
+    database: self
+
+  - sample: S3
+    train_id: natA
+    train_fastq_1: tests/data/natural_R1.fastq.gz
+    train_fastq_2: tests/data/natural_R2.fastq.gz
+    platform: hq-illumina
+    genomes_csv: tests/data/genomes_S1.csv
+    num_reads: 2000
+    mode: shotgun
+    profiler: sr_shotgun
+    database: srA

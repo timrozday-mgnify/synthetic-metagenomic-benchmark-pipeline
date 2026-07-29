@@ -18,6 +18,13 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 BASES = "ACGT"
 COMP = str.maketrans("ACGT", "TGCA")
 
+# 515-YF / 806BR with the degenerate positions resolved to one concrete base, so the
+# amplicon fixtures below carry sites the standard V4 primers actually match.
+#   515-YF GTGYCAGCMGCCGCGGTAA  (Y->C, M->A)
+#   806BR  GGACTACNVGGGTWTCTAAT (N->A, V->A, W->A)
+V4_FWD = "GTGCCAGCAGCCGCGGTAA"
+V4_REV = "GGACTACAAGGGTATCTAAT"
+
 
 def revcomp(s: str) -> str:
     return s.translate(COMP)[::-1]
@@ -84,6 +91,31 @@ def main() -> None:
     write_fastq_gz(
         os.path.join(HERE, "natural_R2.fastq.gz"), [(r2, q2) for _, _, r2, q2 in pairs]
     )
+
+    # 16S-like references for the amplicon profilers. The superresolution-amplicon
+    # pipeline builds its DB by in-silico PCR over the references, so unlike the
+    # random genomes above these MUST carry real V4 primer sites (515F / 806R) or
+    # nothing amplifies. Two 16S copies per genome, and the copies differ only in a
+    # short window — the near-identical sequence superresolution exists to resolve.
+    for name, seed in (("ssuA", 11), ("ssuB", 12)):
+        crng = random.Random(seed)
+        core = random_genome(crng, 250)
+        records = []
+        for copy in range(2):
+            # Copy 1 differs from copy 0 in a 20 bp window only.
+            var = core if copy == 0 else core[:100] + random_genome(crng, 20) + core[120:]
+            records.append((f"{name}_copy{copy}", V4_FWD + var + revcomp(V4_REV)))
+        path = os.path.join(HERE, f"{name}.fasta")
+        with open(path, "w") as fh:
+            for header, seq in records:
+                fh.write(f">{header}\n")
+                for i in range(0, len(seq), 70):
+                    fh.write(seq[i : i + 70] + "\n")
+
+    with open(os.path.join(HERE, "genomes_S2_ssu.csv"), "w") as fh:
+        fh.write("genome_id,fasta_path,abundance\n")
+        fh.write("genomeA,tests/data/ssuA.fasta,0.4\n")
+        fh.write("genomeB,tests/data/ssuB.fasta,0.6\n")
 
     with open(os.path.join(HERE, "genomes_S1.csv"), "w") as fh:
         fh.write("genome_id,fasta_path,abundance\n")

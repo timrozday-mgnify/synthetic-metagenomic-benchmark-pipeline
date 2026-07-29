@@ -99,6 +99,40 @@ nextflow_pipeline {
         }
     }
 
+    test("superresolution profiling - stub") {
+        tag "stub"
+        options "-stub"
+        when {
+            params {
+                input  = "${projectDir}/tests/samplesheets/superresolution.yaml"
+                outdir = "$outputDir"
+            }
+        }
+        then {
+            assertAll(
+                { assert workflow.success },
+
+                // Collection references published in the prebuilt-dir layout. Only the
+                // genome source is built: no sample references srA with sr_amplicon.
+                { assert path("${params.outdir}/databases/srA/srA_genome.sr_refs.fasta").exists() },
+
+                // Normalised profile next to truth.tsv for all three: self/shotgun,
+                // self/amplicon, and the named collection.
+                { assert path("${params.outdir}/S1/S1.sr_profile.tsv").exists() },
+                { assert path("${params.outdir}/S2/S2.sr_profile.tsv").exists() },
+                { assert path("${params.outdir}/S3/S3.sr_profile.tsv").exists() },
+
+                // Raw composition CSV kept under profiling/sr/.
+                { assert path("${params.outdir}/S1/profiling/sr/S1.inferred_composition.csv").exists() },
+
+                // Only the 'self' samples build their own references (S1, S2); S3 joins
+                // the collection's. 2 SR_BUILD_REFS + 1 SR_BUILD_COLLECTION_REFS + 3 runs.
+                { assert workflow.trace.succeeded().findAll { it.name.contains("RUN_SUPERRESOLUTION") }.size() == 3 },
+                { assert workflow.trace.succeeded().findAll { it.name.contains("SR_BUILD_REFS") }.size() == 2 }
+            )
+        }
+    }
+
     test("train-only - stub") {
         tag "stub"
         options "-stub"
@@ -295,6 +329,49 @@ nextflow_pipeline {
 
                 // Raw sylph output kept under profiling/.
                 { assert path("${params.outdir}/S1/profiling/sylph/S1.sylph.tsv").exists() }
+            )
+        }
+    }
+
+    test("superresolution profiling") {
+        tag "e2e"
+        // Launches both nested superresolution pipelines for real. They're pulled
+        // from GitHub on first run (params.sr_*_repo / sr_revision), so this needs
+        // network access plus their GHCR images; tests/sr_fast.config scales the
+        // inference down to the fixture size, and the nested run needs its own
+        // -profile (it doesn't inherit the outer one).
+        when {
+            params {
+                input      = "${projectDir}/tests/samplesheets/superresolution.yaml"
+                outdir     = "$outputDir"
+                sr_profile = "docker"
+                sr_configs = [ "${projectDir}/tests/sr_fast.config" ]
+            }
+        }
+        then {
+            assertAll(
+                { assert workflow.success },
+
+                // Generation + ground truth still produced.
+                { assert path("${params.outdir}/S1/S1.truth.tsv").exists() },
+
+                // Same truth-comparable contract sylph emits, for both flavours.
+                { assert path("${params.outdir}/S1/S1.sr_profile.tsv").readLines().get(0)
+                    == "genome_id\tpredicted_rel_abundance\tpredicted_tax_rel_abundance" },
+                { assert path("${params.outdir}/S2/S2.sr_profile.tsv").readLines().get(0)
+                    == "genome_id\tpredicted_rel_abundance\tpredicted_tax_rel_abundance" },
+                { assert path("${params.outdir}/S3/S3.sr_profile.tsv").readLines().get(0)
+                    == "genome_id\tpredicted_rel_abundance\tpredicted_tax_rel_abundance" },
+
+                // Genomes are the community's, and the abundances renormalise to 1.
+                { assert path("${params.outdir}/S1/S1.sr_profile.tsv").readLines().size() > 1 },
+                { assert Math.abs(path("${params.outdir}/S1/S1.sr_profile.tsv").readLines()
+                    .drop(1).collect { it.split("\t")[1] as double }.sum() - 1.0) < 1e-5 },
+                { assert path("${params.outdir}/S1/S1.sr_profile.tsv").readLines().drop(1)
+                    .collect { it.split("\t")[0] }.every { it in ["genomeA", "genomeB"] } },
+
+                // Raw composition CSV kept under profiling/sr/.
+                { assert path("${params.outdir}/S1/profiling/sr/S1.inferred_composition.csv").exists() }
             )
         }
     }

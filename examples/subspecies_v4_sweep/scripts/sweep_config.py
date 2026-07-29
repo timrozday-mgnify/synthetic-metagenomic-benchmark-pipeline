@@ -12,12 +12,13 @@ Schema (see ../config.yaml for a filled-in template):
     reads:    {num_reads, subsample?, paired_end, read_length_mean, read_length_variance}
               # shared read-generation defaults; a generation mode may override any field.
     sweep:    {n_samples, steepness}
-    database: {name, profilers: [aap|sylph, ...],
+    database: {name, profilers: [aap|sylph|sr_amplicon|sr_shotgun, ...],
                rfam_covariance_model?, rfam_claninfo?}  # required if 'aap' in profilers
     aap:      {configs?: [path, ...], profile?}         # optional; nested-AAP engine/-c files
     generation_modes:                                   # each sweep sample is emitted once per mode
               [ {name, source: genome|ssu|amplicon, mode: shotgun|amplicon|long,
-                 profiler?, primers?: [...]|path-to-TSV, reads?: {...}}, ... ]
+                 profiler?, extra_profilers?: [...], primers?: [...]|path-to-TSV,
+                 reads?: {...}}, ... ]
     panel:    [ {id, species, amplicon?, ssu?, genome?, taxonomy?, kingdom?}, ... ]
 
 Exactly one `species` must appear twice: that pair is the abundance-sweep target.
@@ -47,6 +48,12 @@ class _NoAliasDumper(yaml.SafeDumper):
 def dump_yaml(doc, fh):
     yaml.dump(doc, fh, Dumper=_NoAliasDumper, sort_keys=False,
               default_flow_style=False)
+
+
+# Panel FASTA field each profiler's database is built from. Whole-genome profilers
+# need `genome:`; 16S ones need `ssu:`.
+PROFILER_FIELD = {"sylph": "genome", "sr_shotgun": "genome",
+                  "aap": "ssu", "sr_amplicon": "ssu"}
 
 
 def load_config(path):
@@ -123,18 +130,22 @@ def _validate(cfg):
             sys.exit(f"config: generation mode '{name}' (amplicon from {src}) needs `primers:`")
         if src == "amplicon" and has_primers:
             sys.exit(f"config: generation mode '{name}' uses pre-trimmed amplicons; remove `primers:`")
-        if gm.get("profiler") and gm["profiler"] not in profilers:
-            sys.exit(f"config: generation mode '{name}' profiler '{gm['profiler']}' "
-                     f"not in database.profilers {profilers}")
+        for prof in mode_profilers(gm):
+            if prof not in profilers:
+                sys.exit(f"config: generation mode '{name}' profiler '{prof}' "
+                         f"not in database.profilers {profilers}")
         for m in panel:
             if not m.get(src):
                 sys.exit(f"config: panel member '{m['id']}' needs `{src}:` (generation mode '{name}')")
 
     for m in panel:
-        if "aap" in profilers and not m.get("ssu"):
-            sys.exit(f"config: panel member '{m['id']}' needs `ssu:` (aap profiling)")
-        if "sylph" in profilers and not m.get("genome"):
-            sys.exit(f"config: panel member '{m['id']}' needs `genome:` (sylph profiling)")
+        for prof in profilers:
+            if prof not in PROFILER_FIELD:
+                sys.exit(f"config: unknown profiler '{prof}' in database.profilers "
+                         f"(expected one of {sorted(PROFILER_FIELD)})")
+            if not m.get(PROFILER_FIELD[prof]):
+                sys.exit(f"config: panel member '{m['id']}' needs "
+                         f"`{PROFILER_FIELD[prof]}:` ({prof} profiling)")
 
 
 def sweep_pair(cfg):
@@ -164,6 +175,14 @@ def generation_modes(cfg):
     }]
 
 
+def mode_profilers(m):
+    """Every profiler a generation mode's samples are profiled with: the primary
+    `profiler:` (used by `--step all`) plus any `extra_profilers:` (re-profiled over
+    the same reads by `--step profile`)."""
+    profs = [m["profiler"]] if m.get("profiler") else []
+    return profs + list(m.get("extra_profilers") or [])
+
+
 def mode_source_field(m):
     """Panel FASTA field feeding read generation for this mode (genome|ssu|amplicon)."""
     return m["source"]
@@ -188,16 +207,20 @@ def taxonomy(member):
 
 def database_block(cfg):
     """`{name: {sequences: [...]}}` for the config's database, emitting only the
-    fields each requested profiler needs (genome for sylph; ssu+taxonomy for aap)."""
+    fields the requested profilers need: `genome` for the whole-genome profilers
+    (sylph, sr_shotgun), `ssu` for the 16S ones (aap, sr_amplicon), and `taxonomy`
+    only for aap (the sole profiler that classifies rather than matching genomes)."""
     db = cfg["database"]
     profilers = db["profilers"]
+    fields = {PROFILER_FIELD[p] for p in profilers if p in PROFILER_FIELD}
     sequences = []
     for m in cfg["panel"]:
         seq = {"id": m["id"]}
-        if "sylph" in profilers:
+        if "genome" in fields:
             seq["genome"] = m["genome"]
-        if "aap" in profilers:
+        if "ssu" in fields:
             seq["ssu"] = m["ssu"]
+        if "aap" in profilers:
             seq["taxonomy"] = taxonomy(m)
         sequences.append(seq)
     entry = {"sequences": sequences}
@@ -328,6 +351,46 @@ def _selfcheck():
             assert "primers" in str(e), e
         else:
             raise AssertionError("expected SystemExit for amplicon-from-ssu without primers")
+
+        # superresolution: sr_amplicon needs `ssu:` (no taxonomy), sr_shotgun `genome:`.
+        p.write_text(cfg_text.replace("profilers: [aap]", "profilers: [sr_amplicon]"))
+        seqs_sr = database_block(load_config(p))["community_v4"]["sequences"]
+        assert "ssu" in seqs_sr[0], seqs_sr
+        assert "taxonomy" not in seqs_sr[0] and "genome" not in seqs_sr[0], seqs_sr
+
+        p.write_text(cfg_text.replace("profilers: [aap]", "profilers: [sr_shotgun]"))
+        try:
+            load_config(p)
+        except SystemExit as e:
+            assert "genome" in str(e) and "sr_shotgun" in str(e), e
+        else:
+            raise AssertionError("expected SystemExit for missing genome (sr_shotgun)")
+
+        # An unknown profiler name is caught rather than silently ignored.
+        p.write_text(cfg_text.replace("profilers: [aap]", "profilers: [nope]"))
+        try:
+            load_config(p)
+        except SystemExit as e:
+            assert "unknown profiler" in str(e), e
+        else:
+            raise AssertionError("expected SystemExit for unknown profiler")
+
+        # extra_profilers are benchmarked over the same reads, and must be declared.
+        assert mode_profilers({"profiler": "sylph", "extra_profilers": ["sr_shotgun"]}) \
+            == ["sylph", "sr_shotgun"]
+        p.write_text(gm_text.replace(
+            "profiler: sylph, reads:", "profiler: sylph, extra_profilers: [sr_shotgun], reads:"))
+        try:
+            load_config(p)
+        except SystemExit as e:
+            assert "sr_shotgun" in str(e), e
+        else:
+            raise AssertionError("expected SystemExit for undeclared extra profiler")
+        p.write_text(gm_text.replace(
+            "profiler: sylph, reads:", "profiler: sylph, extra_profilers: [sr_shotgun], reads:"
+        ).replace("profilers: [sylph, aap]", "profilers: [sylph, aap, sr_shotgun]"))
+        cfg4 = load_config(p)
+        assert mode_profilers(generation_modes(cfg4)[0]) == ["sylph", "sr_shotgun"]
 
         # legacy fallback: no generation_modes -> single mode from reads.mode.
         assert generation_modes(cfg)[0]["source"] == "amplicon", "legacy amplicon fallback"

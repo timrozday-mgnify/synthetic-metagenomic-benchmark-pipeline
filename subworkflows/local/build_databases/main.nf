@@ -5,9 +5,12 @@
 // `database` column.
 //   - sylph  (WGS)      : SYLPH_BUILD_DB over the collection's genomes.
 //   - mapseq (amplicon) : MAPSEQ_PREP -> MAPSEQ_CLUSTER -> MAPSEQ_OTU over 16S + taxonomy.
+//   - superresolution   : one combined reference FASTA over the collection's genomes
+//                         (sr_shotgun) or 16S (sr_amplicon); the nested pipeline builds
+//                         its own index from it, so there's nothing else to build.
 //
 // Each spec (one per referenced collection) is a map:
-//   [ name, profilers(Set of 'sylph'/'aap'), prebuilt_dir(file|null),
+//   [ name, profilers(Set of 'sylph'/'aap'/'sr_amplicon'/'sr_shotgun'), prebuilt_dir(file|null),
 //     sequences([ {id, genome(file|null), ssu(file|null), taxonomy} ]|null) ]
 //
 
@@ -15,6 +18,10 @@ include { SYLPH_BUILD_DB as SYLPH_BUILD_COLLECTION } from '../../../modules/loca
 include { MAPSEQ_PREP    } from '../../../modules/local/mapseq/prep/main'
 include { MAPSEQ_CLUSTER } from '../../../modules/local/mapseq/build_db/main'
 include { MAPSEQ_OTU     } from '../../../modules/local/mapseq/otu/main'
+include { SR_BUILD_REFS as SR_BUILD_COLLECTION_REFS } from '../../../modules/local/superresolution/build_refs/main'
+
+// Panel FASTA field feeding each superresolution flavour's reference set.
+def srSources() { [ sr_shotgun: 'genome', sr_amplicon: 'ssu' ] }
 
 // Resolve exactly one file matching `pat` inside a pre-built DB directory.
 def globOne(dir, pat, name) {
@@ -31,6 +38,9 @@ workflow BUILD_DATABASES {
 
     main:
     ch_versions = Channel.empty()
+    // Placeholder for SR_BUILD_REFS' optional genomes-CSV slot (a collection has no
+    // CSV of its own; the module writes one from the manifest instead).
+    def no_file = file("${projectDir}/assets/NO_FILE")
 
     ch_specs
         .branch { spec ->
@@ -114,8 +124,36 @@ workflow BUILD_DATABASES {
     // [ name, fasta, tax, otu, mscluster, rfam_cm, rfam_claninfo ]
     ch_mapseq_dbs = ch_built_mapseq.mix(ch_pre_mapseq).join(ch_rfam, by: 0)
 
+    //
+    // Build the superresolution reference FASTA. A collection may feed both
+    // flavours (different source FASTAs), so each is keyed "<name>:<source>".
+    //
+    ch_sr_in = ch_b.build
+        .flatMap { spec ->
+            srSources().findAll { prof, field -> prof in spec.profilers }.collect { prof, field ->
+                def fastas = spec.sequences.collect { it[field] }
+                // Single-line manifest (literal \n) so the module's printf stays one line.
+                def manifest = spec.sequences.collect { s -> "${s.id},${s[field].name}" }.join('\\n')
+                // meta.key is what PROFILE joins on; meta.id also names the published file.
+                [ [ id: "${spec.name}_${field}", key: "${spec.name}:${field}" ], no_file, fastas, manifest ]
+            }
+        }
+    SR_BUILD_COLLECTION_REFS(ch_sr_in)
+    ch_versions = ch_versions.mix(SR_BUILD_COLLECTION_REFS.out.versions.first())
+    ch_built_sr = SR_BUILD_COLLECTION_REFS.out.refs.map { meta, refs -> [ meta.key, refs ] }
+
+    // Pre-built: the published layout is `<name>_<source>.sr_refs.fasta` (see
+    // conf/modules.config), so each flavour resolves its own file.
+    ch_pre_sr = ch_b.prebuilt
+        .flatMap { spec ->
+            srSources().findAll { prof, field -> prof in spec.profilers }.collect { prof, field ->
+                [ "${spec.name}:${field}", globOne(spec.prebuilt_dir, "*_${field}.sr_refs.fasta", spec.name) ]
+            }
+        }
+
     emit:
     sylph_dbs  = ch_built_sylph.mix(ch_pre_sylph)
     mapseq_dbs = ch_mapseq_dbs
+    sr_dbs     = ch_built_sr.mix(ch_pre_sr)   // [ "<name>:<genome|ssu>", refs_fasta ]
     versions   = ch_versions
 }

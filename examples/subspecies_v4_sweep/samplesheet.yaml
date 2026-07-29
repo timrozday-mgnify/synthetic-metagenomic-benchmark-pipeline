@@ -101,6 +101,8 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
+  extra_profilers:
+  - sr_shotgun
   subsample:
   - none
   - 100000
@@ -118,6 +120,8 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
+  extra_profilers:
+  - sr_shotgun
   subsample:
   - none
   - 100000
@@ -135,6 +139,8 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
+  extra_profilers:
+  - sr_shotgun
   subsample:
   - none
   - 100000
@@ -152,6 +158,8 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
+  extra_profilers:
+  - sr_shotgun
   subsample:
   - none
   - 100000
@@ -169,6 +177,8 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
+  extra_profilers:
+  - sr_shotgun
   subsample:
   - none
   - 100000
@@ -186,6 +196,8 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
+  extra_profilers:
+  - sr_shotgun
   subsample:
   - none
   - 100000
@@ -203,6 +215,8 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
+  extra_profilers:
+  - sr_shotgun
   subsample:
   - none
   - 100000
@@ -220,6 +234,8 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
+  extra_profilers:
+  - sr_shotgun
   subsample:
   - none
   - 100000
@@ -237,6 +253,8 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
+  extra_profilers:
+  - sr_shotgun
   subsample:
   - none
   - 100000
@@ -254,6 +272,8 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
+  extra_profilers:
+  - sr_shotgun
   subsample:
   - none
   - 100000
@@ -271,6 +291,8 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
+  extra_profilers:
+  - sr_shotgun
   subsample:
   - none
   - 100000
@@ -288,6 +310,8 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
+  extra_profilers:
+  - sr_shotgun
   subsample:
   - none
   - 100000
@@ -305,6 +329,8 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
+  extra_profilers:
+  - sr_shotgun
   subsample:
   - none
   - 100000
@@ -322,6 +348,8 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
+  extra_profilers:
+  - sr_shotgun
   subsample:
   - none
   - 100000
@@ -339,6 +367,8 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
+  extra_profilers:
+  - sr_shotgun
   subsample:
   - none
   - 100000
@@ -356,6 +386,8 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
+  extra_profilers:
+  - sr_shotgun
   subsample:
   - none
   - 100000
@@ -373,6 +405,8 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
+  extra_profilers:
+  - sr_shotgun
   subsample:
   - none
   - 100000
@@ -390,6 +424,8 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
+  extra_profilers:
+  - sr_shotgun
   subsample:
   - none
   - 100000
@@ -407,6 +443,8 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
+  extra_profilers:
+  - sr_shotgun
   subsample:
   - none
   - 100000
@@ -424,6 +462,8 @@ samples:
   read_length_variance: 0
   profiler: sylph
   database: community_v4
+  extra_profilers:
+  - sr_shotgun
   subsample:
   - none
   - 100000
@@ -441,6 +481,8 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  extra_profilers:
+  - sr_amplicon
   subsample:
   - none
   - 100000
@@ -462,6 +504,8 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  extra_profilers:
+  - sr_amplicon
   subsample:
   - none
   - 100000
@@ -483,6 +527,8 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  extra_profilers:
+  - sr_amplicon
   subsample:
   - none
   - 100000
@@ -504,6 +550,8 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  extra_profilers:
+  - sr_amplicon
   subsample:
   - none
   - 100000
@@ -525,6 +573,8 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  extra_profilers:
+  - sr_amplicon
   subsample:
   - none
   - 100000
@@ -546,6 +596,8 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  extra_profilers:
+  - sr_amplicon
   subsample:
   - none
   - 100000
@@ -567,6 +619,8 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  extra_profilers:
+  - sr_amplicon
   subsample:
   - none
   - 100000
@@ -588,6 +642,8 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  extra_profilers:
+  - sr_amplicon
   subsample:
   - none
   - 100000
@@ -609,6 +665,8 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  extra_profilers:
+  - sr_amplicon
   subsample:
   - none
   - 100000
@@ -630,6 +688,8 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  extra_profilers:
+  - sr_amplicon
   subsample:
   - none
   - 100000
@@ -651,6 +711,8 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  extra_profilers:
+  - sr_amplicon
   subsample:
   - none
   - 100000
@@ -672,6 +734,8 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  extra_profilers:
+  - sr_amplicon
   subsample:
   - none
   - 100000
@@ -693,6 +757,8 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  extra_profilers:
+  - sr_amplicon
   subsample:
   - none
   - 100000
@@ -714,6 +780,8 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  extra_profilers:
+  - sr_amplicon
   subsample:
   - none
   - 100000
@@ -735,6 +803,8 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  extra_profilers:
+  - sr_amplicon
   subsample:
   - none
   - 100000
@@ -756,6 +826,8 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  extra_profilers:
+  - sr_amplicon
   subsample:
   - none
   - 100000
@@ -777,6 +849,8 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  extra_profilers:
+  - sr_amplicon
   subsample:
   - none
   - 100000
@@ -798,6 +872,8 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  extra_profilers:
+  - sr_amplicon
   subsample:
   - none
   - 100000
@@ -819,6 +895,8 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  extra_profilers:
+  - sr_amplicon
   subsample:
   - none
   - 100000
@@ -840,6 +918,8 @@ samples:
   read_length_variance: 0
   profiler: aap
   database: community_v4
+  extra_profilers:
+  - sr_amplicon
   subsample:
   - none
   - 100000

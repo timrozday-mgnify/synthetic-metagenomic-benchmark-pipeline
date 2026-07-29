@@ -102,6 +102,44 @@ def test_build_mapseq_selfchecks():
     assert run("build_mapseq_otu.py", "--selfcheck").returncode == 0
 
 
+def test_build_sr_refs_headers(tmp_path):
+    """Combined refs FASTA: `{genome_id}|{n}|{orig}`, resolved by basename in cwd."""
+    (tmp_path / "genomeA.fasta").write_text(">ctg1 desc\nACGT\n>ctg2\nTTTT\n")
+    (tmp_path / "genomeB.fasta").write_text(">ctg1\nGGGG\n")
+    csv = tmp_path / "genomes.csv"
+    csv.write_text(
+        "genome_id,fasta_path,abundance\n"
+        "genomeA,/elsewhere/genomeA.fasta,0.7\n"
+        "genomeB,/elsewhere/genomeB.fasta,0.3\n"
+    )
+    out = run("build_sr_refs.py", "--genomes-csv", str(csv), "--output", "refs.fasta",
+              cwd=tmp_path)
+    assert out.returncode == 0, out.stderr
+    heads = [ln for ln in (tmp_path / "refs.fasta").read_text().splitlines() if ln.startswith(">")]
+    assert heads == [">genomeA|0|ctg1 desc", ">genomeA|1|ctg2", ">genomeB|0|ctg1"], heads
+
+
+def test_normalize_sr_profile_renormalises(tmp_path):
+    comp = tmp_path / "S1.inferred_composition.csv"
+    comp.write_text(
+        "sample,genome_id,observed_rel_abundance,inferred_mean,inferred_lo,inferred_hi\n"
+        "S1,genomeA,0.5,0.6,0.5,0.7\n"
+        "S1,genomeB,0.5,0.2,0.1,0.3\n"
+    )
+    dst = tmp_path / "S1.sr_profile.tsv"
+    out = run("normalize_sr_profile.py", "--composition", str(comp), "--output", str(dst))
+    assert out.returncode == 0, out.stderr
+    lines = [ln.split("\t") for ln in dst.read_text().splitlines()]
+    assert lines[0] == ["genome_id", "predicted_rel_abundance", "predicted_tax_rel_abundance"]
+    assert lines[1] == ["genomeA", "0.750000", "0.750000"], lines
+    assert lines[2] == ["genomeB", "0.250000", "0.250000"], lines
+
+
+def test_superresolution_selfchecks():
+    assert run("build_sr_refs.py", "--selfcheck").returncode == 0
+    assert run("normalize_sr_profile.py", "--selfcheck").returncode == 0
+
+
 def test_rewrite_genomes_csv_basenames(tmp_path):
     src = tmp_path / "in.csv"
     src.write_text(

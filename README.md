@@ -17,7 +17,10 @@ For each sample it:
 4. **Optionally profiles the generated reads** and publishes the predicted
    profile next to the ground truth for easy comparison — [sylph](https://github.com/bluenote-1577/sylph)
    for WGS, the [amplicon-analysis-pipeline](https://github.com/EBI-Metagenomics/amplicon-analysis-pipeline)
-   (AAP) for amplicon.
+   (AAP) for amplicon, and
+   [superresolution-shotgun](https://github.com/timrozday-mgnify/superresolution-shotgun) /
+   [superresolution-amplicon](https://github.com/timrozday-mgnify/superresolution-amplicon)
+   for sub-species composition from either.
 
 Which phases run is controlled by `--step` (`all` | `generate` | `profile` |
 `train`), so you can generate only, profile pre-existing benchmark dirs only, do
@@ -130,8 +133,8 @@ databases (see [Named sequence collections](#named-sequence-collections-database
 | `paired_end` | Optional. `true` \| `false`. Blank → `params.paired_end` (default `true`). Forced single-end when `mode=long`. |
 | `read_length_mean` | Optional. Mean read length. Blank → `params.read_length_mean` (default `150`). |
 | `read_length_variance` | Optional. Read-length variance. Blank → `params.read_length_variance` (default `10`). |
-| `profiler` | Optional. `sylph` (WGS) or `aap` (amplicon). Blank = generate only, no profiling. |
-| `database` | Database to profile against, by name. A name defined in the samplesheet `databases:` block is built (or its prebuilt dir consumed) by the pipeline — works for both `sylph` and `aap`. Otherwise: for `sylph`, a key in `params.sylph_databases`, or `self` to build the DB from this sample's reference genomes; for `aap`, blank (DB comes from `--aap_config`). |
+| `profiler` | Optional. `sylph` (WGS), `aap` (amplicon), `sr_shotgun` (superresolution, WGS) or `sr_amplicon` (superresolution, 16S). Blank = generate only, no profiling. |
+| `database` | Database to profile against, by name. A name defined in the samplesheet `databases:` block is built (or its prebuilt dir consumed) by the pipeline — works for every profiler. Otherwise: for `sylph`, a key in `params.sylph_databases`, or `self` to build the DB from this sample's reference genomes; for `aap`, blank (DB comes from `--aap_config`); for `sr_shotgun`/`sr_amplicon`, a defined collection or `self` (there is no params fallback). |
 | `subsample` | Optional list of read depths to sweep (absolute read/pair counts). The full draw is generated once, then subsampled to each depth — each gets its own `subsample_<N>/` output dir with its own reads + ground truth + profile. `none`/`null`/empty/omitted → a single full-depth run in `<sample>/`. |
 | `chunks` | Optional. Split generation of `num_reads` across N parallel `generate-reads` calls (merged back into one reads-set + BAM before subsampling/ground truth), useful for large `num_reads`. Blank → `params.chunks` (default `1`, no chunking). |
 
@@ -207,9 +210,10 @@ Per-entry rules:
 
 - Each named entry is **either** `sequences:` (build) **or** `path:` (a pre-built
   directory), not both.
-- `sequences[].genome` is required for a `sylph` collection; `sequences[].ssu` and
-  `sequences[].taxonomy` (a `Kingdom;Genus;Species` string) are required for an `aap`
-  (mapseq) collection. One collection can serve both if every entry has all three.
+- `sequences[].genome` is required for a `sylph` or `sr_shotgun` collection;
+  `sequences[].ssu` is required for an `aap` or `sr_amplicon` one, plus
+  `sequences[].taxonomy` (a `Kingdom;Genus;Species` string) for `aap` specifically.
+  One collection can serve several profilers if every entry has the fields they need.
   `ssu` must be a pre-extracted full-length 16S FASTA (no barrnap step).
 - `rfam_covariance_model` (an Rfam `.cm` directory) and `rfam_claninfo` (the
   `ribo.clan_info` file) are **required for an `aap` collection** — the nested
@@ -379,6 +383,52 @@ then majority-votes each cluster's taxonomy into the `.otu` table. The standalon
 `examples/subspecies_v4_sweep/scripts/build_profiling_dbs.py` does the same via
 docker and additionally runs `barrnap` to predict 16S for any genome missing a
 pre-extracted copy.
+
+### superresolution (sub-species composition)
+
+`profiler=sr_shotgun` (WGS) and `profiler=sr_amplicon` (16S) run the two
+superresolution pipelines via a nested `nextflow run`. The repo is named by
+`--sr_shotgun_repo` / `--sr_amplicon_repo` at `--sr_revision`; a local checkout path
+works in the same slot (handy for testing unpushed changes).
+
+> The wrapper `git clone`s the repo into the task dir rather than letting Nextflow
+> pull it as a project. Both repos carry a `vendor/skiver` submodule whose
+> `.gitmodules` URL is SSH (`git@github.com:`), and Nextflow's JGit — which
+> initialises submodules on `run` and has no SSH session factory — fails with
+> `Repository may be corrupted`, leaving a broken clone in `~/.nextflow/assets`
+> (clear it with `nextflow drop <repo>`). A plain clone skips submodules, which are
+> only needed to build the container images. Point `.gitmodules` at an https URL
+> upstream and this can go back to `nextflow run <org>/<repo> -r <rev>`.
+
+Both infer composition by Bayesian inversion of a
+mis-mapping matrix measured by simulate-and-map, so they resolve genomes that share
+near-identical sequence — the case sylph and mapseq collapse.
+
+Neither needs an external database: the only reference input is one combined FASTA
+over the community, which the pipeline builds for you with headers
+`{genome_id}|{n}|{orig}`. It comes from either:
+
+- **`database: self`** — built from the sample's own genomes CSV, so the reported
+  `genome_id`s line up exactly with `truth.tsv`. For `sr_amplicon` the CSV already
+  points at whatever FASTAs the reads were generated from (16S or pre-trimmed
+  amplicons), so this is the right references set for amplicon runs too.
+- **A built collection** — a `database` name defined in the samplesheet `databases:`
+  block. `sr_shotgun` uses each entry's `genome`, `sr_amplicon` its `ssu`; the result
+  publishes to `<outdir>/databases/<name>/<name>_{genome,ssu}.sr_refs.fasta`, which a
+  `path:` entry reads back. Use this to profile every sample against the *whole* panel
+  (including genomes absent from a given sample) rather than only its own genomes.
+
+There is no `params.*_databases` fallback — an unknown `database` name is an error.
+
+Output `<sample>.sr_profile.tsv` uses the same three columns as the sylph one
+(`inferred_mean`, renormalised; superresolution has no separate taxonomic abundance,
+so both abundance columns carry it). The raw `inferred_composition.csv` and inference
+diagnostics go under `<sample>/profiling/sr/`.
+
+Like AAP, the wrapper runs on the host (`executor local`) and the nested run does
+**not** inherit the outer `-profile`: set `--sr_profile docker` (or supply an engine
+config via `--sr_configs`). `--sr_configs` is also where you scale the inference down
+for small runs — see `tests/sr_fast.config`.
 
 ### Custom PIMENTO primers
 

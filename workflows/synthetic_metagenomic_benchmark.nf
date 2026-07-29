@@ -58,8 +58,7 @@ workflow SYNTHETIC_METAGENOMIC_BENCHMARK {
     ch_pretrained    // [ train_id, path(model.pt), path(phred_cal) ]      (generate/all: reused models)
     ch_profile_in    // [ val(meta), reads ]                               (profile)
     ch_db_specs      // channel of named-collection spec maps               (all/profile)
-    builtSylphNames  // Set of collection names built/prebuilt for sylph
-    builtMapseqNames // Set of collection names built/prebuilt for mapseq/aap
+    builtNames       // [ profiler: Set of collection names built/prebuilt for it ]
 
     main:
     ch_versions = Channel.empty()
@@ -214,7 +213,7 @@ workflow SYNTHETIC_METAGENOMIC_BENCHMARK {
         ch_versions = ch_versions.mix(BUILD_DATABASES.out.versions)
 
         PROFILE(ch_reads, ch_aux, BUILD_DATABASES.out.sylph_dbs, BUILD_DATABASES.out.mapseq_dbs,
-            builtSylphNames, builtMapseqNames)
+            BUILD_DATABASES.out.sr_dbs, builtNames)
         ch_versions = ch_versions.mix(PROFILE.out.versions)
     }
 

@@ -34,7 +34,13 @@ sweep:
 #              AmpliconHunter; each pair published as its own benchmark <sample>.<pair>).
 #              Omit for source=amplicon (pre-trimmed FASTAs used directly) or shotgun.
 #              Inline list of {pair_id, forward, reverse}, or a path to a pair TSV.
-#   profiler : profiler for this mode's samples (must be in database.profilers below)
+#   profiler : primary profiler for this mode's samples, run by `--step all`
+#              (must be in database.profilers below)
+#   extra_profilers : optional extra profilers benchmarked against the SAME generated
+#              reads. They are not run by `--step all`; generate_profile_samplesheet.py
+#              emits a row per profiler and `--step profile` re-profiles without
+#              regenerating anything, so each method's profile lands in the same
+#              sample dir. Also must be in database.profilers.
 #   reads    : optional overrides of the shared `reads:` defaults (e.g. WGS read length)
 # The four supported combos: genomes+shotgun (wgs); genomes+primers+amplicon;
 # 16S(ssu)+primers+amplicon; pre-trimmed amplicon (source=amplicon, no primers).
@@ -43,11 +49,13 @@ generation_modes:
     source: genome
     mode: shotgun
     profiler: sylph
+    extra_profilers: [sr_shotgun]   # superresolution-shotgun, over the same reads
     reads: {read_length_mean: 150}
   - name: amplicon_16s
     source: ssu
     mode: amplicon
     profiler: aap
+    extra_profilers: [sr_amplicon]  # superresolution-amplicon, over the same reads
     primers:
       - {pair_id: 515-YF-806BR, forward: GTGYCAGCMGCCGCGGTAA, reverse: GGACTACNVGGGTWTCTAAT}
 
@@ -63,10 +71,11 @@ generation_modes:
 # `databases:` block: the pipeline builds it during the run (no out-of-band step).
 database:
   name: community_v4
-  profilers: [sylph, aap]      # union across generation_modes: sylph profiles wgs,
-                               #   aap profiles amplicon. [aap], [sylph], or [sylph, aap].
-                               #   aap  -> each panel member needs `ssu` (+ taxonomy)
-                               #   sylph-> each panel member needs `genome`
+  profilers: [sylph, aap, sr_shotgun, sr_amplicon]
+                               # union over every generation mode's profiler +
+                               #   extra_profilers. Panel fields each one needs:
+                               #   aap, sr_amplicon -> `ssu` (aap also needs taxonomy)
+                               #   sylph, sr_shotgun -> `genome`
   # Rfam rRNA-detection DBs the nested amplicon-analysis-pipeline needs (required
   # when 'aap' in profilers). covariance_model is a directory; claninfo a file.
   rfam_covariance_model: /PATH/TO/rfam/ribo             # dir of Rfam .cm models

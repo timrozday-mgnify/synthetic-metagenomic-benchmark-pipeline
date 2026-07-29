@@ -1,0 +1,3 @@
+genome_id,fasta_path,abundance
+genomeA,tests/data/ssuA.fasta,0.4
+genomeB,tests/data/ssuB.fasta,0.6

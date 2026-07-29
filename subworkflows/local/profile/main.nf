@@ -4,12 +4,21 @@
 //   - sylph : WGS. DB is either a config entry (params.sylph_databases[<database>])
 //             or 'self' (built from the sample's own reference genomes).
 //   - aap   : amplicon-analysis-pipeline, run via a nested `nextflow run`.
+//   - sr_amplicon / sr_shotgun : superresolution, also a nested `nextflow run`. Its
+//             "DB" is one combined reference FASTA, built from the sample's own
+//             genomes ('self') or from a named collection.
 //
 
-include { SYLPH_BUILD_DB  } from '../../../modules/local/sylph/build_db/main'
-include { SYLPH_PROFILE   } from '../../../modules/nf-core/sylph/profile/main'
-include { NORMALIZE_SYLPH } from '../../../modules/local/sylph/normalize/main'
-include { RUN_AAP         } from '../../../modules/local/amplicon_analysis/main'
+include { SYLPH_BUILD_DB      } from '../../../modules/local/sylph/build_db/main'
+include { SYLPH_PROFILE       } from '../../../modules/nf-core/sylph/profile/main'
+include { NORMALIZE_SYLPH     } from '../../../modules/local/sylph/normalize/main'
+include { RUN_AAP             } from '../../../modules/local/amplicon_analysis/main'
+include { SR_BUILD_REFS       } from '../../../modules/local/superresolution/build_refs/main'
+include { RUN_SUPERRESOLUTION } from '../../../modules/local/superresolution/run/main'
+
+// Panel FASTA field each superresolution flavour's references are built from
+// (keep in sync with the same map in build_databases).
+def srSources() { [ sr_shotgun: 'genome', sr_amplicon: 'ssu' ] }
 
 workflow PROFILE {
     take:
@@ -17,8 +26,8 @@ workflow PROFILE {
     ch_aux           // [ id, genomes_csv, [ fasta ] ]       (empty in profile-only step)
     ch_sylph_dbs     // [ name, syldb ]                      built/prebuilt sylph DBs by name
     ch_mapseq_dbs    // [ name, fasta, tax, otu, mscluster ] built/prebuilt mapseq DBs by name
-    builtSylphNames  // Set of collection names resolved for sylph
-    builtMapseqNames // Set of collection names resolved for mapseq/aap
+    ch_sr_dbs        // [ "<name>:<genome|ssu>", refs_fasta ] built/prebuilt superresolution refs
+    builtNames       // [ profiler: Set of collection names resolved for it ]
 
     main:
     ch_versions = Channel.empty()
@@ -28,6 +37,7 @@ workflow PROFILE {
         .branch { meta, reads ->
             sylph: meta.profiler == 'sylph'
             aap:   meta.profiler == 'aap'
+            sr:    meta.profiler in srSources().keySet()
             other: true
         }
         .set { ch_by_prof }
@@ -60,7 +70,7 @@ workflow PROFILE {
     ch_by_prof.sylph
         .filter { it[0].database && it[0].database != 'self' }
         .branch { meta, reads ->
-            built:  meta.database in builtSylphNames
+            built:  meta.database in builtNames.sylph
             config: true
         }
         .set { ch_named }
@@ -103,7 +113,7 @@ workflow PROFILE {
     //
     ch_by_prof.aap
         .branch { meta, reads ->
-            built: meta.database in builtMapseqNames
+            built: meta.database in builtNames.aap
             other: true
         }
         .set { ch_aap }
@@ -156,8 +166,56 @@ workflow PROFILE {
             metas.collect { m -> [ m, fl.findAll { it.toString().contains("/aap_out/${m.id}/") } ] }
         }
 
+    //
+    // superresolution (nested nextflow run). Its only "database" is a combined
+    // reference FASTA: either built from the sample's own genomes ('self', needs
+    // ch_aux) or from a named collection built by BUILD_DATABASES. There is no
+    // params-configured fallback — an unknown name is an error.
+    //
+    ch_by_prof.sr
+        .branch { meta, reads ->
+            self:  meta.database == 'self' || !meta.database
+            built: meta.database in builtNames[meta.profiler]
+            other: true
+        }
+        .set { ch_sr }
+
+    // Fail loudly rather than silently dropping the sample.
+    ch_sr.other.map { meta, reads ->
+        error "No superresolution reference collection '${meta.database}' in the samplesheet databases: block for profiler '${meta.profiler}' (sample ${meta.id}); use 'self' or define it"
+    }
+
+    // 'self': reuse the sample's genomes_csv + staged FASTAs (same inner-join as sylph;
+    // a 'self' row without reference genomes — profile-only — has nothing to join).
+    ch_sr_self = ch_sr.self
+        .map { meta, reads -> [ meta.sample ?: meta.id, meta, reads ] }
+        .join(ch_aux, by: 0)
+        .map { id, meta, reads, csv, fastas -> [ meta, reads, csv, fastas ] }
+    SR_BUILD_REFS(ch_sr_self.map { meta, reads, csv, fastas -> [ meta, csv, fastas, '' ] })
+    ch_versions = ch_versions.mix(SR_BUILD_REFS.out.versions.first())
+
+    ch_sr_self_in = ch_sr_self
+        .map { meta, reads, csv, fastas -> [ meta.id, meta, reads ] }
+        .join(SR_BUILD_REFS.out.refs.map { meta, refs -> [ meta.id, refs ] }, by: 0)
+        .map { id, meta, reads, refs -> [ meta, reads, refs ] }
+
+    // Named collection: join by "<name>:<source>", the key BUILD_DATABASES emits.
+    ch_sr_built_in = ch_sr.built
+        .map { meta, reads -> [ "${meta.database}:${srSources()[meta.profiler]}".toString(), meta, reads ] }
+        .combine(ch_sr_dbs, by: 0)
+        .map { key, meta, reads, refs -> [ meta, reads, refs ] }
+
+    // Reads go through as absolute path strings (val) — see RUN_SUPERRESOLUTION.
+    RUN_SUPERRESOLUTION(
+        ch_sr_self_in.mix(ch_sr_built_in).map { meta, reads, refs ->
+            [ meta, (reads instanceof List ? reads : [reads])*.toString(), refs ]
+        }
+    )
+    ch_versions = ch_versions.mix(RUN_SUPERRESOLUTION.out.versions.first())
+
     emit:
-    sylph    = NORMALIZE_SYLPH.out.profile // [ meta, sylph_profile.tsv ]
-    aap      = ch_aap_out                  // [ meta, aap_out/<id> ]
+    sylph    = NORMALIZE_SYLPH.out.profile      // [ meta, sylph_profile.tsv ]
+    aap      = ch_aap_out                       // [ meta, aap_out/<id> ]
+    sr       = RUN_SUPERRESOLUTION.out.profile  // [ meta, sr_profile.tsv ]
     versions = ch_versions
 }

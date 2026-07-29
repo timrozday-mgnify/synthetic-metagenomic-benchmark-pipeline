@@ -60,9 +60,10 @@ def parsePrimerPairs(v) {
     }
 }
 
-// Resolve nested-AAP `-c` config files to absolute path strings (a YAML list, or a
-// comma-separated string from the CLI). Relative paths resolve against projectDir.
-def parseAapConfigs(v) {
+// Resolve a nested run's `-c` config files (AAP, superresolution) to absolute path
+// strings (a YAML list, or a comma-separated string from the CLI). Relative paths
+// resolve against projectDir.
+def parseNestedConfigs(v) {
     def list = (v == null) ? [] : (v instanceof List ? v : v.toString().tokenize(','))
     list.findAll { it?.toString()?.trim() }.collect { p ->
         def s = p.toString().trim()
@@ -101,10 +102,13 @@ workflow {
     }
     ch_rows = Channel.fromList(rows)
 
-    // Optional samplesheet-level nested-AAP settings (map form); fall back to params.
-    // Global for the run (the container engine is a site-wide setting, not per-sample).
-    def effAapConfigs = parseAapConfigs((loaded instanceof Map && loaded.aap_configs != null) ? loaded.aap_configs : params.aap_configs)
+    // Optional samplesheet-level settings for the nested runs (AAP, superresolution);
+    // fall back to params. Global for the run (the container engine is a site-wide
+    // setting, not per-sample).
+    def effAapConfigs = parseNestedConfigs((loaded instanceof Map && loaded.aap_configs != null) ? loaded.aap_configs : params.aap_configs)
     def effAapProfile = (loaded instanceof Map ? loaded.aap_profile : null) ?: params.aap_profile
+    def effSrConfigs  = parseNestedConfigs((loaded instanceof Map && loaded.sr_configs != null) ? loaded.sr_configs : params.sr_configs)
+    def effSrProfile  = (loaded instanceof Map ? loaded.sr_profile : null) ?: params.sr_profile
 
     //
     // Named sequence collections -> profiler DBs. A collection is built (or its
@@ -112,11 +116,12 @@ workflow {
     // with a matching `profiler`. Names not defined under `databases:` fall back to
     // params.sylph_databases / params.aap_config (unchanged behaviour).
     //
+    def knownProfilers = ['sylph', 'aap', 'sr_amplicon', 'sr_shotgun']
     def dbProfilers = [:]
     rows.each { row ->
         def name = row.database
         def prof = row.profiler
-        if (name && name != 'self' && prof in ['sylph', 'aap']) {
+        if (name && name != 'self' && prof in knownProfilers) {
             dbProfilers.computeIfAbsent(name) { [] as Set } << prof
         }
     }
@@ -136,6 +141,15 @@ workflow {
         if ('aap' in profs && (!rfamCm || !rfamClan)) {
             error "database '${name}': profiler 'aap' requires 'rfam_covariance_model' and 'rfam_claninfo'"
         }
+        // The superresolution reference FASTA is built from whole genomes (shotgun)
+        // or 16S (amplicon); fail here rather than deep in BUILD_DATABASES.
+        if (d.sequences) {
+            [ sr_shotgun: 'genome', sr_amplicon: 'ssu' ].each { prof, field ->
+                if (prof in profs && d.sequences.any { !it[field] }) {
+                    error "database '${name}': profiler '${prof}' requires '${field}' on every sequence"
+                }
+            }
+        }
         if (d.path) {
             dbSpecs << [ name: name, profilers: profs, prebuilt_dir: resolveFile(d.path), sequences: null,
                          rfam_cm: rfamCm, rfam_claninfo: rfamClan ]
@@ -154,8 +168,11 @@ workflow {
             error "database '${name}': must define 'sequences:' or 'path:'"
         }
     }
-    def builtSylphNames  = dbSpecs.findAll { 'sylph' in it.profilers }.collect { it.name } as Set
-    def builtMapseqNames = dbSpecs.findAll { 'aap'   in it.profilers }.collect { it.name } as Set
+    // Collection names resolved per profiler; PROFILE uses these to decide
+    // built-vs-fallback. One map so adding a profiler doesn't add a workflow arg.
+    def builtNames = knownProfilers.collectEntries { prof ->
+        [ (prof): dbSpecs.findAll { prof in it.profilers }.collect { it.name } as Set ]
+    }
     ch_db_specs = Channel.fromList(dbSpecs)
 
     ch_samples    = Channel.empty()
@@ -183,6 +200,8 @@ workflow {
                 subsamples: parseSubsamples(row.subsample),
                 aap_configs: effAapConfigs,
                 aap_profile: effAapProfile,
+                sr_configs:  effSrConfigs,
+                sr_profile:  effSrProfile,
                 // Primer pairs for in-silico PCR (empty => no extraction, use the
                 // genomes_csv FASTAs directly). Each pair is extracted + run separately.
                 primer_sets: parsePrimerPairs(row.primers),
@@ -244,15 +263,18 @@ workflow {
                 sample:   row.sample,   // profile-only: no subsampling, one run per sample
                 publish_subdir: '',
                 mode:     (row.mode ?: 'paired'),
+                platform: row.platform,
                 profiler: (row.profiler ?: ''),
                 database: (row.database ?: ''),
                 aap_configs: effAapConfigs,
                 aap_profile: effAapProfile,
+                sr_configs:  effSrConfigs,
+                sr_profile:  effSrProfile,
             ]
             [ meta, reads ]
         }
     }
 
     SYNTHETIC_METAGENOMIC_BENCHMARK(ch_samples, ch_train, ch_pretrained, ch_profile_in,
-        ch_db_specs, builtSylphNames, builtMapseqNames)
+        ch_db_specs, builtNames)
 }

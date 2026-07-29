@@ -85,6 +85,10 @@ def main():
                 "read_length_variance": reads["read_length_variance"],
                 "profiler": gm.get("profiler") or cfg["database"]["profilers"][0],
                 "database": db_name,
+                # Carried through so generate_profile_samplesheet.py can re-profile
+                # these same reads with each extra method (`--step profile`). The
+                # pipeline ignores the key.
+                **({"extra_profilers": gm["extra_profilers"]} if gm.get("extra_profilers") else {}),
                 **({"subsample": subsample} if subsample is not None else {}),
                 **({"primers": gm["primers"]} if gm.get("primers") else {}),
             })
