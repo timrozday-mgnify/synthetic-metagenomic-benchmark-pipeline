@@ -8,8 +8,11 @@ OUTDIR="$REPO/results/abundance_nb_sample"
 python "$HERE/generate_samplesheet.py"
 
 # One combined run: --step all trains the error model once (deduped by train_id),
-# generates reads for every sample, builds the profiler DB from the samplesheet's
-# `databases:` block, and profiles each sample against it.
+# generates reads for every sample, builds the profiler DBs from the samplesheet's
+# `databases:` block, and profiles each sample with EVERY profiler its row lists -
+# the mode's `profiler:` plus its `extra_profilers:` (sylph + superresolution-shotgun
+# for wgs, aap + superresolution-amplicon for amplicon_16s). Each method's profile
+# lands in the same benchmark dir, so they compare directly against truth.tsv.
 nextflow run "$REPO/main.nf" \
     -profile docker \
     -c "$HERE/benchmark.config" \
@@ -18,19 +21,8 @@ nextflow run "$REPO/main.nf" \
     --outdir "$OUTDIR" \
     --seed 42
 
-# Second pass: benchmark the remaining profilers against the SAME reads. The
-# profile samplesheet has one row per (sample, profiler) - each mode's primary
-# `profiler:` plus its `extra_profilers:` - so the superresolution methods land
-# their profiles next to the sylph/aap ones without regenerating anything.
-# (The primary profiler re-runs here too; it's cached by -resume, and dropping it
-# would mean maintaining two sample lists.)
-python "$HERE/generate_profile_samplesheet.py" "$OUTDIR"
-
-nextflow run "$REPO/main.nf" \
-    -profile docker \
-    -resume \
-    -c "$HERE/benchmark.config" \
-    --step profile \
-    --input "$HERE/profile_samplesheet.yaml" \
-    --outdir "$OUTDIR" \
-    --seed 42
+# To re-profile already-generated reads without regenerating them (e.g. after adding
+# a profiler to config.yaml), build a profile-only samplesheet and run --step profile:
+#   python "$HERE/generate_profile_samplesheet.py" "$OUTDIR"
+#   nextflow run "$REPO/main.nf" -profile docker -resume -c "$HERE/benchmark.config" \
+#       --step profile --input "$HERE/profile_samplesheet.yaml" --outdir "$OUTDIR" --seed 42

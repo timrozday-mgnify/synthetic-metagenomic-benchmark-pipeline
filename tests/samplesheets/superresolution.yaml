@@ -1,5 +1,6 @@
 # Superresolution profiling: both flavours, both reference sources.
-#   S1 - shotgun reads, sr_shotgun, references built from the sample's own genomes.
+#   S1 - shotgun reads, sr_shotgun + sylph (extra_profilers) over one set of reads,
+#        references built from the sample's own genomes.
 #   S2 - amplicon reads, sr_amplicon, references built from the sample's own 16S
 #        (ssuA/ssuB: two V4-flanked 16S copies per genome). No `primers:` — the
 #        genomes CSV is used directly, which is what makes `self` references correct
@@ -28,6 +29,9 @@ samples:
     num_reads: 2000
     mode: shotgun
     profiler: sr_shotgun
+    # Fan-out: the same reads are also profiled by sylph, which writes its own
+    # profile into this sample's dir (exercised for real by the e2e test).
+    extra_profilers: [sylph]
     database: self
 
   - sample: S2

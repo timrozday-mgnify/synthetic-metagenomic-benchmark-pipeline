@@ -212,7 +212,16 @@ workflow SYNTHETIC_METAGENOMIC_BENCHMARK {
         BUILD_DATABASES(ch_db_specs)
         ch_versions = ch_versions.mix(BUILD_DATABASES.out.versions)
 
-        PROFILE(ch_reads, ch_aux, BUILD_DATABASES.out.sylph_dbs, BUILD_DATABASES.out.mapseq_dbs,
+        // Fan out one entry per profiler (primary + extra_profilers): the reads are
+        // generated once and benchmarked by each method, which writes its own profile
+        // into the same sample dir. meta.id is unchanged, so all output stays
+        // co-located with that sample's truth.tsv; only meta.profiler differs.
+        ch_reads_by_profiler = ch_reads.flatMap { meta, reads ->
+            (meta.profilers ?: [meta.profiler]).findAll { it }
+                .collect { prof -> [ meta + [ profiler: prof ], reads ] }
+        }
+
+        PROFILE(ch_reads_by_profiler, ch_aux, BUILD_DATABASES.out.sylph_dbs, BUILD_DATABASES.out.mapseq_dbs,
             BUILD_DATABASES.out.sr_dbs, builtNames)
         ch_versions = ch_versions.mix(PROFILE.out.versions)
     }

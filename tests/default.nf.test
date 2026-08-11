@@ -128,7 +128,49 @@ nextflow_pipeline {
                 // Only the 'self' samples build their own references (S1, S2); S3 joins
                 // the collection's. 2 SR_BUILD_REFS + 1 SR_BUILD_COLLECTION_REFS + 3 runs.
                 { assert workflow.trace.succeeded().findAll { it.name.contains("RUN_SUPERRESOLUTION") }.size() == 3 },
-                { assert workflow.trace.succeeded().findAll { it.name.contains("SR_BUILD_REFS") }.size() == 2 }
+                { assert workflow.trace.succeeded().findAll { it.name.contains("SR_BUILD_REFS") }.size() == 2 },
+
+                // S1 also lists sylph in extra_profilers: same reads, second profile.
+                { assert path("${params.outdir}/S1/S1.sylph_profile.tsv").exists() }
+            )
+        }
+    }
+
+    test("extra_profilers - several profilers over one set of reads - stub") {
+        tag "stub"
+        options "-stub"
+        when {
+            params {
+                input  = "${projectDir}/tests/samplesheets/extra_profilers.yaml"
+                outdir = "$outputDir"
+            }
+        }
+        then {
+            assertAll(
+                { assert workflow.success },
+
+                // Reads generated ONCE per sample...
+                { assert workflow.trace.succeeded().findAll { it.name.contains("GENOME_BLENDER_GENERATE") }.size() == 3 },
+
+                // ...but profiled by both the primary profiler and the extra one, each
+                // dropping its own profile next to that sample's truth.tsv.
+                { assert path("${params.outdir}/E1/E1.sylph_profile.tsv").exists() },
+                { assert path("${params.outdir}/E1/E1.sr_profile.tsv").exists() },
+                { assert path("${params.outdir}/E2/E2.sylph_profile.tsv").exists() },
+                { assert path("${params.outdir}/E2/E2.sr_profile.tsv").exists() },
+                { assert path("${params.outdir}/E3/profiling/aap/E3").exists() },
+                { assert path("${params.outdir}/E3/E3.sr_profile.tsv").exists() },
+
+                // A collection referenced by two profilers builds both DB kinds.
+                { assert path("${params.outdir}/databases/commA/commA.syldb").exists() },
+                { assert path("${params.outdir}/databases/commA/commA_genome.sr_refs.fasta").exists() },
+                { assert path("${params.outdir}/databases/ampA/ampA.mapseq.otu").exists() },
+                { assert path("${params.outdir}/databases/ampA/ampA_ssu.sr_refs.fasta").exists() },
+
+                // E2 is database:self and fans out to sylph + sr_shotgun — the `combine`
+                // (not `join`) against ch_aux is what keeps both alive.
+                { assert workflow.trace.succeeded().findAll { it.name.contains("SR_BUILD_REFS") }.size() == 1 },
+                { assert workflow.trace.succeeded().findAll { it.name.contains("SYLPH_BUILD_DB") }.size() == 1 }
             )
         }
     }
@@ -371,7 +413,14 @@ nextflow_pipeline {
                     .collect { it.split("\t")[0] }.every { it in ["genomeA", "genomeB"] } },
 
                 // Raw composition CSV kept under profiling/sr/.
-                { assert path("${params.outdir}/S1/profiling/sr/S1.inferred_composition.csv").exists() }
+                { assert path("${params.outdir}/S1/profiling/sr/S1.inferred_composition.csv").exists() },
+
+                // extra_profilers for real: S1's reads are generated once and profiled
+                // by both sr_shotgun and sylph, each publishing into the same dir.
+                { assert workflow.trace.succeeded().findAll { it.name.contains("GENOME_BLENDER_GENERATE") }.size() == 3 },
+                { assert path("${params.outdir}/S1/S1.sylph_profile.tsv").readLines().get(0)
+                    == "genome_id\tpredicted_rel_abundance\tpredicted_tax_rel_abundance" },
+                { assert path("${params.outdir}/S1/profiling/sylph/S1.sylph.tsv").exists() }
             )
         }
     }

@@ -71,6 +71,17 @@ def parseNestedConfigs(v) {
     }
 }
 
+// Every profiler a sample's reads are benchmarked with: its primary `profiler`
+// followed by any `extra_profilers` (samplesheet column, else params.extra_profilers).
+// Deduped, order preserved. The reads are generated once and each profiler writes its
+// own profile into the same benchmark dir.
+def parseProfilers(row, defaultExtra) {
+    def extra = (row.extra_profilers != null) ? row.extra_profilers : defaultExtra
+    def list = (extra == null) ? [] : (extra instanceof List ? extra : extra.toString().tokenize(','))
+    def all = ([ row.profiler ] + list).collect { it?.toString()?.trim() }.findAll { it }
+    all.unique()
+}
+
 workflow {
     main:
     if (!params.input) {
@@ -113,16 +124,25 @@ workflow {
     //
     // Named sequence collections -> profiler DBs. A collection is built (or its
     // pre-built dir consumed) only if some sample references it by `database` name
-    // with a matching `profiler`. Names not defined under `databases:` fall back to
-    // params.sylph_databases / params.aap_config (unchanged behaviour).
+    // with a matching profiler (primary or extra). Names not defined under
+    // `databases:` fall back to params.sylph_databases / params.aap_config.
     //
     def knownProfilers = ['sylph', 'aap', 'sr_amplicon', 'sr_shotgun']
+    def defaultExtraProfilers = (loaded instanceof Map && loaded.extra_profilers != null)
+        ? loaded.extra_profilers : params.extra_profilers
+    rows.each { row ->
+        def unknown = parseProfilers(row, defaultExtraProfilers).findAll { !(it in knownProfilers) }
+        if (unknown) {
+            error "Sample ${row.sample ?: row.id}: unknown profiler(s) ${unknown} (expected ${knownProfilers})"
+        }
+    }
     def dbProfilers = [:]
     rows.each { row ->
         def name = row.database
-        def prof = row.profiler
-        if (name && name != 'self' && prof in knownProfilers) {
-            dbProfilers.computeIfAbsent(name) { [] as Set } << prof
+        if (name && name != 'self') {
+            parseProfilers(row, defaultExtraProfilers).each { prof ->
+                dbProfilers.computeIfAbsent(name) { [] as Set } << prof
+            }
         }
     }
     def dbSpecs = []
@@ -196,6 +216,9 @@ workflow {
                 num_reads: (row.num_reads as long),
                 chunks:    ((row.chunks ?: params.chunks) as int),
                 profiler:  (row.profiler ?: ''),
+                // Every profiler these reads are benchmarked with (primary + extras).
+                // PROFILE fans out one run per entry, all sharing this benchmark dir.
+                profilers: parseProfilers(row, defaultExtraProfilers),
                 database:  (row.database ?: ''),
                 subsamples: parseSubsamples(row.subsample),
                 aap_configs: effAapConfigs,
@@ -265,6 +288,7 @@ workflow {
                 mode:     (row.mode ?: 'paired'),
                 platform: row.platform,
                 profiler: (row.profiler ?: ''),
+                profilers: parseProfilers(row, defaultExtraProfilers),
                 database: (row.database ?: ''),
                 aap_configs: effAapConfigs,
                 aap_profile: effAapProfile,

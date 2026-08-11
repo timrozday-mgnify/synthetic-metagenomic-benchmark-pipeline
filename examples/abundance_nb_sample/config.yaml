@@ -55,10 +55,10 @@ sampling:
 #   profiler : primary profiler for this mode's samples, run by `--step all`
 #              (must be in database.profilers below)
 #   extra_profilers : optional extra profilers benchmarked against the SAME generated
-#              reads. They are not run by `--step all`; generate_profile_samplesheet.py
-#              emits a row per profiler and `--step profile` re-profiles without
-#              regenerating anything, so each method's profile lands in the same
-#              sample dir. Also must be in database.profilers.
+#              reads. Emitted onto each samplesheet row, so `--step all` generates the
+#              reads once and profiles them with every listed method, each writing its
+#              own profile into that sample's benchmark dir. Also must be in
+#              database.profilers.
 #   reads    : optional overrides of the shared `reads:` defaults (e.g. WGS read length)
 # The four supported combos: genomes+shotgun (wgs); genomes+primers+amplicon;
 # 16S(ssu)+primers+amplicon; pre-trimmed amplicon (source=amplicon, no primers).

@@ -1,0 +1,63 @@
+# extra_profilers: one set of generated reads benchmarked by several profilers in a
+# single run. Reads are generated once per sample; each profiler writes its own
+# profile into that sample's benchmark dir, next to truth.tsv.
+#   E1 - shotgun: sylph (primary) + sr_shotgun, both against the `commA` collection.
+#   E2 - shotgun: sylph (primary) + sr_shotgun, both with `self` references.
+#   E3 - amplicon: aap (primary) + sr_amplicon, against the `ampA` collection
+#        (aap uses its ssu+taxonomy, sr_amplicon just the ssu).
+databases:
+  commA:
+    sequences:
+      - id: genomeA
+        genome: tests/data/genomeA.fasta
+      - id: genomeB
+        genome: tests/data/genomeB.fasta
+  ampA:
+    # rfam DBs required for aap; the stub never reads them, any existing path passes checkIfExists.
+    rfam_covariance_model: tests/data
+    rfam_claninfo: tests/data/genomeA.fasta
+    sequences:
+      - id: genomeA
+        ssu: tests/data/ssuA.fasta
+        taxonomy: "Bacteria;Genusa;speciesa"
+      - id: genomeB
+        ssu: tests/data/ssuB.fasta
+        taxonomy: "Bacteria;Genusb;speciesb"
+
+samples:
+  - sample: E1
+    train_id: natA
+    train_fastq_1: tests/data/natural_R1.fastq.gz
+    train_fastq_2: tests/data/natural_R2.fastq.gz
+    platform: hq-illumina
+    genomes_csv: tests/data/genomes_S1.csv
+    num_reads: 2000
+    mode: shotgun
+    profiler: sylph
+    extra_profilers: [sr_shotgun]
+    database: commA
+
+  - sample: E2
+    train_id: natA
+    train_fastq_1: tests/data/natural_R1.fastq.gz
+    train_fastq_2: tests/data/natural_R2.fastq.gz
+    platform: hq-illumina
+    genomes_csv: tests/data/genomes_S2.csv
+    num_reads: 2000
+    mode: shotgun
+    profiler: sylph
+    extra_profilers: [sr_shotgun]
+    database: self
+
+  - sample: E3
+    train_id: natA
+    train_fastq_1: tests/data/natural_R1.fastq.gz
+    train_fastq_2: tests/data/natural_R2.fastq.gz
+    platform: hq-illumina
+    genomes_csv: tests/data/genomes_S2_ssu.csv
+    num_reads: 2000
+    mode: amplicon
+    read_length_mean: 200
+    profiler: aap
+    extra_profilers: [sr_amplicon]
+    database: ampA

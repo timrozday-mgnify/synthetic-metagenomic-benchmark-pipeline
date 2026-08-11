@@ -134,6 +134,7 @@ databases (see [Named sequence collections](#named-sequence-collections-database
 | `read_length_mean` | Optional. Mean read length. Blank → `params.read_length_mean` (default `150`). |
 | `read_length_variance` | Optional. Read-length variance. Blank → `params.read_length_variance` (default `10`). |
 | `profiler` | Optional. `sylph` (WGS), `aap` (amplicon), `sr_shotgun` (superresolution, WGS) or `sr_amplicon` (superresolution, 16S). Blank = generate only, no profiling. |
+| `extra_profilers` | Optional list of additional profilers run against the **same** generated reads. Reads are generated once; every profiler writes its own profile into that sample's dir. Blank → `params.extra_profilers` (default none). |
 | `database` | Database to profile against, by name. A name defined in the samplesheet `databases:` block is built (or its prebuilt dir consumed) by the pipeline — works for every profiler. Otherwise: for `sylph`, a key in `params.sylph_databases`, or `self` to build the DB from this sample's reference genomes; for `aap`, blank (DB comes from `--aap_config`); for `sr_shotgun`/`sr_amplicon`, a defined collection or `self` (there is no params fallback). |
 | `subsample` | Optional list of read depths to sweep (absolute read/pair counts). The full draw is generated once, then subsampled to each depth — each gets its own `subsample_<N>/` output dir with its own reads + ground truth + profile. `none`/`null`/empty/omitted → a single full-depth run in `<sample>/`. |
 | `chunks` | Optional. Split generation of `num_reads` across N parallel `generate-reads` calls (merged back into one reads-set + BAM before subsampling/ground truth), useful for large `num_reads`. Blank → `params.chunks` (default `1`, no chunking). |
@@ -301,6 +302,29 @@ genomeB,tests/data/genomeB.fasta,0.3
 Set a `profiler` per sample to profile the generated reads and drop the predicted
 profile next to `truth.tsv`.
 
+### Benchmarking several profilers at once (`extra_profilers`)
+
+To compare methods, list more profilers on the sample — reads are generated once and
+each method profiles them, writing its own file into the same benchmark dir:
+
+```yaml
+- sample: S1
+  profiler: sylph                 # primary
+  extra_profilers: [sr_shotgun]   # benchmarked against the same reads
+  database: community             # one collection can serve both
+```
+
+Giving `<outdir>/S1/S1.sylph_profile.tsv` and `<outdir>/S1/S1.sr_profile.tsv`
+alongside `S1.truth.tsv`. Set it globally with `--extra_profilers sr_shotgun` (or a
+top-level `extra_profilers:` key in the samplesheet); the per-sample column wins.
+Duplicates are removed, so a profiler named in both places runs once.
+
+A `database` collection is built for whichever DB kinds the listed profilers need —
+`sylph` + `sr_shotgun` on one collection yields both a `.syldb` and a reference
+FASTA. Every listed profiler must be able to use that `database`, so the collection
+needs the fields they each require (`genome` for `sylph`/`sr_shotgun`, `ssu` for
+`aap`/`sr_amplicon`, plus `taxonomy` for `aap`).
+
 ### sylph (WGS)
 
 Uses the nf-core `sylph/profile` module. The database is chosen by the `database`
@@ -391,15 +415,6 @@ superresolution pipelines via a nested `nextflow run`. The repo is named by
 `--sr_shotgun_repo` / `--sr_amplicon_repo` at `--sr_revision`; a local checkout path
 works in the same slot (handy for testing unpushed changes).
 
-> The wrapper `git clone`s the repo into the task dir rather than letting Nextflow
-> pull it as a project. Both repos carry a `vendor/skiver` submodule whose
-> `.gitmodules` URL is SSH (`git@github.com:`), and Nextflow's JGit — which
-> initialises submodules on `run` and has no SSH session factory — fails with
-> `Repository may be corrupted`, leaving a broken clone in `~/.nextflow/assets`
-> (clear it with `nextflow drop <repo>`). A plain clone skips submodules, which are
-> only needed to build the container images. Point `.gitmodules` at an https URL
-> upstream and this can go back to `nextflow run <org>/<repo> -r <rev>`.
-
 Both infer composition by Bayesian inversion of a
 mis-mapping matrix measured by simulate-and-map, so they resolve genomes that share
 near-identical sequence — the case sylph and mapseq collapse.
@@ -424,6 +439,12 @@ Output `<sample>.sr_profile.tsv` uses the same three columns as the sylph one
 (`inferred_mean`, renormalised; superresolution has no separate taxonomic abundance,
 so both abundance columns carry it). The raw `inferred_composition.csv` and inference
 diagnostics go under `<sample>/profiling/sr/`.
+
+Each task pulls the pipeline into its own asset dir rather than the shared
+`~/.nextflow/assets`: concurrent nested runs would otherwise read each other's
+half-written clone (`Repository may be corrupted`). So every run fetches the revision
+you asked for — pin `--sr_revision` to a tag or commit for a reproducible benchmark,
+since the default `main` moves.
 
 Like AAP, the wrapper runs on the host (`executor local`) and the nested run does
 **not** inherit the outer `-profile`: set `--sr_profile docker` (or supply an engine
