@@ -54,7 +54,9 @@ def main():
             abund = abundances[i - 1]
             csv_path = HERE / "genomes" / f"sample_{i:02d}.{mname}.csv"
             with open(csv_path, "w", newline="") as fh:
-                w = csv.writer(fh)
+                # lineterminator: csv.writer defaults to CRLF, which trips the
+                # mixed-line-ending pre-commit hook on the committed CSVs.
+                w = csv.writer(fh, lineterminator="\n")
                 w.writerow(["genome_id", "fasta_path", "abundance"])
                 for m, a in zip(panel, abund):
                     # Skip genomes the NB draw put at zero (absent this sample).

@@ -51,10 +51,12 @@ workflow PROFILE {
     // simply has nothing to join and is dropped (see README).
     // ponytail: self DB is rebuilt per run (keyed by unique meta.id) even though
     // it depends only on the genomes; dedupe by meta.sample if it ever matters.
+    // combine, not join: join is 1:1 and consumes the key, so with extra_profilers
+    // fanning a sample into several entries it would silently drop all but one.
     ch_self = ch_by_prof.sylph
         .filter { it[0].database == 'self' }
         .map { meta, reads -> [ meta.sample ?: meta.id, meta, reads ] }
-        .join(ch_aux, by: 0)
+        .combine(ch_aux, by: 0)
         .map { id, meta, reads, csv, fastas -> [ meta, reads, csv, fastas ] }
     SYLPH_BUILD_DB( ch_self.map { meta, reads, csv, fastas -> [ meta, fastas ] } )
     ch_versions = ch_versions.mix(SYLPH_BUILD_DB.out.versions.first())
@@ -189,15 +191,17 @@ workflow PROFILE {
     // a 'self' row without reference genomes — profile-only — has nothing to join).
     ch_sr_self = ch_sr.self
         .map { meta, reads -> [ meta.sample ?: meta.id, meta, reads ] }
-        .join(ch_aux, by: 0)
+        .combine(ch_aux, by: 0)
         .map { id, meta, reads, csv, fastas -> [ meta, reads, csv, fastas ] }
     SR_BUILD_REFS(ch_sr_self.map { meta, reads, csv, fastas -> [ meta, csv, fastas, '' ] })
     ch_versions = ch_versions.mix(SR_BUILD_REFS.out.versions.first())
 
+    // Keyed by id+profiler: a sample may run both superresolution flavours, and each
+    // gets its own reference set (genomes vs 16S).
     ch_sr_self_in = ch_sr_self
-        .map { meta, reads, csv, fastas -> [ meta.id, meta, reads ] }
-        .join(SR_BUILD_REFS.out.refs.map { meta, refs -> [ meta.id, refs ] }, by: 0)
-        .map { id, meta, reads, refs -> [ meta, reads, refs ] }
+        .map { meta, reads, csv, fastas -> [ "${meta.id}:${meta.profiler}".toString(), meta, reads ] }
+        .join(SR_BUILD_REFS.out.refs.map { meta, refs -> [ "${meta.id}:${meta.profiler}".toString(), refs ] }, by: 0)
+        .map { key, meta, reads, refs -> [ meta, reads, refs ] }
 
     // Named collection: join by "<name>:<source>", the key BUILD_DATABASES emits.
     ch_sr_built_in = ch_sr.built

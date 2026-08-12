@@ -105,11 +105,13 @@ already-generated **sample x profiler** — each generation mode's `profiler:` p
 `extra_profilers:`, read from `samplesheet.yaml` — with `benchmark_dir` at
 `<results_dir>/<sample>`. See the root README's "Named sequence collections (`databases:`)".
 
-This is how the superresolution methods are benchmarked: `run.sh` does this pass
-automatically, so `sr_shotgun` profiles the wgs reads and `sr_amplicon` the amplicon
-reads that `--step all` already generated, each dropping its `<sample>.sr_profile.tsv`
-into the same benchmark dir as the sylph/aap profile. Add or drop methods by editing
-`extra_profilers:` (and `database.profilers`) in `config.yaml`.
+You do **not** need this pass just to benchmark the superresolution methods: each
+mode's `extra_profilers:` is emitted onto the samplesheet rows, so a single
+`--step all` run already profiles every sample with `sylph` + `sr_shotgun` (wgs) or
+`aap` + `sr_amplicon` (amplicon_16s), each dropping its own profile into the sample's
+benchmark dir. Use `--step profile` when you add a method *after* generating reads and
+don't want to regenerate them. Add or drop methods by editing `extra_profilers:` (and
+`database.profilers`) in `config.yaml`.
 
 ## Building the profiler DB out-of-band (optional)
 

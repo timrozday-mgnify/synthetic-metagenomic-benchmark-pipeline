@@ -96,6 +96,14 @@ null => bundled set. It's global (not per-sample) and passed as an absolute host
   CSV (`self`) or a collection's `genome`/`ssu`. `RUN_SUPERRESOLUTION` normalises the
   resulting `inferred_composition.csv` into the same three-column contract sylph emits,
   in-process (bin/ is on PATH for local tasks), so there's no separate normalize module.
+- **`extra_profilers` fans a sample out across profilers.** `parseProfilers` (main.nf)
+  merges the row's `profiler` + `extra_profilers` (or params.extra_profilers) into
+  `meta.profilers`; the top workflow `flatMap`s one entry per profiler into PROFILE,
+  same `meta.id`, differing `meta.profiler`. So reads are generated once and every
+  method publishes into the same benchmark dir under its own filename. Consequence:
+  any per-sample join in PROFILE must use `combine(by:)`, not `join(by:)` — `join` is
+  1:1 and would silently drop all but one of the fanned-out entries (this is why the
+  `self` paths combine against `ch_aux`, and why the SR refs join keys on id+profiler).
 - **Profiler DB selection** keys off a sample's `database` name. Names defined in the
   samplesheet `databases:` block are built (or their `path:` dir resolved) by
   BUILD_DATABASES and joined into PROFILE by name; the `builtNames` map
