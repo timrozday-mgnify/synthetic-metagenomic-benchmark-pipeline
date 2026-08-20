@@ -11,6 +11,68 @@
 // + container engine, exactly like RUN_AAP; the nested run manages its own images.
 // The nested run does NOT inherit the outer -profile: set params.sr_profile (and
 // params.sr_configs for extra -c files).
+process BUILD_SUPERRESOLUTION_MISMAPPING {
+    tag "${meta.reference_set} (${meta.profiler})"
+    label 'process_medium'
+    executor 'local'
+
+    input:
+    tuple val(meta), val(read_paths), path(refs)
+
+    output:
+    tuple val(meta), path("${meta.id}.mismapping_matrix.csv"), emit: mismapping
+    path "versions.yml",                                       emit: versions
+
+    when:
+    task.ext.when == null || task.ext.when
+
+    script:
+    def repo = meta.profiler == 'sr_amplicon' ? params.sr_amplicon_repo : params.sr_shotgun_repo
+    if (!repo) error "BUILD_SUPERRESOLUTION_MISMAPPING: params.${meta.profiler == 'sr_amplicon' ? 'sr_amplicon_repo' : 'sr_shotgun_repo'} is not set (reference set ${meta.reference_set})"
+    def revArg = (repo.startsWith('/') || repo.startsWith('.')) ? '' : "-r ${params.sr_revision}"
+    def profArg = meta.sr_profile ? "-profile ${meta.sr_profile}" : ''
+    def extraCfg = (meta.sr_configs ?: []).collect { "-c ${file(it, checkIfExists: true)}" }.join(' ')
+    def nestedArgs = [revArg, profArg, '--input sr_samplesheet.yml', '--outdir sr_out', extraCfg]
+        .findAll { it }
+        .join(' ')
+    def platform = meta.platform ? "printf '  platform: %s\\n' '${meta.platform}' >> sr_samplesheet.yml" : 'true'
+    def reads = (read_paths instanceof List ? read_paths : [read_paths]).collect { it.toString() }
+    assert reads.every { it } : "BUILD_SUPERRESOLUTION_MISMAPPING: empty read path for ${meta.reference_set}"
+    def readCmds = reads.collect { "printf '    - %s\\n' '${it}' >> sr_samplesheet.yml" }.join('\n    ')
+    """
+    export NXF_ASSETS="\$PWD/.nxf_assets"
+
+    printf -- '- id: %s\\n' '${meta.id}' > sr_samplesheet.yml
+    printf '  reads:\\n' >> sr_samplesheet.yml
+    ${readCmds}
+    ${platform}
+    printf '  references: %s\\n' "\$(realpath ${refs})" >> sr_samplesheet.yml
+
+    nextflow run ${repo} \\
+        ${nestedArgs}
+
+    cp sr_out/composition/${meta.id}/${meta.id}.mismapping_matrix.csv ${meta.id}.mismapping_matrix.csv
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        ${repo}: ${params.sr_revision}
+        nextflow: \$(nextflow -version 2>&1 | grep -oE 'version [0-9.]+' | sed 's/version //')
+    END_VERSIONS
+    """
+
+    stub:
+    def repo = meta.profiler == 'sr_amplicon' ? params.sr_amplicon_repo : params.sr_shotgun_repo
+    """
+    echo 'src,dst,prob' > ${meta.id}.mismapping_matrix.csv
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        ${repo}: stub
+        nextflow: stub
+    END_VERSIONS
+    """
+}
+
 process RUN_SUPERRESOLUTION {
     tag "${meta.id} (${meta.profiler})"
     label 'process_single'
@@ -21,7 +83,7 @@ process RUN_SUPERRESOLUTION {
     // RUN_AAP — this process is executor 'local' so the nested run reads them
     // directly, and the superresolution main.nf resolves relative paths against its
     // OWN projectDir, which a staged basename would break.
-    tuple val(meta), val(read_paths), path(refs)
+    tuple val(meta), val(read_paths), path(refs), path(mismapping_matrix)
 
     output:
     tuple val(meta), path("${meta.id}.sr_profile.tsv"),          emit: profile
@@ -50,7 +112,8 @@ process RUN_SUPERRESOLUTION {
     if (presencePrior != null) presenceArgs << "--infer_presence_prior ${presencePrior}"
     if (presenceTemp != null) presenceArgs << "--infer_presence_temp ${presenceTemp}"
     def presenceArg = presenceArgs.join(' ')
-    def nestedArgs = [rev_arg, prof_arg, '--input sr_samplesheet.yml', '--outdir sr_out', extra_cfg, presenceArg]
+    def nestedArgs = [rev_arg, prof_arg, '--input sr_samplesheet.yml', '--outdir sr_out', extra_cfg,
+                      "--mismapping_matrix ${mismapping_matrix}", presenceArg]
         .findAll { it }
         .join(' ')
     def platform  = meta.platform ? "printf '  platform: %s\\n' '${meta.platform}' >> sr_samplesheet.yml" : 'true'

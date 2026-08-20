@@ -38,6 +38,11 @@ Preprocessing walks the run tree once and writes four tidy tables into the run d
 | `summary.csv` | per `assay × depth × source`: `l1_error_per_sample, pearson_r, mismapping_rate, pair_mismapping_rate, n_reads` |
 | `meta.json` | swept pair, assays, depths, samples, sample→sweep_x map, detection sources |
 
+Superresolution's simulated mis-mapping matrices are pipeline outputs rather than
+preprocessed tables. They are published once per reference set at
+`<pipeline-dir>/mismapping/<reference-set>/mismapping_matrix.csv`; the benchmark
+report discovers and summarises them from that location.
+
 The report then reads those CSVs (all heavy compute is already done) and builds the plots.
 
 Each sample dir is a `<sweep_point>.<assay>` cell (e.g. `S10_a0.42.amplicon_515YF-806BR_16s.515-YF-806BR`

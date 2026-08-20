@@ -23,6 +23,7 @@ params:
   mismapping_csv: "mismapping.csv"
   summary_csv: "summary.csv"
   meta_json: "meta.json"
+  superresolution_mismapping_dir: "mismapping"
   output_dir: ""
 ---
 
@@ -37,6 +38,7 @@ abundance_csv = "abundance.csv"
 mismapping_csv = "mismapping.csv"
 summary_csv = "summary.csv"
 meta_json = "meta.json"
+superresolution_mismapping_dir = "mismapping"
 output_dir = ""
 ```
 
@@ -65,6 +67,14 @@ RUN_DIR = next((p for p in _candidates if (p / abundance_csv).exists() or (p / m
 def _resolve(path_param):
     p = Path(path_param)
     return p if p.is_absolute() else RUN_DIR / p
+
+
+_pipeline_dir = Path(pipeline_dir)
+PIPELINE_DIR = _pipeline_dir if _pipeline_dir.is_absolute() else RUN_DIR / _pipeline_dir
+_sr_mismapping_dir = Path(superresolution_mismapping_dir)
+SR_MISMAPPING_DIR = (_sr_mismapping_dir if _sr_mismapping_dir.is_absolute()
+                     else PIPELINE_DIR / _sr_mismapping_dir)
+SR_MATRICES = sorted(SR_MISMAPPING_DIR.glob("*/mismapping_matrix.csv")) if SR_MISMAPPING_DIR.exists() else []
 
 
 ABUNDANCE = pd.read_csv(_resolve(abundance_csv))
@@ -247,6 +257,56 @@ for assay in ASSAYS:
 ```
 
 :::
+
+## Superresolution mis-mapping matrices
+
+The superresolution workflows simulate and map reads once for each reference set,
+then reuse that matrix for all samples that use the set. The matrices are published
+outside the per-sample directories so they are not duplicated at every depth.
+
+```{python}
+#| echo: false
+def _sr_matrix_summary(path):
+    """Summarise either dense amplicon or sparse shotgun matrix output."""
+    frame = pd.read_csv(path, index_col=0)
+    reference_set = path.parent.name
+    if {"dst_chunk", "prob"}.issubset(frame.columns):
+        # Sparse shotgun matrix: source chunk is the CSV index.
+        probs = pd.to_numeric(frame["prob"], errors="coerce").fillna(0.0)
+        off_diagonal = frame.index.to_series().ne(frame["dst_chunk"].astype(str)).to_numpy()
+        return {
+            "reference_set": reference_set,
+            "format": "shotgun (sparse chunk → chunk)",
+            "sources": frame.index.nunique(),
+            "targets": frame["dst_chunk"].nunique(),
+            "entries": len(frame),
+            "off_diagonal_mass": float(probs[off_diagonal].sum()),
+        }
+
+    # Dense amplicon matrix: index and columns are reference IDs.
+    values = frame.apply(pd.to_numeric, errors="coerce").fillna(0.0)
+    diagonal = np.trace(values.to_numpy())
+    return {
+        "reference_set": reference_set,
+        "format": "amplicon (dense reference → reference)",
+        "sources": len(values.index),
+        "targets": len(values.columns),
+        "entries": values.size,
+        "off_diagonal_mass": float(values.to_numpy().sum() - diagonal),
+    }
+
+
+if SR_MATRICES:
+    matrix_summary = pd.DataFrame([_sr_matrix_summary(path) for path in SR_MATRICES])
+    display(Markdown(
+        f"Found **{len(matrix_summary)}** reusable matrix/matrices in `{SR_MISMAPPING_DIR}`. "
+        "`off_diagonal_mass` is the total simulated probability assigned away from the "
+        "source sequence/chunk (not a per-row rate for sparse shotgun matrices)."))
+    display(matrix_summary.style.format({"off_diagonal_mass": "{:.4f}"}).hide(axis="index"))
+else:
+    display(Markdown(
+        f"_No published superresolution matrices found under `{SR_MISMAPPING_DIR}`._"))
+```
 
 ## Inferred cross-mapping (abundance regression)
 

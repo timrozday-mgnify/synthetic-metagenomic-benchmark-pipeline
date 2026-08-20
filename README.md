@@ -415,9 +415,15 @@ superresolution pipelines via a nested `nextflow run`. The repo is named by
 `--sr_shotgun_repo` / `--sr_amplicon_repo` at `--sr_revision`; a local checkout path
 works in the same slot (handy for testing unpushed changes).
 
-Both infer composition by Bayesian inversion of a
-mis-mapping matrix measured by simulate-and-map, so they resolve genomes that share
-near-identical sequence — the case sylph and mapseq collapse.
+Both infer composition by Bayesian inversion of a mis-mapping matrix measured by
+simulate-and-map, so they resolve genomes that share near-identical sequence — the
+case sylph and mapseq collapse. The benchmark materialises that expensive matrix once
+per superresolution reference set, then supplies it to every matching sample-level
+run. It is published as
+`<outdir>/mismapping/<reference-set>/mismapping_matrix.csv`; sample
+`profiling/sr/` directories retain the composition and diagnostics only. A named
+collection is one shared reference set, while `database: self` is one reference set
+per source sample (shared across that sample's subsampling depths).
 
 Neither needs an external database: the only reference input is one combined FASTA
 over the community, which the pipeline builds for you with headers
