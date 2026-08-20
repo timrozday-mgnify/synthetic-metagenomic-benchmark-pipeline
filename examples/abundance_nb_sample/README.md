@@ -8,6 +8,10 @@ sets its abundance. Each of the 20 samples is thus a different random mixture â€
 genomes dominant, some rare, some absent. Draws are seeded (`sampling.seed`) so a rerun
 reproduces the same communities.
 
+The bundled configuration uses a **66.67%** independent presence probability for every
+panel genome. This deliberately supplies known absent genomes to evaluate
+presence/absence calls alongside abundance estimates.
+
 - **Reads:** one set per entry in `config.yaml`'s `generation_modes:`. The shipped config
   sweeps **two** modes â€” `wgs` (shotgun from genomes, 150 bp, profiled by sylph + superresolution-shotgun) and
   `amplicon_16s` (V4 515-YF/806BR amplicons extracted from full-length 16S by in-silico PCR,

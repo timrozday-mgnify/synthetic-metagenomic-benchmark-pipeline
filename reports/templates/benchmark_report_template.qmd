@@ -26,6 +26,9 @@ params:
   superresolution_mismapping_dir: "mismapping"
   report_scripts_dir: ""
   output_dir: ""
+  presence_prob_thresholds: [0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0]
+  subspecies: []
+  presence_confusion_threshold: 0.5
 ---
 
 ```{python}
@@ -42,6 +45,10 @@ meta_json = "meta.json"
 superresolution_mismapping_dir = "mismapping"
 report_scripts_dir = ""
 output_dir = ""
+presence_prob_thresholds = [0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45,
+                            0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0]
+subspecies = []
+presence_confusion_threshold = 0.5
 ```
 
 ```{python}
@@ -101,10 +108,20 @@ MISMAP = pd.read_csv(_resolve(mismapping_csv))
 SUMMARY = pd.read_csv(_resolve(summary_csv))
 META = json.loads(_resolve(meta_json).read_text())
 
+
+def as_list(value):
+    """Return a Quarto list parameter, accepting a comma-separated CLI value too."""
+    if isinstance(value, str):
+        return [item.strip() for item in value.split(",") if item.strip()]
+    return [str(item).strip() for item in value if str(item).strip()]
+
 # Back-compat: older CSVs have no `assay` column (single-assay layout).
 for _df in (ABUNDANCE, MISMAP, SUMMARY):
     if not _df.empty and "assay" not in _df.columns:
         _df["assay"] = "reads"
+
+if "sr_presence_prob" not in ABUNDANCE.columns:
+    ABUNDANCE["sr_presence_prob"] = np.nan
 
 SWEEP_PAIR = META.get("sweep_pair", [])
 SOURCE_ORDER = ["profiler", "reference", "sylph", "sr"]
@@ -143,6 +160,17 @@ def depth_order(depths):
 DEPTHS = depth_order(ABUNDANCE["depth"].unique().tolist())
 DEFAULT_DEPTH = "full" if "full" in DEPTHS else DEPTHS[-1]
 PALETTE = px.colors.qualitative.Safe
+PRESENCE_THRESHOLDS = sorted({float(value) for value in as_list(presence_prob_thresholds)
+                              if 0.0 <= float(value) <= 1.0})
+if not PRESENCE_THRESHOLDS:
+    raise ValueError("presence_prob_thresholds must contain at least one value in [0, 1]")
+PRESENCE_CONFUSION_THRESHOLD = float(presence_confusion_threshold)
+if not 0.0 <= PRESENCE_CONFUSION_THRESHOLD <= 1.0:
+    raise ValueError("presence_confusion_threshold must be in [0, 1]")
+REQUESTED_SUBSPECIES = as_list(subspecies)
+PRESENT_SUBSPECIES = [genome for genome in REQUESTED_SUBSPECIES
+                      if genome in set(ABUNDANCE["genome_id"])]
+MISSING_SUBSPECIES = sorted(set(REQUESTED_SUBSPECIES) - set(PRESENT_SUBSPECIES))
 ```
 
 ```{python}
@@ -451,6 +479,104 @@ for assay in ASSAYS:
 ```
 
 :::
+
+## Presence/absence detection
+
+Superresolution's `presence_prob` is scored against the realized zero/non-zero synthetic
+community for every probability threshold shown below. Jaccard is the intersection of
+true and called presences divided by their union, aggregated over genomes and samples at
+each assay and depth.
+
+```{python}
+#| echo: false
+def presence_jaccard_curve():
+    """Return Jaccard scores over requested superresolution presence thresholds."""
+    rows = []
+    available = ABUNDANCE.dropna(subset=["sr_presence_prob"])
+    for (assay, depth), sub in available.groupby(["assay", "depth"]):
+        truth_present = sub["realized_rel_abundance"] > 0
+        probabilities = sub["sr_presence_prob"]
+        for threshold in PRESENCE_THRESHOLDS:
+            called_present = probabilities >= threshold
+            union = (truth_present | called_present).sum()
+            rows.append({
+                "assay": assay,
+                "depth": depth,
+                "threshold": threshold,
+                "jaccard": (truth_present & called_present).sum() / union if union else 1.0,
+            })
+    return pd.DataFrame(rows)
+
+
+PRESENCE_JACCARD = presence_jaccard_curve()
+if PRESENCE_JACCARD.empty:
+    display(Markdown("_No superresolution `presence_prob` values were found in this run._"))
+else:
+    fig = go.Figure()
+    for (assay, depth), sub in PRESENCE_JACCARD.groupby(["assay", "depth"]):
+        fig.add_trace(go.Scatter(
+            x=sub["threshold"], y=sub["jaccard"], mode="lines+markers",
+            name=f"{assay} · {depth}",
+            hovertemplate=(f"{assay} · {depth}<br>threshold: %{{x:.2f}}<br>"
+                           "Jaccard: %{y:.3f}<extra></extra>"),
+        ))
+    fig.update_layout(
+        template="simple_white", height=460, width=820,
+        xaxis=dict(title="presence probability threshold", range=[0, 1]),
+        yaxis=dict(title="presence Jaccard", range=[0, 1]),
+        legend=dict(orientation="h", y=-0.2), margin=dict(l=10, r=10, t=10, b=10),
+    )
+    display(fig)
+```
+
+```{python}
+#| echo: false
+#| output: asis
+if REQUESTED_SUBSPECIES:
+    print("### Selected sub-species presence/absence confusion\n")
+    if MISSING_SUBSPECIES:
+        display(Markdown(
+            "_No benchmark rows were found for: " + ", ".join(f"`{g}`" for g in MISSING_SUBSPECIES)
+            + ". _\n"))
+    if not PRESENT_SUBSPECIES:
+        display(Markdown("_None of the requested sub-species are present in this run._"))
+    else:
+        display(Markdown(
+            "Each matrix compares the selected sub-species' realized presence with its "
+            f"superresolution call at probability ≥ **{PRESENCE_CONFUSION_THRESHOLD:.2f}**. "
+            "Rows are truth and columns are calls."))
+        for genome in PRESENT_SUBSPECIES:
+            sub = ABUNDANCE[(ABUNDANCE["genome_id"] == genome)
+                            & ABUNDANCE["sr_presence_prob"].notna()]
+            if sub.empty:
+                display(Markdown(f"**{genome}** — _no superresolution presence probabilities._\n"))
+                continue
+            truth = sub["realized_rel_abundance"] > 0
+            called = sub["sr_presence_prob"] >= PRESENCE_CONFUSION_THRESHOLD
+            matrix = pd.crosstab(
+                pd.Categorical(truth, categories=[False, True]),
+                pd.Categorical(called, categories=[False, True]),
+                dropna=False,
+            )
+            labels = ["absent", "present"]
+            fig = go.Figure(go.Heatmap(
+                z=matrix.to_numpy(), x=labels, y=labels,
+                colorscale="Blues", text=matrix.to_numpy(), texttemplate="%{text}",
+                hovertemplate=("truth: %{y}<br>call: %{x}<br>sample-genome cells: %{z}<extra></extra>"),
+            ))
+            fig.update_layout(
+                title=genome, template="simple_white", height=380, width=500,
+                xaxis=dict(title="superresolution presence call"),
+                yaxis=dict(title="realized presence", autorange="reversed"),
+                margin=dict(l=10, r=10, t=45, b=10),
+            )
+            display(fig)
+else:
+    print("### Selected sub-species presence/absence confusion\n")
+    display(Markdown(
+        "_Set the `subspecies` report parameter to one or more comma-separated genome IDs "
+        "to show their truth-versus-call presence/absence confusion matrices._"))
+```
 
 ## Ground-truth vs detected abundance
 

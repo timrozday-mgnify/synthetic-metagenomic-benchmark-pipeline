@@ -1,5 +1,4 @@
 genome_id,fasta_path,abundance
-bacteroides_fragilis,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/bacteroides_fragilis.ssu.fasta,15
 bacteroides_thetaiotaomicron,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/bacteroides_thetaiotaomicron.ssu.fasta,37
 bacteroides_uniformis,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/bacteroides_uniformis.ssu.fasta,8
 bacteroides_vulgatus,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/bacteroides_vulgatus.ssu.fasta,17
@@ -11,10 +10,6 @@ collinsella_aerofaciens,/Users/timrozday/Documents/synthetic-metagenomic-benchma
 coprococcus_comes,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/coprococcus_comes.ssu.fasta,13
 dorea_formicigenerans,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/dorea_formicigenerans.ssu.fasta,2
 eggerthella_lenta,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/eggerthella_lenta.ssu.fasta,14
-eubacterium_rectale,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/eubacterium_rectale.ssu.fasta,15
-fusobacterium_nucleatum,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/fusobacterium_nucleatum.ssu.fasta,2
 methanobrevibacter_smithii,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/methanobrevibacter_smithii.ssu.fasta,19
 parabacteroides_merdae,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/parabacteroides_merdae.ssu.fasta,9
-roseburia_intestinalis,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/roseburia_intestinalis.ssu.fasta,42
 streptococcus_parasanguinis,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/streptococcus_parasanguinis.ssu.fasta,11
-streptococcus_salivarius,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/streptococcus_salivarius.ssu.fasta,7
