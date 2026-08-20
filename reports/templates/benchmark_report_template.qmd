@@ -80,7 +80,8 @@ for _df in (ABUNDANCE, MISMAP, SUMMARY):
 SWEEP_PAIR = META.get("sweep_pair", [])
 SOURCE_ORDER = ["profiler", "reference", "sylph", "sr"]
 SOURCE_LABEL = {"profiler": "Profiler assignments", "reference": "Reference BAM",
-                "sylph": "Sylph profile", "sr": "Superresolution profile"}
+                "sylph": "Sylph profile", "sr": "Superresolution profile",
+                "sr_presence": "Superresolution presence gate"}
 ABUND_COL = {"profiler": "detected_profiler_rel_abundance",
              "reference": "detected_reference_rel_abundance",
              "sylph": "detected_sylph_rel_abundance",
@@ -757,7 +758,9 @@ if not SUMMARY.empty:
     rename = {"assay": "Assay", "depth": "Depth", "source": "Source",
               "l1_error_per_sample": "L1 error", "pearson_r": "Pearson r",
               "mismapping_rate": "Mis-mapping", "pair_mismapping_rate": "Pair mis-mapping",
-              "n_reads": "Reads"}
+              "n_reads": "Reads", "presence_jaccard": "Presence Jaccard",
+              "presence_precision": "Presence precision", "presence_recall": "Presence recall",
+              "presence_called_per_sample": "Called present / sample"}
     if not _has_pair_mm:
         disp = disp.drop(columns=["pair_mismapping_rate"], errors="ignore")
     disp = disp.rename(columns=rename)
@@ -765,7 +768,9 @@ if not SUMMARY.empty:
     disp["Assay"] = pd.Categorical(disp["Assay"], categories=ASSAYS, ordered=True)
     disp = disp.sort_values(["Assay", "Source", "Depth"])
     fmt = {"L1 error": "{:.4f}", "Pearson r": "{:.3f}", "Mis-mapping": "{:.2%}",
-           "Reads": "{:,.0f}"}
+           "Reads": "{:,.0f}", "Presence Jaccard": "{:.3f}",
+           "Presence precision": "{:.3f}", "Presence recall": "{:.3f}",
+           "Called present / sample": "{:.2f}"}
     if _has_pair_mm:
         fmt["Pair mis-mapping"] = "{:.2%}"
     display(disp.style.format(fmt, na_rep="—").hide(axis="index"))

@@ -38,6 +38,21 @@ process RUN_SUPERRESOLUTION {
     def rev_arg   = (repo.startsWith('/') || repo.startsWith('.')) ? '' : "-r ${params.sr_revision}"
     def prof_arg  = meta.sr_profile ? "-profile ${meta.sr_profile}" : ''
     def extra_cfg = (meta.sr_configs ?: []).collect { "-c ${file(it, checkIfExists: true)}" }.join(' ')
+    // Pass presence-gate settings explicitly rather than via sr_configs: the nested
+    // amplicon and shotgun pipelines have different defaults and can be swept
+    // independently in one benchmark invocation.
+    def srKind = meta.profiler == 'sr_amplicon' ? 'amplicon' : 'shotgun'
+    def presence = params["sr_${srKind}_infer_presence"]
+    def presencePrior = params["sr_${srKind}_infer_presence_prior"]
+    def presenceTemp = params["sr_${srKind}_infer_presence_temp"]
+    def presenceArgs = []
+    if (presence != null) presenceArgs << "--infer_presence ${presence}"
+    if (presencePrior != null) presenceArgs << "--infer_presence_prior ${presencePrior}"
+    if (presenceTemp != null) presenceArgs << "--infer_presence_temp ${presenceTemp}"
+    def presenceArg = presenceArgs.join(' ')
+    def nestedArgs = [rev_arg, prof_arg, '--input sr_samplesheet.yml', '--outdir sr_out', extra_cfg, presenceArg]
+        .findAll { it }
+        .join(' ')
     def platform  = meta.platform ? "printf '  platform: %s\\n' '${meta.platform}' >> sr_samplesheet.yml" : 'true'
     def reads     = (read_paths instanceof List ? read_paths : [read_paths]).collect { it.toString() }
     assert reads.every { it } : "RUN_SUPERRESOLUTION: empty read path for ${meta.id}"
@@ -61,11 +76,7 @@ process RUN_SUPERRESOLUTION {
     printf '  references: %s\\n' "\$(realpath ${refs})" >> sr_samplesheet.yml
 
     nextflow run ${repo} \\
-        ${rev_arg} \\
-        ${prof_arg} \\
-        --input sr_samplesheet.yml \\
-        --outdir sr_out \\
-        ${extra_cfg}
+        ${nestedArgs}
 
     normalize_sr_profile.py \\
         --composition sr_out/composition/${meta.id}/${meta.id}.inferred_composition.csv \\

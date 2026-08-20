@@ -135,6 +135,35 @@ def test_normalize_sr_profile_renormalises(tmp_path):
     assert lines[2] == ["genomeB", "0.250000", "0.250000"], lines
 
 
+def test_preprocess_reads_superresolution_presence(tmp_path):
+    """Regularised superresolution output yields a presence metric row."""
+    import sys
+
+    sys.path.insert(0, str(BIN.parent / "reports" / "scripts"))
+    import benchmark_preprocess as preprocess
+
+    cell = tmp_path / "results" / "presence_run" / "S1.wgs"
+    raw = cell / "profiling" / "sr"
+    raw.mkdir(parents=True)
+    (cell / "S1.truth.tsv").write_text(
+        "genome_id\ttarget_rel_abundance\trealized_n_reads\trealized_rel_abundance\n"
+        "A\t0.7\t70\t0.7\nB\t0.3\t30\t0.3\nC\t0.0\t0\t0.0\n"
+    )
+    (cell / "S1.sr_profile.tsv").write_text(
+        "genome_id\tpredicted_rel_abundance\tpredicted_tax_rel_abundance\n"
+        "A\t0.7\t0.7\nB\t0.3\t0.3\nC\t0.0\t0.0\n"
+    )
+    (raw / "S1.inferred_composition.csv").write_text(
+        "genome_id,inferred_mean,presence_prob\nA,0.7,0.99\nB,0.3,0.95\nC,0.0,0.01\n"
+    )
+
+    tables = preprocess.build_tables(tmp_path, "results/presence_run", "*.mseq.gz", None, "")
+    presence = tables["summary"].query("source == 'sr_presence'").iloc[0]
+    assert presence["presence_jaccard"] == 1.0
+    assert presence["presence_precision"] == 1.0
+    assert presence["presence_recall"] == 1.0
+
+
 def test_superresolution_selfchecks():
     assert run("build_sr_refs.py", "--selfcheck").returncode == 0
     assert run("normalize_sr_profile.py", "--selfcheck").returncode == 0

@@ -41,8 +41,10 @@ TRUTH_GLOB = "*.truth.tsv"
 MSEQ_GLOB_DEFAULT = "profiling/aap/*/taxonomy-summary/*/*.mseq.gz"
 BAM_GLOB = "*.sorted.bam"
 SYLPH_GLOB = "*.sylph_profile.tsv"
-# superresolution emits the same three-column contract, so parse_sylph reads it too.
+# Superresolution emits the same three-column abundance contract. Its raw
+# composition additionally carries the regularised presence posterior.
 SR_GLOB = "*.sr_profile.tsv"
+SR_COMPOSITION_GLOB = "profiling/sr/*.inferred_composition.csv"
 
 # `S10_a0.42` -> the swept fraction encoded in the sample-dir suffix.
 SWEEP_X_RE = re.compile(r"_a([0-9]*\.?[0-9]+)$")
@@ -178,6 +180,22 @@ def parse_sylph(path: Path, acc2genome: dict[str, str]) -> Counter:
     return counts
 
 
+def parse_sr_presence(path: Path) -> dict[str, float]:
+    """Return superresolution presence posteriors keyed by genome ID.
+
+    Older superresolution outputs do not have a ``presence_prob`` column, so they
+    remain abundance-only benchmark runs and return an empty mapping.
+    """
+    df = pd.read_csv(path)
+    if "presence_prob" not in df.columns:
+        return {}
+    return {
+        str(genome_id): float(probability)
+        for genome_id, probability in zip(df["genome_id"], df["presence_prob"])
+        if pd.notna(probability)
+    }
+
+
 def find_cells(pipeline_root: Path) -> list[dict]:
     """Discover (sample, assay, depth) cells: each sample dir + its subsample_<N> subdirs.
     The dir name splits into a sweep point (shared across assays) and an assay label."""
@@ -253,6 +271,9 @@ def build_tables(run_dir: Path, pipeline_dir: str, mseq_glob: str,
         sr_detected: Counter = Counter()
         for sr in cdir.glob(SR_GLOB):
             sr_detected += parse_sylph(sr, acc2genome)
+        sr_presence: dict[str, float] = {}
+        for composition in cdir.glob(SR_COMPOSITION_GLOB):
+            sr_presence.update(parse_sr_presence(composition))
 
         prof_rel, ref_rel = rel(prof_detected), rel(ref_detected)
         syl_rel, sr_rel = rel(syl_detected), rel(sr_detected)
@@ -272,6 +293,7 @@ def build_tables(run_dir: Path, pipeline_dir: str, mseq_glob: str,
             row["detected_reference_rel_abundance"] = ref_rel.get(g) if ref_detected else None
             row["detected_sylph_rel_abundance"] = syl_rel.get(g) if syl_detected else None
             row["detected_sr_rel_abundance"] = sr_rel.get(g) if sr_detected else None
+            row["sr_presence_prob"] = sr_presence.get(g) if sr_presence else None
             abundance_rows.append(row)
 
         for source, conf in (("profiler", prof_conf), ("reference", ref_conf)):
@@ -337,7 +359,10 @@ def build_summary(abundance: pd.DataFrame, mismapping: pd.DataFrame,
                                 & (mismapping["source"] == source)] if not mismapping.empty \
                     else mismapping
                 total = mm["reads"].sum() if "reads" in mm.columns else 0
-                offdiag = mm[mm["truth_genome"] != mm["assigned_genome"]]["reads"].sum()
+                offdiag = (
+                    mm[mm["truth_genome"] != mm["assigned_genome"]]["reads"].sum()
+                    if total else 0
+                )
                 # Within-pair mis-mapping: swept-pair reads assigned to the *other* member.
                 pair_reads = mm[mm["truth_genome"].isin(pair)]["reads"].sum() if pair and total else 0
                 pair_cross = mm[mm["truth_genome"].isin(pair) & mm["assigned_genome"].isin(pair)
@@ -350,6 +375,33 @@ def build_summary(abundance: pd.DataFrame, mismapping: pd.DataFrame,
                     "mismapping_rate": (offdiag / total) if total else np.nan,
                     "pair_mismapping_rate": (pair_cross / pair_reads) if pair_reads else np.nan,
                     "n_reads": int(total),
+                })
+            # Presence probabilities only exist for the regularised
+            # superresolution output. Score their standard 0.5 call against the
+            # realised synthetic community, not the requested abundance.
+            sr_presence = adep.dropna(subset=["sr_presence_prob"])
+            if not sr_presence.empty:
+                truth_present = sr_presence["realized_rel_abundance"] > 0
+                called_present = sr_presence["sr_presence_prob"] >= 0.5
+                true_positive = (truth_present & called_present).sum()
+                false_positive = (~truth_present & called_present).sum()
+                false_negative = (truth_present & ~called_present).sum()
+                union = true_positive + false_positive + false_negative
+                called = true_positive + false_positive
+                actual = true_positive + false_negative
+                rows.append({
+                    "assay": assay,
+                    "depth": depth,
+                    "source": "sr_presence",
+                    "l1_error_per_sample": np.nan,
+                    "pearson_r": np.nan,
+                    "mismapping_rate": np.nan,
+                    "pair_mismapping_rate": np.nan,
+                    "n_reads": 0,
+                    "presence_jaccard": true_positive / union if union else 1.0,
+                    "presence_precision": true_positive / called if called else 1.0,
+                    "presence_recall": true_positive / actual if actual else 1.0,
+                    "presence_called_per_sample": called / max(sr_presence["sample"].nunique(), 1),
                 })
     return pd.DataFrame(rows)
 
