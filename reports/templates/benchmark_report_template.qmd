@@ -24,6 +24,7 @@ params:
   summary_csv: "summary.csv"
   meta_json: "meta.json"
   superresolution_mismapping_dir: "mismapping"
+  report_scripts_dir: ""
   output_dir: ""
 ---
 
@@ -39,6 +40,7 @@ mismapping_csv = "mismapping.csv"
 summary_csv = "summary.csv"
 meta_json = "meta.json"
 superresolution_mismapping_dir = "mismapping"
+report_scripts_dir = ""
 output_dir = ""
 ```
 
@@ -46,6 +48,8 @@ output_dir = ""
 #| echo: false
 #| output: false
 import json
+import os
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -55,6 +59,21 @@ import plotly.graph_objects as go
 from IPython.display import Markdown, display
 
 pd.set_option("display.max_columns", 40)
+
+_script_candidates = [
+    Path(report_scripts_dir) if report_scripts_dir else None,
+    Path(os.environ["BENCHMARK_REPORT_SCRIPTS"])
+    if os.environ.get("BENCHMARK_REPORT_SCRIPTS") else None,
+    Path.cwd().parent / "synthetic-metagenomic-benchmark-pipeline" / "reports" / "scripts",
+]
+REPORT_SCRIPTS_DIR = next(
+    (path for path in _script_candidates if path and (path / "mismapping_plots.py").exists()),
+    None,
+)
+if REPORT_SCRIPTS_DIR is None:
+    raise FileNotFoundError("Could not locate reports/scripts/mismapping_plots.py")
+sys.path.insert(0, str(REPORT_SCRIPTS_DIR))
+from mismapping_plots import load_mismapping_matrix, mismapping_heatmap, render_mismapping_chord
 
 # Resolve run_dir whether the template is rendered directly or from a Taskfile
 # elsewhere: try the path as given, then relative to cwd and each parent, picking
@@ -264,45 +283,37 @@ The superresolution workflows simulate and map reads once for each reference set
 then reuse that matrix for all samples that use the set. The matrices are published
 outside the per-sample directories so they are not duplicated at every depth.
 
+Each reference set has a ribbon plot and a heatmap. Ribbons show the largest
+off-diagonal assignments, from the simulated source reference to its mapped target;
+the heatmap shows all retained off-diagonal values on a log scale. Amplicon matrices
+are dense reference-to-reference frames. Shotgun matrices are sparse chunk triplets,
+so plots retain the 80 chunks carrying the greatest off-diagonal mass when necessary.
+
 ```{python}
 #| echo: false
-def _sr_matrix_summary(path):
-    """Summarise either dense amplicon or sparse shotgun matrix output."""
-    frame = pd.read_csv(path, index_col=0)
-    reference_set = path.parent.name
-    if {"dst_chunk", "prob"}.issubset(frame.columns):
-        # Sparse shotgun matrix: source chunk is the CSV index.
-        probs = pd.to_numeric(frame["prob"], errors="coerce").fillna(0.0)
-        off_diagonal = frame.index.to_series().ne(frame["dst_chunk"].astype(str)).to_numpy()
-        return {
-            "reference_set": reference_set,
-            "format": "shotgun (sparse chunk → chunk)",
-            "sources": frame.index.nunique(),
-            "targets": frame["dst_chunk"].nunique(),
-            "entries": len(frame),
-            "off_diagonal_mass": float(probs[off_diagonal].sum()),
-        }
-
-    # Dense amplicon matrix: index and columns are reference IDs.
-    values = frame.apply(pd.to_numeric, errors="coerce").fillna(0.0)
-    diagonal = np.trace(values.to_numpy())
-    return {
-        "reference_set": reference_set,
-        "format": "amplicon (dense reference → reference)",
-        "sources": len(values.index),
-        "targets": len(values.columns),
-        "entries": values.size,
-        "off_diagonal_mass": float(values.to_numpy().sum() - diagonal),
-    }
-
-
 if SR_MATRICES:
-    matrix_summary = pd.DataFrame([_sr_matrix_summary(path) for path in SR_MATRICES])
-    display(Markdown(
-        f"Found **{len(matrix_summary)}** reusable matrix/matrices in `{SR_MISMAPPING_DIR}`. "
-        "`off_diagonal_mass` is the total simulated probability assigned away from the "
-        "source sequence/chunk (not a per-row rate for sparse shotgun matrices)."))
-    display(matrix_summary.style.format({"off_diagonal_mass": "{:.4f}"}).hide(axis="index"))
+    for matrix_path in SR_MATRICES:
+        matrix, workflow, total_references = load_mismapping_matrix(matrix_path)
+        reference_set = matrix_path.parent.name
+        retained = len(matrix)
+        display(Markdown(
+            f"### {reference_set}\n\n"
+            f"**{workflow.capitalize()}** matrix: displaying {retained} of "
+            f"{total_references} reference{'s' if total_references != 1 else ''}."))
+        chord = render_mismapping_chord(
+            matrix,
+            title=f"{reference_set} — reference mis-mapping",
+        )
+        if chord is None:
+            display(Markdown("_No off-diagonal assignments at or above 0.5%._"))
+        else:
+            display(chord)
+        heatmap = mismapping_heatmap(
+            matrix,
+            title=f"{reference_set} — reference mis-mapping",
+        )
+        if heatmap is not None:
+            display(heatmap)
 else:
     display(Markdown(
         f"_No published superresolution matrices found under `{SR_MISMAPPING_DIR}`._"))

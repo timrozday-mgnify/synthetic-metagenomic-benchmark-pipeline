@@ -61,6 +61,7 @@ tasks:
           -P summary_csv:summary.csv \
           -P meta_json:meta.json \
           -P superresolution_mismapping_dir:mismapping \
+          -P report_scripts_dir:"{{.ROOT_DIR}}/scripts" \
           -P output_dir:"" \
           --output-dir "{{.RUN_DIR_ABS}}"
 
