@@ -14,7 +14,8 @@ include { SYLPH_PROFILE       } from '../../../modules/nf-core/sylph/profile/mai
 include { NORMALIZE_SYLPH     } from '../../../modules/local/sylph/normalize/main'
 include { RUN_AAP             } from '../../../modules/local/amplicon_analysis/main'
 include { SR_BUILD_REFS       } from '../../../modules/local/superresolution/build_refs/main'
-include { RUN_SUPERRESOLUTION } from '../../../modules/local/superresolution/run/main'
+include { BUILD_SUPERRESOLUTION_MISMAPPING } from '../../../modules/local/superresolution/run/main'
+include { RUN_SUPERRESOLUTION               } from '../../../modules/local/superresolution/run/main'
 
 // Panel FASTA field each superresolution flavour's references are built from
 // (keep in sync with the same map in build_databases).
@@ -201,19 +202,44 @@ workflow PROFILE {
     ch_sr_self_in = ch_sr_self
         .map { meta, reads, csv, fastas -> [ "${meta.id}:${meta.profiler}".toString(), meta, reads ] }
         .join(SR_BUILD_REFS.out.refs.map { meta, refs -> [ "${meta.id}:${meta.profiler}".toString(), refs ] }, by: 0)
-        .map { key, meta, reads, refs -> [ meta, reads, refs ] }
+        // A self reference set belongs to the source sample, so all of its
+        // subsampling depths reuse one matrix while distinct samples remain isolated.
+        .map { key, meta, reads, refs -> [ "self:${meta.sample ?: meta.id}:${meta.profiler}", meta, reads, refs ] }
 
     // Named collection: join by "<name>:<source>", the key BUILD_DATABASES emits.
     ch_sr_built_in = ch_sr.built
         .map { meta, reads -> [ "${meta.database}:${srSources()[meta.profiler]}".toString(), meta, reads ] }
         .combine(ch_sr_dbs, by: 0)
-        .map { key, meta, reads, refs -> [ meta, reads, refs ] }
+        // Named collections are reference sets shared by every matching sample.
+        .map { key, meta, reads, refs -> [ "${meta.database}:${meta.profiler}", meta, reads, refs ] }
+
+    ch_sr_runs = ch_sr_self_in.mix(ch_sr_built_in)
+
+    // Materialise exactly one matrix per reference set. The nested pipelines need a
+    // sample-shaped input to build the simulation matrix, so select one representative
+    // run; all subsequent sample runs reuse its matrix through --mismapping_matrix.
+    ch_sr_mismapping_in = ch_sr_runs
+        .groupTuple(by: 0)
+        .map { referenceSet, metas, readsList, refsList ->
+            def representative = metas[0] + [
+                id: "mismapping_${referenceSet.replaceAll(/[^A-Za-z0-9._-]+/, '_')}",
+                reference_set: referenceSet,
+                reference_set_dir: referenceSet.replaceAll(/[^A-Za-z0-9._-]+/, '_'),
+            ]
+            [ representative, (readsList[0] instanceof List ? readsList[0] : [readsList[0]])*.toString(), refsList[0] ]
+        }
+    BUILD_SUPERRESOLUTION_MISMAPPING(ch_sr_mismapping_in)
+    ch_versions = ch_versions.mix(BUILD_SUPERRESOLUTION_MISMAPPING.out.versions.first())
 
     // Reads go through as absolute path strings (val) — see RUN_SUPERRESOLUTION.
+    // Joining restores the one shared matrix to every run in its reference set.
     RUN_SUPERRESOLUTION(
-        ch_sr_self_in.mix(ch_sr_built_in).map { meta, reads, refs ->
-            [ meta, (reads instanceof List ? reads : [reads])*.toString(), refs ]
-        }
+        ch_sr_runs
+            .map { referenceSet, meta, reads, refs -> [ referenceSet, meta, reads, refs ] }
+            .join(BUILD_SUPERRESOLUTION_MISMAPPING.out.mismapping.map { meta, matrix -> [ meta.reference_set, matrix ] }, by: 0)
+            .map { referenceSet, meta, reads, refs, matrix ->
+                [ meta, (reads instanceof List ? reads : [reads])*.toString(), refs, matrix ]
+            }
     )
     ch_versions = ch_versions.mix(RUN_SUPERRESOLUTION.out.versions.first())
 

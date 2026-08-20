@@ -125,8 +125,16 @@ nextflow_pipeline {
                 // Raw composition CSV kept under profiling/sr/.
                 { assert path("${params.outdir}/S1/profiling/sr/S1.inferred_composition.csv").exists() },
 
+                // A reusable matrix is published per reference set, rather than once
+                // inside every sample's profiling directory.
+                { assert path("${params.outdir}/mismapping/self_S1_sr_shotgun/mismapping_matrix.csv").exists() },
+                { assert path("${params.outdir}/mismapping/self_S2_sr_amplicon/mismapping_matrix.csv").exists() },
+                { assert path("${params.outdir}/mismapping/srA_sr_shotgun/mismapping_matrix.csv").exists() },
+                { assert !path("${params.outdir}/S1/profiling/sr/S1.mismapping_matrix.csv").exists() },
+
                 // Only the 'self' samples build their own references (S1, S2); S3 joins
-                // the collection's. 2 SR_BUILD_REFS + 1 SR_BUILD_COLLECTION_REFS + 3 runs.
+                // the collection's. One matrix build and one inference run per set.
+                { assert workflow.trace.succeeded().findAll { it.name.contains("BUILD_SUPERRESOLUTION_MISMAPPING") }.size() == 3 },
                 { assert workflow.trace.succeeded().findAll { it.name.contains("RUN_SUPERRESOLUTION") }.size() == 3 },
                 { assert workflow.trace.succeeded().findAll { it.name.contains("SR_BUILD_REFS") }.size() == 2 },
 

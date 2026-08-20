@@ -46,7 +46,9 @@ jobs:
 
       - name: Run bin tests
         run: |
-          pip install pytest
+          # benchmark_preprocess is imported by the superresolution presence test.
+          # Its BAM dependency (pysam) is lazy, but its table dependencies are not.
+          pip install pytest numpy pandas
           pytest tests/bin/test_bin.py -v
 
   nf-test-stub:

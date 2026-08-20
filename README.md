@@ -415,9 +415,15 @@ superresolution pipelines via a nested `nextflow run`. The repo is named by
 `--sr_shotgun_repo` / `--sr_amplicon_repo` at `--sr_revision`; a local checkout path
 works in the same slot (handy for testing unpushed changes).
 
-Both infer composition by Bayesian inversion of a
-mis-mapping matrix measured by simulate-and-map, so they resolve genomes that share
-near-identical sequence — the case sylph and mapseq collapse.
+Both infer composition by Bayesian inversion of a mis-mapping matrix measured by
+simulate-and-map, so they resolve genomes that share near-identical sequence — the
+case sylph and mapseq collapse. The benchmark materialises that expensive matrix once
+per superresolution reference set, then supplies it to every matching sample-level
+run. It is published as
+`<outdir>/mismapping/<reference-set>/mismapping_matrix.csv`; sample
+`profiling/sr/` directories retain the composition and diagnostics only. A named
+collection is one shared reference set, while `database: self` is one reference set
+per source sample (shared across that sample's subsampling depths).
 
 Neither needs an external database: the only reference input is one combined FASTA
 over the community, which the pipeline builds for you with headers
@@ -439,6 +445,18 @@ Output `<sample>.sr_profile.tsv` uses the same three columns as the sylph one
 (`inferred_mean`, renormalised; superresolution has no separate taxonomic abundance,
 so both abundance columns carry it). The raw `inferred_composition.csv` and inference
 diagnostics go under `<sample>/profiling/sr/`.
+
+Both current superresolution pipelines also emit `presence_prob`, a regularised
+posterior probability that each reference genome is present. The wrapper leaves their
+modality-specific defaults unchanged, but exposes independent benchmarking controls:
+`--sr_amplicon_infer_presence`, `--sr_amplicon_infer_presence_prior`,
+`--sr_amplicon_infer_presence_temp` and their `sr_shotgun` counterparts. The prior is
+the sparsity regulariser; lower values make absent-reference calls less likely. Sweep it
+over `0.001, 0.01, 0.1` and use temperatures `1.0, 2.0` (the production defaults are
+1.0 for amplicon and 2.0 for shotgun). Keep the gate enabled for this evaluation;
+`infer_mode=nuts` does not support it. `reports/scripts/benchmark_preprocess.py` now
+adds an `sr_presence` summary row (0.5 call threshold) with presence Jaccard, precision,
+recall, and calls per sample against the realised zero/non-zero truth.
 
 Each task pulls the pipeline into its own asset dir rather than the shared
 `~/.nextflow/assets`: concurrent nested runs would otherwise read each other's
