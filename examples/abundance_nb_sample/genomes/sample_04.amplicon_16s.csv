@@ -1,10 +1,8 @@
 genome_id,fasta_path,abundance
 bacteroides_fragilis,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/bacteroides_fragilis.ssu.fasta,8
-bacteroides_thetaiotaomicron,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/bacteroides_thetaiotaomicron.ssu.fasta,56
 bacteroides_uniformis,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/bacteroides_uniformis.ssu.fasta,1
 bacteroides_vulgatus,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/bacteroides_vulgatus.ssu.fasta,39
 clostridium_bolteae,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/clostridium_bolteae.ssu.fasta,41
-collinsella_aerofaciens,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/collinsella_aerofaciens.ssu.fasta,16
 dorea_formicigenerans,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/dorea_formicigenerans.ssu.fasta,69
 methanobrevibacter_smithii,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/methanobrevibacter_smithii.ssu.fasta,64
 parabacteroides_merdae,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/parabacteroides_merdae.ssu.fasta,54

@@ -1,13 +1,10 @@
 genome_id,fasta_path,abundance
-bacteroides_fragilis,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/genomes/bacteroides_fragilis.fasta,32
-bacteroides_uniformis,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/genomes/bacteroides_uniformis.fasta,1
 bacteroides_vulgatus,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/genomes/bacteroides_vulgatus.fasta,32
 clostridium_bolteae,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/genomes/clostridium_bolteae.fasta,27
 clostridium_perfringens,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/genomes/clostridium_perfringens.fasta,37
 clostridium_ramosum,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/genomes/clostridium_ramosum.fasta,2
 eggerthella_lenta,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/genomes/eggerthella_lenta.fasta,16
 eubacterium_rectale,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/genomes/eubacterium_rectale.fasta,21
-methanobrevibacter_smithii,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/genomes/methanobrevibacter_smithii.fasta,13
 parabacteroides_merdae,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/genomes/parabacteroides_merdae.fasta,30
 ruminococcus_gnavus,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/genomes/ruminococcus_gnavus.fasta,68
 streptococcus_parasanguinis,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/genomes/streptococcus_parasanguinis.fasta,1

@@ -37,7 +37,7 @@ reads:                         # shared read-generation defaults; a mode may ove
 sampling:
   n_samples: 20
   seed: 1
-  presence: 0.8                 # Bernoulli p that each genome is present in a sample
+  presence: 0.6667              # Bernoulli p that each genome is present in a sample (66.67%)
   negative_binomial:
     mean: 20
     dispersion: 1.0

@@ -1,15 +1,11 @@
 genome_id,fasta_path,abundance
-bacteroides_fragilis,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/bacteroides_fragilis.ssu.fasta,8
 bacteroides_thetaiotaomicron,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/bacteroides_thetaiotaomicron.ssu.fasta,35
-bacteroides_vulgatus,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/bacteroides_vulgatus.ssu.fasta,7
 clostridium_bolteae,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/clostridium_bolteae.ssu.fasta,4
 clostridium_perfringens,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/clostridium_perfringens.ssu.fasta,62
 clostridium_ramosum,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/clostridium_ramosum.ssu.fasta,22
 clostridium_saccharolyticum,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/clostridium_saccharolyticum.ssu.fasta,10
 collinsella_aerofaciens,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/collinsella_aerofaciens.ssu.fasta,35
 coprococcus_comes,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/coprococcus_comes.ssu.fasta,43
-dorea_formicigenerans,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/dorea_formicigenerans.ssu.fasta,8
-eggerthella_lenta,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/eggerthella_lenta.ssu.fasta,11
 eubacterium_rectale,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/eubacterium_rectale.ssu.fasta,56
 parabacteroides_merdae,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/parabacteroides_merdae.ssu.fasta,22
 roseburia_intestinalis,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/roseburia_intestinalis.ssu.fasta,49

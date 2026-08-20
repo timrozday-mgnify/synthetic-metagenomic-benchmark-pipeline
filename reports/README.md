@@ -107,7 +107,14 @@ samples — no config needed for the common single-pair sweep.
 ### Report parameters (`-P` to `quarto render`)
 
 `run_label`, `run_dir`, `pipeline_dir`, `abundance_csv`, `mismapping_csv`, `summary_csv`,
-`meta_json`, `output_dir`. The CSV params are resolved relative to `run_dir`.
+`meta_json`, `output_dir`, `presence_prob_thresholds`, `subspecies`, and
+`presence_confusion_threshold`. The CSV params are resolved relative to `run_dir`.
+
+`presence_prob_thresholds` is a YAML list of superresolution posterior cutoffs used for the
+presence Jaccard curve. Set `subspecies` to comma-separated genome IDs to add a 2×2
+truth-versus-call presence/absence matrix for each one; `presence_confusion_threshold`
+sets their calling cutoff (default `0.5`). With the Taskfile, pass the equivalents as
+`PRESENCE_THRESHOLDS`, `SUBSPECIES`, and `PRESENCE_CONFUSION_THRESHOLD`.
 
 ## Environments
 

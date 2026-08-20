@@ -1,10 +1,8 @@
 genome_id,fasta_path,abundance
-bacteroides_fragilis,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/bacteroides_fragilis.ssu.fasta,10
 bacteroides_thetaiotaomicron,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/bacteroides_thetaiotaomicron.ssu.fasta,78
 bacteroides_vulgatus,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/bacteroides_vulgatus.ssu.fasta,39
 clostridium_bolteae,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/clostridium_bolteae.ssu.fasta,13
 clostridium_perfringens,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/clostridium_perfringens.ssu.fasta,3
-clostridium_ramosum,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/clostridium_ramosum.ssu.fasta,39
 collinsella_aerofaciens,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/collinsella_aerofaciens.ssu.fasta,5
 coprococcus_comes,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/coprococcus_comes.ssu.fasta,5
 dorea_formicigenerans,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/abundance_nb_sample/references/16S/dorea_formicigenerans.ssu.fasta,21
