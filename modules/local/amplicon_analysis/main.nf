@@ -60,7 +60,7 @@ process RUN_AAP {
         "printf '%s,%s,%s,%s\\n' '${id}' '${fq1}' '${fq2}' '${se}' >> aap_samplesheet.csv"
     }.join('\n    ')
     """
-    ${use_built ? "write_aap_config.py --name '${dbname}' --fasta ${mapseq_fasta} --tax ${mapseq_tax} --otu ${mapseq_otu} --mscluster ${mapseq_mscluster} --rfam-covariance-model '${rfam_cm}' --rfam-claninfo '${rfam_claninfo}' --output aap.config" : "true"}
+    ${use_built ? "python3 \$(command -v write_aap_config.py) --name '${dbname}' --fasta ${mapseq_fasta} --tax ${mapseq_tax} --otu ${mapseq_otu} --mscluster ${mapseq_mscluster} --rfam-covariance-model '${rfam_cm}' --rfam-claninfo '${rfam_claninfo}' --output aap.config" : "true"}
 
     # AAP samplesheet: sample,fastq_1,fastq_2,single_end (one row per batched sample).
     printf 'sample,fastq_1,fastq_2,single_end\\n' > aap_samplesheet.csv

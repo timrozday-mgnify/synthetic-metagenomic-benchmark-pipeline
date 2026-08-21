@@ -24,7 +24,7 @@ process MAPSEQ_PREP {
     """
     printf '${manifest_text}\\n' > manifest.tsv
 
-    build_mapseq_refs.py \\
+    python "\$(command -v build_mapseq_refs.py)" \\
         --manifest manifest.tsv \\
         --out-fasta ${prefix}.mapseq.fasta \\
         --out-tax ${prefix}.mapseq.tax \\

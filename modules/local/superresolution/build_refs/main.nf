@@ -33,7 +33,7 @@ process SR_BUILD_REFS {
     """
     ${csv_cmd}
 
-    build_sr_refs.py \\
+    python "\$(command -v build_sr_refs.py)" \\
         --genomes-csv sr_genomes.csv \\
         --output ${prefix}.sr_refs.fasta
 

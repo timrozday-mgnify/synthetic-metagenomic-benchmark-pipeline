@@ -22,7 +22,7 @@ process NORMALIZE_SYLPH {
     // genomes_csv is optional: staged as NO_FILE for config DBs (no mapping).
     def map_arg  = genomes_csv.name != 'NO_FILE' ? "--genomes-csv ${genomes_csv}" : ''
     """
-    normalize_sylph_profile.py \\
+    python "\$(command -v normalize_sylph_profile.py)" \\
         --sylph-tsv ${sylph_tsv} \\
         ${map_arg} \\
         --output ${prefix}.sylph_profile.tsv

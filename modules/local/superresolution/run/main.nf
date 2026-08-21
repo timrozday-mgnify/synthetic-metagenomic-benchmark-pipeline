@@ -33,7 +33,12 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     def revArg = (repo.startsWith('/') || repo.startsWith('.')) ? '' : "-r ${params.sr_revision}"
     def profArg = meta.sr_profile ? "-profile ${meta.sr_profile}" : ''
     def extraCfg = (meta.sr_configs ?: []).collect { "-c ${file(it, checkIfExists: true)}" }.join(' ')
-    def nestedArgs = [revArg, profArg, '--input sr_samplesheet.yml', '--outdir sr_out', extraCfg]
+    // The nested repositories contain helpers that are not marked executable.
+    // Supply a task-local config that shadows them with `python <script>`; this
+    // also works on clusters whose work filesystem is mounted `noexec`, without
+    // mutating the downloaded asset checkout.
+    def noexecCfg = '-c sr_noexec.config'
+    def nestedArgs = [revArg, profArg, '--input sr_samplesheet.yml', '--outdir sr_out', extraCfg, noexecCfg]
         .findAll { it }
         .join(' ')
     def platform = meta.platform ? "printf '  platform: %s\\n' '${meta.platform}' >> sr_samplesheet.yml" : 'true'
@@ -48,6 +53,25 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     ${readCmds}
     ${platform}
     printf '  references: %s\\n' "\$(realpath ${refs})" >> sr_samplesheet.yml
+
+    cat <<'END_SR_NOEXEC_CONFIG' > sr_noexec.config
+process {
+    withName: 'PUBLISH_MISMAPPING' {
+        beforeScript = '''
+        write_mismapping_bundle.py() {
+            python "\${projectDir}/bin/write_mismapping_bundle.py" "\$@"
+        }
+        '''
+    }
+    withName: 'POOL_TRAINING_READS' {
+        beforeScript = '''
+        pool_training_reads.py() {
+            python "\${projectDir}/bin/pool_training_reads.py" "\$@"
+        }
+        '''
+    }
+}
+END_SR_NOEXEC_CONFIG
 
     nextflow run ${repo} \\
         ${nestedArgs}
@@ -158,7 +182,7 @@ process RUN_SUPERRESOLUTION {
     nextflow run ${repo} \\
         ${nestedArgs}
 
-    normalize_sr_profile.py \\
+    python "\$(command -v normalize_sr_profile.py)" \\
         --composition sr_out/composition/${meta.id}/${meta.id}.inferred_composition.csv \\
         --output ${meta.id}.sr_profile.tsv
 

@@ -21,7 +21,7 @@ process GROUND_TRUTH {
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    build_truth.py \\
+    python "\$(command -v build_truth.py)" \\
         --bam ${bam} \\
         --genomes-csv ${genomes_csv} \\
         --keep-names ${names} \\

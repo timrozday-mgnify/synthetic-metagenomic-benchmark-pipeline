@@ -36,7 +36,7 @@ process GENOME_BLENDER_GENERATE {
     def seed = meta.seed ?: params.seed
     """
     # Point the genomes CSV at the locally staged FASTA basenames.
-    rewrite_genomes_csv.py ${genomes_csv} genomes.local.csv
+    python "\$(command -v rewrite_genomes_csv.py)" ${genomes_csv} genomes.local.csv
 
     generate-reads \\
         --input-csv genomes.local.csv \\
