@@ -52,7 +52,23 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     nextflow run ${repo} \\
         ${nestedArgs}
 
-    cp sr_out/composition/${meta.id}/${meta.id}.mismapping_matrix.csv ${meta.id}.mismapping_matrix.csv
+    # Current superresolution-amplicon and superresolution-shotgun revisions publish
+    # generated matrices in an opaque-key bundle under mismapping/, rather than next
+    # to a sample's composition. The representative nested run must yield one bundle.
+    find sr_out/mismapping -type f -name mismapping_matrix.csv -print 2>/dev/null | sort > matrix_paths.txt
+    matrix_count=\$(wc -l < matrix_paths.txt | tr -d ' ')
+    if [ "\$matrix_count" -ne 1 ]; then
+        echo "Expected exactly one nested superresolution mismapping matrix under sr_out/mismapping/, found \$matrix_count." >&2
+        if [ "\$matrix_count" -gt 0 ]; then
+            sed 's/^/Discovered matrix: /' matrix_paths.txt >&2
+        else
+            echo 'Files produced below sr_out/:' >&2
+            find sr_out -type f -print 2>/dev/null | sort >&2 || true
+        fi
+        exit 1
+    fi
+    matrix_path=\$(sed -n '1p' matrix_paths.txt)
+    cp "\$matrix_path" ${meta.id}.mismapping_matrix.csv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
