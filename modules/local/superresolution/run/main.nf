@@ -8,12 +8,13 @@
 // only selects which repo to launch.
 //
 // Runs on the host (executor 'local', no container) so it reuses the host nextflow
-// + container engine, exactly like RUN_AAP; the nested run manages its own images.
+// + container engine, exactly like RUN_AAP. These are lightweight nested-Nextflow
+// launchers; the nested run manages its own images, executor, and heavy-job resources.
 // The nested run does NOT inherit the outer -profile: set params.sr_profile (and
 // params.sr_configs for extra -c files).
 process BUILD_SUPERRESOLUTION_MISMAPPING {
     tag "${meta.reference_set} (${meta.profiler})"
-    label 'process_medium'
+    label 'process_single'
     executor 'local'
 
     input:
