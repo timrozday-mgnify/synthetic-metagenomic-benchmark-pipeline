@@ -32,7 +32,7 @@ process SKIVER_TRAIN {
     cp ${base_tsv} data/${platform}/${prefix}.base_observations.tsv
 
     # Build a model-config JSON from the candidate component strings.
-    build_model_config.py "${components}" > model_config.json
+    python "\$(command -v build_model_config.py)" "${components}" > model_config.json
 
     python \$SKIVER_SCRIPTS/train_context_error_models.py \\
         --model-config model_config.json \\
@@ -44,7 +44,7 @@ process SKIVER_TRAIN {
         $args
 
     # Pick the min-AIC (MLE) model and expose it under a stable name.
-    WINNER=\$(pick_best_model.py out/context_model_aic.csv ${platform})
+    WINNER=\$(python "\$(command -v pick_best_model.py)" out/context_model_aic.csv ${platform})
     cp out/\${WINNER}_${platform}.pt ${prefix}.model.pt
     cp out/context_model_aic.csv ${prefix}.context_model_aic.csv
 

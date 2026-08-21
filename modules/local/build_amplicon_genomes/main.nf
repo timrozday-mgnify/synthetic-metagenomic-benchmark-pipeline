@@ -22,7 +22,7 @@ process BUILD_AMPLICON_GENOMES {
 
     script:
     """
-    build_amplicon_genomes_csv.py \\
+    python "\$(command -v build_amplicon_genomes_csv.py)" \\
         ${amplicons_fa} \\
         ${genomes_csv} \\
         amplicon_genomes.csv \\

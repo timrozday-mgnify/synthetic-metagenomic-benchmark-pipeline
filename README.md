@@ -469,6 +469,10 @@ Like AAP, the wrapper runs on the host (`executor local`) and the nested run doe
 config via `--sr_configs`). `--sr_configs` is also where you scale the inference down
 for small runs — see `tests/sr_fast.config`.
 
+For superresolution runs, the wrapper also supplies an internal nested configuration
+that launches non-executable helper scripts through Python. This supports HPC work
+filesystems mounted with `noexec`; no additional user configuration is required.
+
 ### Custom PIMENTO primers
 
 By default AAP infers amplicon primers automatically with PIMENTO. To make PIMENTO

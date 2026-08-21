@@ -18,7 +18,7 @@ process MAPSEQ_OTU {
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    build_mapseq_otu.py \\
+    python "\$(command -v build_mapseq_otu.py)" \\
         --mscluster ${mscluster} \\
         --headers ${headers_json} \\
         --out-otu ${prefix}.mapseq.otu
