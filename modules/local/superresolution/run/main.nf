@@ -30,15 +30,15 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     script:
     def repo = meta.profiler == 'sr_amplicon' ? params.sr_amplicon_repo : params.sr_shotgun_repo
     if (!repo) error "BUILD_SUPERRESOLUTION_MISMAPPING: params.${meta.profiler == 'sr_amplicon' ? 'sr_amplicon_repo' : 'sr_shotgun_repo'} is not set (reference set ${meta.reference_set})"
-    def revArg = (repo.startsWith('/') || repo.startsWith('.')) ? '' : "-r ${params.sr_revision}"
+    def remoteRepo = !(repo.startsWith('/') || repo.startsWith('.'))
+    def revArg = remoteRepo ? "-r ${params.sr_revision}" : ''
+    // A named repository is pulled into this task's isolated asset directory before
+    // launch, so the non-executable upstream helpers can be fixed there. A supplied
+    // local checkout remains untouched and can carry its own equivalent patch.
+    def launchRepo = remoteRepo ? "\$NXF_ASSETS/${repo}" : repo
     def profArg = meta.sr_profile ? "-profile ${meta.sr_profile}" : ''
     def extraCfg = (meta.sr_configs ?: []).collect { "-c ${file(it, checkIfExists: true)}" }.join(' ')
-    // The nested repositories contain helpers that are not marked executable.
-    // Supply a task-local config that shadows them with `python <script>`; this
-    // also works on clusters whose work filesystem is mounted `noexec`, without
-    // mutating the downloaded asset checkout.
-    def noexecCfg = '-c sr_noexec.config'
-    def nestedArgs = [revArg, profArg, '--input sr_samplesheet.yml', '--outdir sr_out', extraCfg, noexecCfg]
+    def nestedArgs = [profArg, '--input sr_samplesheet.yml', '--outdir sr_out', extraCfg]
         .findAll { it }
         .join(' ')
     def platform = meta.platform ? "printf '  platform: %s\\n' '${meta.platform}' >> sr_samplesheet.yml" : 'true'
@@ -54,26 +54,20 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     ${platform}
     printf '  references: %s\\n' "\$(realpath ${refs})" >> sr_samplesheet.yml
 
-    cat <<'END_SR_NOEXEC_CONFIG' > sr_noexec.config
-process {
-    withName: 'PUBLISH_MISMAPPING' {
-        beforeScript = '''
-        write_mismapping_bundle.py() {
-            python "\${projectDir}/bin/write_mismapping_bundle.py" "\$@"
-        }
-        '''
-    }
-    withName: 'POOL_TRAINING_READS' {
-        beforeScript = '''
-        pool_training_reads.py() {
-            python "\${projectDir}/bin/pool_training_reads.py" "\$@"
-        }
-        '''
-    }
-}
-END_SR_NOEXEC_CONFIG
+    if [ '${remoteRepo}' = 'true' ]; then
+        nextflow pull ${repo} ${revArg}
 
-    nextflow run ${repo} \\
+        publish_module="\$NXF_ASSETS/${repo}/modules/local/publish_mismapping/main.nf"
+        pool_module="\$NXF_ASSETS/${repo}/modules/local/pool_training_reads/main.nf"
+        sed -i.bak 's|^    write_mismapping_bundle.py|    python "\${projectDir}/bin/write_mismapping_bundle.py"|' "\$publish_module"
+        sed -i.bak 's|^    pool_training_reads.py|    python "\${projectDir}/bin/pool_training_reads.py"|' "\$pool_module"
+        grep -F 'python "\${projectDir}/bin/write_mismapping_bundle.py"' "\$publish_module" >/dev/null || {
+            echo 'Failed to apply the superresolution Python-helper compatibility patch.' >&2
+            exit 1
+        }
+    fi
+
+    nextflow run ${launchRepo} \\
         ${nestedArgs}
 
     # Current superresolution-amplicon and superresolution-shotgun revisions publish
