@@ -53,7 +53,7 @@ workflow PROFILE {
     // simply has nothing to join and is dropped (see README).
     // ponytail: self DB is rebuilt per run (keyed by unique meta.id) even though
     // it depends only on the genomes; dedupe by meta.sample if it ever matters.
-    // combine, not join: join is 1:1 and consumes the key, so with extra_profilers
+    // combine, not join: join is 1:1 and consumes the key, so with several profilers
     // fanning a sample into several entries it would silently drop all but one.
     ch_self = ch_by_prof.sylph
         .filter { it[0].database == 'self' }
@@ -149,13 +149,17 @@ workflow PROFILE {
         }
         .groupTuple(by: 0)
         .map { key, metas, readsL, useBuilts, aapConfigs, fastas, taxs, otus, msclusters, rfamCms, rfamClaninfos ->
+            // groupTuple emits in arrival (task-completion) order, which varies between runs.
+            // Sort by sample id so the batch hashes identically on a resume — otherwise the
+            // whole nested AAP run is redone every time purely because the list order moved.
+            def rows = [metas, readsL].transpose().sort { a, b -> a[0].id <=> b[0].id }
             // layout: one [id, single_end, fastq_1, fastq_2] per sample. Reads are passed as
             // absolute paths (val), not staged — see RUN_AAP (executor local, avoids sub_* collisions).
-            def layout = [metas, readsL].transpose().collect { m, r ->
+            def layout = rows.collect { m, r ->
                 def rl = r instanceof List ? r : [r]
                 [ m.id, rl.size() > 1 ? 'false' : 'true', rl[0].toString(), rl.size() > 1 ? rl[1].toString() : '' ]
             }
-            [ metas, layout, useBuilts[0], aapConfigs[0], fastas[0], taxs[0], otus[0], msclusters[0], rfamCms[0], rfamClaninfos[0] ]
+            [ rows*.getAt(0), layout, useBuilts[0], aapConfigs[0], fastas[0], taxs[0], otus[0], msclusters[0], rfamCms[0], rfamClaninfos[0] ]
         }
 
     RUN_AAP(ch_aap_grouped)
@@ -226,12 +230,15 @@ workflow PROFILE {
     ch_sr_mismapping_in = ch_sr_runs
         .groupTuple(by: 0)
         .map { referenceSet, metas, readsList, refsList ->
-            def representative = metas[0] + [
+            // Deterministic representative (groupTuple's order is arrival order): a different
+            // sample each run means a different matrix, which invalidates every SR run reusing it.
+            def pick = (0..<metas.size()).min { metas[it].id }
+            def representative = metas[pick] + [
                 id: "mismapping_${referenceSet.replaceAll(/[^A-Za-z0-9._-]+/, '_')}",
                 reference_set: referenceSet,
                 reference_set_dir: referenceSet.replaceAll(/[^A-Za-z0-9._-]+/, '_'),
             ]
-            [ representative, (readsList[0] instanceof List ? readsList[0] : [readsList[0]])*.toString(), refsList[0] ]
+            [ representative, (readsList[pick] instanceof List ? readsList[pick] : [readsList[pick]])*.toString(), refsList[pick] ]
         }
     // combine, not join: several reference sets share one profiler's checkout.
     BUILD_SUPERRESOLUTION_MISMAPPING(
@@ -243,11 +250,13 @@ workflow PROFILE {
     ch_versions = ch_versions.mix(BUILD_SUPERRESOLUTION_MISMAPPING.out.versions.first())
 
     // Reads go through as absolute path strings (val) — see RUN_SUPERRESOLUTION.
-    // Joining restores the one shared matrix to every run in its reference set.
+    // combine, not join: every sample in a reference set needs the one shared
+    // matrix, and join is 1:1 — it would emit a single run per set and silently
+    // drop every other sample.
     RUN_SUPERRESOLUTION(
         ch_sr_runs
             .map { referenceSet, meta, reads, refs -> [ referenceSet, meta, reads, refs ] }
-            .join(BUILD_SUPERRESOLUTION_MISMAPPING.out.mismapping.map { meta, matrix -> [ meta.reference_set, matrix ] }, by: 0)
+            .combine(BUILD_SUPERRESOLUTION_MISMAPPING.out.mismapping.map { meta, matrix -> [ meta.reference_set, matrix ] }, by: 0)
             .map { referenceSet, meta, reads, refs, matrix ->
                 [ meta.profiler, meta, (reads instanceof List ? reads : [reads])*.toString(), refs, matrix ]
             }

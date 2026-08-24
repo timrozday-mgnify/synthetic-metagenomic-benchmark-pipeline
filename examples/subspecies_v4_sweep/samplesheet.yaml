@@ -99,10 +99,10 @@ samples:
   paired_end: true
   read_length_mean: 150
   read_length_variance: 0
-  profiler: sylph
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - sylph
   - sr_shotgun
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -118,10 +118,10 @@ samples:
   paired_end: true
   read_length_mean: 150
   read_length_variance: 0
-  profiler: sylph
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - sylph
   - sr_shotgun
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -137,10 +137,10 @@ samples:
   paired_end: true
   read_length_mean: 150
   read_length_variance: 0
-  profiler: sylph
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - sylph
   - sr_shotgun
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -156,10 +156,10 @@ samples:
   paired_end: true
   read_length_mean: 150
   read_length_variance: 0
-  profiler: sylph
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - sylph
   - sr_shotgun
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -175,10 +175,10 @@ samples:
   paired_end: true
   read_length_mean: 150
   read_length_variance: 0
-  profiler: sylph
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - sylph
   - sr_shotgun
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -194,10 +194,10 @@ samples:
   paired_end: true
   read_length_mean: 150
   read_length_variance: 0
-  profiler: sylph
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - sylph
   - sr_shotgun
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -213,10 +213,10 @@ samples:
   paired_end: true
   read_length_mean: 150
   read_length_variance: 0
-  profiler: sylph
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - sylph
   - sr_shotgun
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -232,10 +232,10 @@ samples:
   paired_end: true
   read_length_mean: 150
   read_length_variance: 0
-  profiler: sylph
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - sylph
   - sr_shotgun
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -251,10 +251,10 @@ samples:
   paired_end: true
   read_length_mean: 150
   read_length_variance: 0
-  profiler: sylph
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - sylph
   - sr_shotgun
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -270,10 +270,10 @@ samples:
   paired_end: true
   read_length_mean: 150
   read_length_variance: 0
-  profiler: sylph
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - sylph
   - sr_shotgun
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -289,10 +289,10 @@ samples:
   paired_end: true
   read_length_mean: 150
   read_length_variance: 0
-  profiler: sylph
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - sylph
   - sr_shotgun
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -308,10 +308,10 @@ samples:
   paired_end: true
   read_length_mean: 150
   read_length_variance: 0
-  profiler: sylph
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - sylph
   - sr_shotgun
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -327,10 +327,10 @@ samples:
   paired_end: true
   read_length_mean: 150
   read_length_variance: 0
-  profiler: sylph
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - sylph
   - sr_shotgun
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -346,10 +346,10 @@ samples:
   paired_end: true
   read_length_mean: 150
   read_length_variance: 0
-  profiler: sylph
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - sylph
   - sr_shotgun
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -365,10 +365,10 @@ samples:
   paired_end: true
   read_length_mean: 150
   read_length_variance: 0
-  profiler: sylph
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - sylph
   - sr_shotgun
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -384,10 +384,10 @@ samples:
   paired_end: true
   read_length_mean: 150
   read_length_variance: 0
-  profiler: sylph
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - sylph
   - sr_shotgun
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -403,10 +403,10 @@ samples:
   paired_end: true
   read_length_mean: 150
   read_length_variance: 0
-  profiler: sylph
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - sylph
   - sr_shotgun
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -422,10 +422,10 @@ samples:
   paired_end: true
   read_length_mean: 150
   read_length_variance: 0
-  profiler: sylph
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - sylph
   - sr_shotgun
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -441,10 +441,10 @@ samples:
   paired_end: true
   read_length_mean: 150
   read_length_variance: 0
-  profiler: sylph
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - sylph
   - sr_shotgun
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -460,10 +460,10 @@ samples:
   paired_end: true
   read_length_mean: 150
   read_length_variance: 0
-  profiler: sylph
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - sylph
   - sr_shotgun
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -479,10 +479,10 @@ samples:
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-  profiler: aap
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - aap
   - sr_amplicon
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -502,10 +502,10 @@ samples:
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-  profiler: aap
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - aap
   - sr_amplicon
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -525,10 +525,10 @@ samples:
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-  profiler: aap
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - aap
   - sr_amplicon
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -548,10 +548,10 @@ samples:
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-  profiler: aap
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - aap
   - sr_amplicon
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -571,10 +571,10 @@ samples:
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-  profiler: aap
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - aap
   - sr_amplicon
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -594,10 +594,10 @@ samples:
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-  profiler: aap
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - aap
   - sr_amplicon
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -617,10 +617,10 @@ samples:
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-  profiler: aap
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - aap
   - sr_amplicon
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -640,10 +640,10 @@ samples:
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-  profiler: aap
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - aap
   - sr_amplicon
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -663,10 +663,10 @@ samples:
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-  profiler: aap
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - aap
   - sr_amplicon
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -686,10 +686,10 @@ samples:
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-  profiler: aap
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - aap
   - sr_amplicon
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -709,10 +709,10 @@ samples:
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-  profiler: aap
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - aap
   - sr_amplicon
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -732,10 +732,10 @@ samples:
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-  profiler: aap
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - aap
   - sr_amplicon
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -755,10 +755,10 @@ samples:
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-  profiler: aap
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - aap
   - sr_amplicon
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -778,10 +778,10 @@ samples:
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-  profiler: aap
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - aap
   - sr_amplicon
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -801,10 +801,10 @@ samples:
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-  profiler: aap
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - aap
   - sr_amplicon
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -824,10 +824,10 @@ samples:
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-  profiler: aap
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - aap
   - sr_amplicon
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -847,10 +847,10 @@ samples:
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-  profiler: aap
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - aap
   - sr_amplicon
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -870,10 +870,10 @@ samples:
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-  profiler: aap
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - aap
   - sr_amplicon
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -893,10 +893,10 @@ samples:
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-  profiler: aap
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - aap
   - sr_amplicon
+  database: community_v4
   subsample:
   - none
   - 100000
@@ -916,10 +916,10 @@ samples:
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
-  profiler: aap
-  database: community_v4
-  extra_profilers:
+  profilers:
+  - aap
   - sr_amplicon
+  database: community_v4
   subsample:
   - none
   - 100000

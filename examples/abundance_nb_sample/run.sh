@@ -9,9 +9,9 @@ python "$HERE/generate_samplesheet.py"
 
 # One combined run: --step all trains the error model once (deduped by train_id),
 # generates reads for every sample, builds the profiler DBs from the samplesheet's
-# `databases:` block, and profiles each sample with EVERY profiler its row lists -
-# the mode's `profiler:` plus its `extra_profilers:` (sylph + superresolution-shotgun
-# for wgs, aap + superresolution-amplicon for amplicon_16s). Each method's profile
+# `databases:` block, and profiles each sample with EVERY profiler its row's
+# `profilers:` lists (sylph + superresolution-shotgun for wgs, aap +
+# superresolution-amplicon for amplicon_16s). Each method's profile
 # lands in the same benchmark dir, so they compare directly against truth.tsv.
 nextflow run "$REPO/main.nf" \
     -profile docker \

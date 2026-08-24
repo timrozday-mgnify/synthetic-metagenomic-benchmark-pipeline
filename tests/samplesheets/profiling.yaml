@@ -6,7 +6,7 @@
   genomes_csv: tests/data/genomes_S1.csv
   num_reads: 2000
   mode: shotgun
-  profiler: sylph
+  profilers: [sylph]
   database: self
 
 - sample: S2
@@ -17,5 +17,5 @@
   genomes_csv: tests/data/genomes_S2.csv
   num_reads: 2000
   mode: shotgun
-  profiler: sylph
+  profilers: [sylph]
   database: self

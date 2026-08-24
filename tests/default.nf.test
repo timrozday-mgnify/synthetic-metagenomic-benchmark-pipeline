@@ -116,11 +116,12 @@ nextflow_pipeline {
                 // genome source is built: no sample references srA with sr_amplicon.
                 { assert path("${params.outdir}/databases/srA/srA_genome.sr_refs.fasta").exists() },
 
-                // Normalised profile next to truth.tsv for all three: self/shotgun,
-                // self/amplicon, and the named collection.
+                // Normalised profile next to truth.tsv for all four: self/shotgun,
+                // self/amplicon, and the two samples sharing the named collection.
                 { assert path("${params.outdir}/S1/S1.sr_profile.tsv").exists() },
                 { assert path("${params.outdir}/S2/S2.sr_profile.tsv").exists() },
                 { assert path("${params.outdir}/S3/S3.sr_profile.tsv").exists() },
+                { assert path("${params.outdir}/S4/S4.sr_profile.tsv").exists() },
 
                 // Raw composition CSV kept under profiling/sr/.
                 { assert path("${params.outdir}/S1/profiling/sr/S1.inferred_composition.csv").exists() },
@@ -132,24 +133,25 @@ nextflow_pipeline {
                 { assert path("${params.outdir}/mismapping/srA_sr_shotgun/mismapping_matrix.csv").exists() },
                 { assert !path("${params.outdir}/S1/profiling/sr/S1.mismapping_matrix.csv").exists() },
 
-                // Only the 'self' samples build their own references (S1, S2); S3 joins
-                // the collection's. One matrix build and one inference run per set.
+                // Only the 'self' samples build their own references (S1, S2); S3 and S4
+                // share the collection's. One matrix build per reference set, but one
+                // inference run per SAMPLE — S3 and S4 both reuse srA's single matrix.
                 { assert workflow.trace.succeeded().findAll { it.name.contains("BUILD_SUPERRESOLUTION_MISMAPPING") }.size() == 3 },
-                { assert workflow.trace.succeeded().findAll { it.name.contains("RUN_SUPERRESOLUTION") }.size() == 3 },
+                { assert workflow.trace.succeeded().findAll { it.name.contains("RUN_SUPERRESOLUTION") }.size() == 4 },
                 { assert workflow.trace.succeeded().findAll { it.name.contains("SR_BUILD_REFS") }.size() == 2 },
 
-                // S1 also lists sylph in extra_profilers: same reads, second profile.
+                // S1 also lists sylph in profilers: same reads, second profile.
                 { assert path("${params.outdir}/S1/S1.sylph_profile.tsv").exists() }
             )
         }
     }
 
-    test("extra_profilers - several profilers over one set of reads - stub") {
+    test("profilers - several profilers over one set of reads - stub") {
         tag "stub"
         options "-stub"
         when {
             params {
-                input  = "${projectDir}/tests/samplesheets/extra_profilers.yaml"
+                input  = "${projectDir}/tests/samplesheets/multi_profiler.yaml"
                 outdir = "$outputDir"
             }
         }
@@ -160,7 +162,7 @@ nextflow_pipeline {
                 // Reads generated ONCE per sample...
                 { assert workflow.trace.succeeded().findAll { it.name.contains("GENOME_BLENDER_GENERATE") }.size() == 3 },
 
-                // ...but profiled by both the primary profiler and the extra one, each
+                // ...but profiled by every listed profiler, each
                 // dropping its own profile next to that sample's truth.tsv.
                 { assert path("${params.outdir}/E1/E1.sylph_profile.tsv").exists() },
                 { assert path("${params.outdir}/E1/E1.sr_profile.tsv").exists() },
@@ -423,7 +425,7 @@ nextflow_pipeline {
                 // Raw composition CSV kept under profiling/sr/.
                 { assert path("${params.outdir}/S1/profiling/sr/S1.inferred_composition.csv").exists() },
 
-                // extra_profilers for real: S1's reads are generated once and profiled
+                // Fan-out for real: S1's reads are generated once and profiled
                 // by both sr_shotgun and sylph, each publishing into the same dir.
                 { assert workflow.trace.succeeded().findAll { it.name.contains("GENOME_BLENDER_GENERATE") }.size() == 3 },
                 { assert path("${params.outdir}/S1/S1.sylph_profile.tsv").readLines().get(0)

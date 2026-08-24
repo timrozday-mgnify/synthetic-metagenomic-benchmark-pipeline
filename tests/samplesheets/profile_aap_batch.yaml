@@ -2,16 +2,16 @@
 # A3 names a different `database` -> its own RUN_AAP. Verifies grouping by DB, and
 # that samples reusing the same read files (all point at tests/data) don't collide.
 - sample: A1
-  profiler: aap
+  profilers: [aap]
   benchmark_dir: tests/data
   database:
 
 - sample: A2
-  profiler: aap
+  profilers: [aap]
   benchmark_dir: tests/data
   database:
 
 - sample: A3
-  profiler: aap
+  profilers: [aap]
   benchmark_dir: tests/data
   database: other_db

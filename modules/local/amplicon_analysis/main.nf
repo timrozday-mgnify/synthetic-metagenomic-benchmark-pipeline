@@ -10,6 +10,11 @@
 //
 // Runs on the host (executor 'local', no container) so it reuses the host
 // nextflow + container engine — AAP manages its own containers/DBs internally.
+//
+// The nested run keeps its work dir and cache OUTSIDE this task's directory (under
+// <workDir>/nested/aap/<batch>) and is launched with -resume, so a retry, or an outer
+// re-run whose batch changed only slightly, resumes the nested pipeline instead of
+// repeating hours of AAP work. Wipe <workDir>/nested to force nested runs from scratch.
 // mapseq_databases and other AAP params come from the optional -c config.
 // An optional custom PIMENTO primer library (params.aap_std_primer_library) is forwarded
 // as --std_primer_library so PIMENTO matches against known primers instead of its bundled set.
@@ -52,6 +57,12 @@ process RUN_AAP {
     // Optional custom PIMENTO primer library. Global param, absolute host path (executor local,
     // nested run reads it directly). null => aap falls back to PIMENTO's bundled library.
     def primer_lib_arg = params.aap_std_primer_library ? "--std_primer_library ${file(params.aap_std_primer_library, type: 'dir', checkIfExists: true)}" : ''
+    // Persistent home for the nested run's cache + work dir. Keyed by the batch identity
+    // (DB name + the exact set of samples), which is stable across outer runs and distinct
+    // between concurrently running batches — two runs must never share one nested cache.
+    def batch_id   = java.security.MessageDigest.getInstance('MD5')
+                         .digest(metas*.id.sort().join(',').bytes).encodeHex().toString()[0..7]
+    def nested_dir = "${workflow.workDir}/nested/aap/${dbname.replaceAll(/[^A-Za-z0-9._-]+/, '_')}-${batch_id}"
     // One CSV row per sample: [id, single_end, fastq_1, fastq_2] (absolute read paths).
     // Emit one printf per row (leading indentation is harmless for commands, unlike a
     // heredoc body) so the samplesheet has no stray whitespace.
@@ -68,8 +79,16 @@ process RUN_AAP {
     # Fail loud if a row was dropped rather than silently profiling a subset.
     [ \$(( \$(grep -c . aap_samplesheet.csv) - 1 )) -eq ${layout.size()} ] || { echo "RUN_AAP: samplesheet row count != ${layout.size()}" >&2; exit 1; }
 
+    # NXF_CACHE_DIR moves the nested run's .nextflow cache + history out of this task
+    # directory, which -resume needs to find a previous session (the launch dir itself
+    # stays the task dir, so every relative path below keeps working).
+    export NXF_CACHE_DIR='${nested_dir}/cache'
+    mkdir -p "\$NXF_CACHE_DIR"
+
     nextflow run ebi-metagenomics/amplicon-analysis-pipeline \\
         -r ${params.aap_revision} \\
+        -w '${nested_dir}/work' \\
+        -resume \\
         ${prof_arg} \\
         --input aap_samplesheet.csv \\
         --outdir aap_out \\

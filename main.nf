@@ -71,15 +71,14 @@ def parseNestedConfigs(v) {
     }
 }
 
-// Every profiler a sample's reads are benchmarked with: its primary `profiler`
-// followed by any `extra_profilers` (samplesheet column, else params.extra_profilers).
-// Deduped, order preserved. The reads are generated once and each profiler writes its
-// own profile into the same benchmark dir.
-def parseProfilers(row, defaultExtra) {
-    def extra = (row.extra_profilers != null) ? row.extra_profilers : defaultExtra
-    def list = (extra == null) ? [] : (extra instanceof List ? extra : extra.toString().tokenize(','))
-    def all = ([ row.profiler ] + list).collect { it?.toString()?.trim() }.findAll { it }
-    all.unique()
+// Every profiler a sample's reads are benchmarked with: the row's `profilers`
+// (a list, or comma-separated), else the samplesheet/params default. Deduped, order
+// preserved. The reads are generated once and each profiler writes its own profile
+// into the same benchmark dir.
+def parseProfilers(row, defaultProfilers) {
+    def v = (row.profilers != null) ? row.profilers : defaultProfilers
+    def list = (v == null) ? [] : (v instanceof List ? v : v.toString().tokenize(','))
+    list.collect { it?.toString()?.trim() }.findAll { it }.unique()
 }
 
 workflow {
@@ -124,14 +123,14 @@ workflow {
     //
     // Named sequence collections -> profiler DBs. A collection is built (or its
     // pre-built dir consumed) only if some sample references it by `database` name
-    // with a matching profiler (primary or extra). Names not defined under
+    // with a matching profiler. Names not defined under
     // `databases:` fall back to params.sylph_databases / params.aap_config.
     //
     def knownProfilers = ['sylph', 'aap', 'sr_amplicon', 'sr_shotgun']
-    def defaultExtraProfilers = (loaded instanceof Map && loaded.extra_profilers != null)
-        ? loaded.extra_profilers : params.extra_profilers
+    def defaultProfilers = (loaded instanceof Map && loaded.profilers != null)
+        ? loaded.profilers : params.profilers
     rows.each { row ->
-        def unknown = parseProfilers(row, defaultExtraProfilers).findAll { !(it in knownProfilers) }
+        def unknown = parseProfilers(row, defaultProfilers).findAll { !(it in knownProfilers) }
         if (unknown) {
             error "Sample ${row.sample ?: row.id}: unknown profiler(s) ${unknown} (expected ${knownProfilers})"
         }
@@ -140,7 +139,7 @@ workflow {
     rows.each { row ->
         def name = row.database
         if (name && name != 'self') {
-            parseProfilers(row, defaultExtraProfilers).each { prof ->
+            parseProfilers(row, defaultProfilers).each { prof ->
                 dbProfilers.computeIfAbsent(name) { [] as Set } << prof
             }
         }
@@ -203,7 +202,7 @@ workflow {
 
     if (params.step in ['all', 'generate']) {
         // Generate samplesheet columns:
-        //   sample,train_id,train_fastq_1,train_fastq_2,train_subsample,platform,genomes_csv,num_reads,mode,profiler,database,chunks,error_model_dir
+        //   sample,train_id,train_fastq_1,train_fastq_2,train_subsample,platform,genomes_csv,num_reads,mode,profilers,database,chunks,error_model_dir
         ch_samples = ch_rows.map { row ->
             def meta = [
                 id:        row.sample,
@@ -215,10 +214,9 @@ workflow {
                 read_length_variance: (row.read_length_variance ?: params.read_length_variance) as double,
                 num_reads: (row.num_reads as long),
                 chunks:    ((row.chunks ?: params.chunks) as int),
-                profiler:  (row.profiler ?: ''),
-                // Every profiler these reads are benchmarked with (primary + extras).
-                // PROFILE fans out one run per entry, all sharing this benchmark dir.
-                profilers: parseProfilers(row, defaultExtraProfilers),
+                // Every profiler these reads are benchmarked with. PROFILE fans out
+                // one run per entry, all sharing this benchmark dir.
+                profilers: parseProfilers(row, defaultProfilers),
                 database:  (row.database ?: ''),
                 subsamples: parseSubsamples(row.subsample),
                 aap_configs: effAapConfigs,
@@ -272,7 +270,7 @@ workflow {
     }
 
     if (params.step == 'profile') {
-        // Profile-only samplesheet columns: sample,profiler,benchmark_dir,database
+        // Profile-only samplesheet columns: sample,profilers,benchmark_dir,database
         // Reads are discovered inside each benchmark_dir (the layout this pipeline
         // publishes to ${outdir}/${sample}). The predicted profile is published back
         // to ${outdir}/${sample}; point --outdir at the benchmark root to co-locate
@@ -287,8 +285,7 @@ workflow {
                 publish_subdir: '',
                 mode:     (row.mode ?: 'paired'),
                 platform: row.platform,
-                profiler: (row.profiler ?: ''),
-                profilers: parseProfilers(row, defaultExtraProfilers),
+                profilers: parseProfilers(row, defaultProfilers),
                 database: (row.database ?: ''),
                 aap_configs: effAapConfigs,
                 aap_profile: effAapProfile,

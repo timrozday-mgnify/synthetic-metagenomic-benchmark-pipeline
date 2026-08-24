@@ -4,8 +4,8 @@ already written by an earlier run, without regenerating them.
 
 Reuses the same config.yaml as generate_samplesheet.py: it emits the same
 `databases:` block (so the pipeline builds the DB) and one `samples:` row per
-already-generated sample x profiler, read from samplesheet.yaml: each mode's primary
-`profiler:` plus any `extra_profilers:`. So a wgs sample re-runs sylph and
+already-generated sample x profiler, read from samplesheet.yaml: each row's
+`profilers:`. So a wgs sample re-runs sylph and
 sr_shotgun, an amplicon sample re-runs aap and sr_amplicon - all against the same
 reads, each writing its own profile into that sample's benchmark dir.
 
@@ -27,14 +27,14 @@ DEFAULT_RESULTS_DIR = HERE.parent.parent / "results" / "abundance_nb_sample"
 
 def generated_samples(samplesheet):
     """(sample_id, profiler) for each row of the generate samplesheet.yaml x each of
-    that row's profilers (its generation mode's `profiler:` + `extra_profilers:`), so
-    every method is benchmarked against the same generated reads."""
+    that row's `profilers:`, so every method is benchmarked against the same
+    generated reads."""
     if not samplesheet.exists():
         sys.exit(f"{samplesheet} not found - run generate_samplesheet.py first.")
     doc = yaml.safe_load(samplesheet.read_text())
     return [(s["sample"], p)
             for s in doc["samples"]
-            for p in [s["profiler"], *(s.get("extra_profilers") or [])]]
+            for p in s["profilers"]]
 
 
 def main():
@@ -46,7 +46,7 @@ def main():
     db_name = cfg["database"]["name"]
 
     rows = [
-        {"sample": sample, "profiler": profiler,
+        {"sample": sample, "profilers": [profiler],
          "benchmark_dir": str(results_dir / sample), "database": db_name}
         for sample, profiler in samples
     ]

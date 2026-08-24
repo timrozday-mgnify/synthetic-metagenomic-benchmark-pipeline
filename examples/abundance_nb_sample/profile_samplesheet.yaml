@@ -85,322 +85,402 @@ databases:
     rfam_claninfo: /PATH/TO/rfam/ribo/ribo.clan_info
 samples:
 - sample: S01.wgs
-  profiler: sylph
+  profilers:
+  - sylph
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S01.wgs
   database: community_nb
 - sample: S01.wgs
-  profiler: sr_shotgun
+  profilers:
+  - sr_shotgun
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S01.wgs
   database: community_nb
 - sample: S02.wgs
-  profiler: sylph
+  profilers:
+  - sylph
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S02.wgs
   database: community_nb
 - sample: S02.wgs
-  profiler: sr_shotgun
+  profilers:
+  - sr_shotgun
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S02.wgs
   database: community_nb
 - sample: S03.wgs
-  profiler: sylph
+  profilers:
+  - sylph
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S03.wgs
   database: community_nb
 - sample: S03.wgs
-  profiler: sr_shotgun
+  profilers:
+  - sr_shotgun
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S03.wgs
   database: community_nb
 - sample: S04.wgs
-  profiler: sylph
+  profilers:
+  - sylph
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S04.wgs
   database: community_nb
 - sample: S04.wgs
-  profiler: sr_shotgun
+  profilers:
+  - sr_shotgun
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S04.wgs
   database: community_nb
 - sample: S05.wgs
-  profiler: sylph
+  profilers:
+  - sylph
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S05.wgs
   database: community_nb
 - sample: S05.wgs
-  profiler: sr_shotgun
+  profilers:
+  - sr_shotgun
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S05.wgs
   database: community_nb
 - sample: S06.wgs
-  profiler: sylph
+  profilers:
+  - sylph
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S06.wgs
   database: community_nb
 - sample: S06.wgs
-  profiler: sr_shotgun
+  profilers:
+  - sr_shotgun
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S06.wgs
   database: community_nb
 - sample: S07.wgs
-  profiler: sylph
+  profilers:
+  - sylph
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S07.wgs
   database: community_nb
 - sample: S07.wgs
-  profiler: sr_shotgun
+  profilers:
+  - sr_shotgun
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S07.wgs
   database: community_nb
 - sample: S08.wgs
-  profiler: sylph
+  profilers:
+  - sylph
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S08.wgs
   database: community_nb
 - sample: S08.wgs
-  profiler: sr_shotgun
+  profilers:
+  - sr_shotgun
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S08.wgs
   database: community_nb
 - sample: S09.wgs
-  profiler: sylph
+  profilers:
+  - sylph
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S09.wgs
   database: community_nb
 - sample: S09.wgs
-  profiler: sr_shotgun
+  profilers:
+  - sr_shotgun
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S09.wgs
   database: community_nb
 - sample: S10.wgs
-  profiler: sylph
+  profilers:
+  - sylph
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S10.wgs
   database: community_nb
 - sample: S10.wgs
-  profiler: sr_shotgun
+  profilers:
+  - sr_shotgun
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S10.wgs
   database: community_nb
 - sample: S11.wgs
-  profiler: sylph
+  profilers:
+  - sylph
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S11.wgs
   database: community_nb
 - sample: S11.wgs
-  profiler: sr_shotgun
+  profilers:
+  - sr_shotgun
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S11.wgs
   database: community_nb
 - sample: S12.wgs
-  profiler: sylph
+  profilers:
+  - sylph
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S12.wgs
   database: community_nb
 - sample: S12.wgs
-  profiler: sr_shotgun
+  profilers:
+  - sr_shotgun
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S12.wgs
   database: community_nb
 - sample: S13.wgs
-  profiler: sylph
+  profilers:
+  - sylph
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S13.wgs
   database: community_nb
 - sample: S13.wgs
-  profiler: sr_shotgun
+  profilers:
+  - sr_shotgun
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S13.wgs
   database: community_nb
 - sample: S14.wgs
-  profiler: sylph
+  profilers:
+  - sylph
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S14.wgs
   database: community_nb
 - sample: S14.wgs
-  profiler: sr_shotgun
+  profilers:
+  - sr_shotgun
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S14.wgs
   database: community_nb
 - sample: S15.wgs
-  profiler: sylph
+  profilers:
+  - sylph
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S15.wgs
   database: community_nb
 - sample: S15.wgs
-  profiler: sr_shotgun
+  profilers:
+  - sr_shotgun
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S15.wgs
   database: community_nb
 - sample: S16.wgs
-  profiler: sylph
+  profilers:
+  - sylph
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S16.wgs
   database: community_nb
 - sample: S16.wgs
-  profiler: sr_shotgun
+  profilers:
+  - sr_shotgun
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S16.wgs
   database: community_nb
 - sample: S17.wgs
-  profiler: sylph
+  profilers:
+  - sylph
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S17.wgs
   database: community_nb
 - sample: S17.wgs
-  profiler: sr_shotgun
+  profilers:
+  - sr_shotgun
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S17.wgs
   database: community_nb
 - sample: S18.wgs
-  profiler: sylph
+  profilers:
+  - sylph
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S18.wgs
   database: community_nb
 - sample: S18.wgs
-  profiler: sr_shotgun
+  profilers:
+  - sr_shotgun
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S18.wgs
   database: community_nb
 - sample: S19.wgs
-  profiler: sylph
+  profilers:
+  - sylph
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S19.wgs
   database: community_nb
 - sample: S19.wgs
-  profiler: sr_shotgun
+  profilers:
+  - sr_shotgun
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S19.wgs
   database: community_nb
 - sample: S20.wgs
-  profiler: sylph
+  profilers:
+  - sylph
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S20.wgs
   database: community_nb
 - sample: S20.wgs
-  profiler: sr_shotgun
+  profilers:
+  - sr_shotgun
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S20.wgs
   database: community_nb
 - sample: S01.amplicon_16s
-  profiler: aap
+  profilers:
+  - aap
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S01.amplicon_16s
   database: community_nb
 - sample: S01.amplicon_16s
-  profiler: sr_amplicon
+  profilers:
+  - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S01.amplicon_16s
   database: community_nb
 - sample: S02.amplicon_16s
-  profiler: aap
+  profilers:
+  - aap
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S02.amplicon_16s
   database: community_nb
 - sample: S02.amplicon_16s
-  profiler: sr_amplicon
+  profilers:
+  - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S02.amplicon_16s
   database: community_nb
 - sample: S03.amplicon_16s
-  profiler: aap
+  profilers:
+  - aap
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S03.amplicon_16s
   database: community_nb
 - sample: S03.amplicon_16s
-  profiler: sr_amplicon
+  profilers:
+  - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S03.amplicon_16s
   database: community_nb
 - sample: S04.amplicon_16s
-  profiler: aap
+  profilers:
+  - aap
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S04.amplicon_16s
   database: community_nb
 - sample: S04.amplicon_16s
-  profiler: sr_amplicon
+  profilers:
+  - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S04.amplicon_16s
   database: community_nb
 - sample: S05.amplicon_16s
-  profiler: aap
+  profilers:
+  - aap
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S05.amplicon_16s
   database: community_nb
 - sample: S05.amplicon_16s
-  profiler: sr_amplicon
+  profilers:
+  - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S05.amplicon_16s
   database: community_nb
 - sample: S06.amplicon_16s
-  profiler: aap
+  profilers:
+  - aap
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S06.amplicon_16s
   database: community_nb
 - sample: S06.amplicon_16s
-  profiler: sr_amplicon
+  profilers:
+  - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S06.amplicon_16s
   database: community_nb
 - sample: S07.amplicon_16s
-  profiler: aap
+  profilers:
+  - aap
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S07.amplicon_16s
   database: community_nb
 - sample: S07.amplicon_16s
-  profiler: sr_amplicon
+  profilers:
+  - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S07.amplicon_16s
   database: community_nb
 - sample: S08.amplicon_16s
-  profiler: aap
+  profilers:
+  - aap
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S08.amplicon_16s
   database: community_nb
 - sample: S08.amplicon_16s
-  profiler: sr_amplicon
+  profilers:
+  - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S08.amplicon_16s
   database: community_nb
 - sample: S09.amplicon_16s
-  profiler: aap
+  profilers:
+  - aap
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S09.amplicon_16s
   database: community_nb
 - sample: S09.amplicon_16s
-  profiler: sr_amplicon
+  profilers:
+  - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S09.amplicon_16s
   database: community_nb
 - sample: S10.amplicon_16s
-  profiler: aap
+  profilers:
+  - aap
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S10.amplicon_16s
   database: community_nb
 - sample: S10.amplicon_16s
-  profiler: sr_amplicon
+  profilers:
+  - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S10.amplicon_16s
   database: community_nb
 - sample: S11.amplicon_16s
-  profiler: aap
+  profilers:
+  - aap
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S11.amplicon_16s
   database: community_nb
 - sample: S11.amplicon_16s
-  profiler: sr_amplicon
+  profilers:
+  - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S11.amplicon_16s
   database: community_nb
 - sample: S12.amplicon_16s
-  profiler: aap
+  profilers:
+  - aap
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S12.amplicon_16s
   database: community_nb
 - sample: S12.amplicon_16s
-  profiler: sr_amplicon
+  profilers:
+  - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S12.amplicon_16s
   database: community_nb
 - sample: S13.amplicon_16s
-  profiler: aap
+  profilers:
+  - aap
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S13.amplicon_16s
   database: community_nb
 - sample: S13.amplicon_16s
-  profiler: sr_amplicon
+  profilers:
+  - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S13.amplicon_16s
   database: community_nb
 - sample: S14.amplicon_16s
-  profiler: aap
+  profilers:
+  - aap
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S14.amplicon_16s
   database: community_nb
 - sample: S14.amplicon_16s
-  profiler: sr_amplicon
+  profilers:
+  - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S14.amplicon_16s
   database: community_nb
 - sample: S15.amplicon_16s
-  profiler: aap
+  profilers:
+  - aap
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S15.amplicon_16s
   database: community_nb
 - sample: S15.amplicon_16s
-  profiler: sr_amplicon
+  profilers:
+  - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S15.amplicon_16s
   database: community_nb
 - sample: S16.amplicon_16s
-  profiler: aap
+  profilers:
+  - aap
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S16.amplicon_16s
   database: community_nb
 - sample: S16.amplicon_16s
-  profiler: sr_amplicon
+  profilers:
+  - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S16.amplicon_16s
   database: community_nb
 - sample: S17.amplicon_16s
-  profiler: aap
+  profilers:
+  - aap
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S17.amplicon_16s
   database: community_nb
 - sample: S17.amplicon_16s
-  profiler: sr_amplicon
+  profilers:
+  - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S17.amplicon_16s
   database: community_nb
 - sample: S18.amplicon_16s
-  profiler: aap
+  profilers:
+  - aap
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S18.amplicon_16s
   database: community_nb
 - sample: S18.amplicon_16s
-  profiler: sr_amplicon
+  profilers:
+  - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S18.amplicon_16s
   database: community_nb
 - sample: S19.amplicon_16s
-  profiler: aap
+  profilers:
+  - aap
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S19.amplicon_16s
   database: community_nb
 - sample: S19.amplicon_16s
-  profiler: sr_amplicon
+  profilers:
+  - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S19.amplicon_16s
   database: community_nb
 - sample: S20.amplicon_16s
-  profiler: aap
+  profilers:
+  - aap
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S20.amplicon_16s
   database: community_nb
 - sample: S20.amplicon_16s
-  profiler: sr_amplicon
+  profilers:
+  - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/abundance_nb_sample/S20.amplicon_16s
   database: community_nb
