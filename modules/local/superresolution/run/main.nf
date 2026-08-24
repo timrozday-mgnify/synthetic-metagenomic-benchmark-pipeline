@@ -135,8 +135,15 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     export NXF_CACHE_DIR='${nestedDir}/cache'
     mkdir -p "\$NXF_CACHE_DIR"
 
+    # The nested run also infers composition for the representative sample, which can
+    # fail for reasons that do not affect the matrix (e.g. a sample whose reads hit no
+    # reference amplicon). The matrix is this task's only deliverable, so a nested
+    # failure is fatal only if it left no matrix behind.
+    set +e
     nextflow run ${launchRepo} \\
         ${nestedArgs}
+    nested_status=\$?
+    set -e
 
     # Current superresolution-amplicon and superresolution-shotgun revisions publish
     # generated matrices in an opaque-key bundle under mismapping/, rather than next
@@ -144,7 +151,7 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     find sr_out/mismapping -type f -name mismapping_matrix.csv -print 2>/dev/null | sort > matrix_paths.txt
     matrix_count=\$(wc -l < matrix_paths.txt | tr -d ' ')
     if [ "\$matrix_count" -ne 1 ]; then
-        echo "Expected exactly one nested superresolution mismapping matrix under sr_out/mismapping/, found \$matrix_count." >&2
+        echo "Expected exactly one nested superresolution mismapping matrix under sr_out/mismapping/, found \$matrix_count (nested exit status \$nested_status)." >&2
         if [ "\$matrix_count" -gt 0 ]; then
             sed 's/^/Discovered matrix: /' matrix_paths.txt >&2
         else
@@ -155,6 +162,9 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     fi
     matrix_path=\$(sed -n '1p' matrix_paths.txt)
     cp "\$matrix_path" ${meta.id}.mismapping_matrix.csv
+    if [ "\$nested_status" -ne 0 ]; then
+        echo "WARN: nested superresolution run exited \$nested_status but produced the mismapping matrix; continuing." >&2
+    fi
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -253,8 +263,26 @@ process RUN_SUPERRESOLUTION {
     export NXF_CACHE_DIR='${nestedDir}/cache'
     mkdir -p "\$NXF_CACHE_DIR"
 
+    # A sample whose reads hit no reference is a legitimate benchmark outcome (the
+    # profiler found nothing), not a pipeline error: the nested inference aborts, and
+    # we publish an empty profile instead of failing the whole run. Any other nested
+    # failure still fails the task.
+    set +e
     nextflow run ${launchRepo} \\
-        ${nestedArgs}
+        ${nestedArgs} 2>&1 | tee nested.log
+    nested_status=\${PIPESTATUS[0]}
+    set -e
+
+    if [ "\$nested_status" -ne 0 ]; then
+        if grep -qiE 'no reads in .* hit a reference' nested.log; then
+            echo "WARN: no reads hit a reference for ${meta.id}; emitting an empty profile." >&2
+            mkdir -p sr_out/composition/${meta.id}
+            printf 'sample,genome_id,observed_rel_abundance,inferred_mean,inferred_lo,inferred_hi\\n' \\
+                > sr_out/composition/${meta.id}/${meta.id}.inferred_composition.csv
+        else
+            exit "\$nested_status"
+        fi
+    fi
 
     python "\$(command -v normalize_sr_profile.py)" \\
         --composition sr_out/composition/${meta.id}/${meta.id}.inferred_composition.csv \\
