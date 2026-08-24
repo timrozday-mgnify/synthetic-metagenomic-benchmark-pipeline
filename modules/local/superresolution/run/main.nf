@@ -35,7 +35,9 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     // A named repository is pulled into this task's isolated asset directory before
     // launch, so the non-executable upstream helpers can be fixed there. A supplied
     // local checkout remains untouched and can carry its own equivalent patch.
-    def launchRepo = remoteRepo ? "\$NXF_ASSETS/${repo}" : repo
+    // The asset layout is Nextflow-version-dependent, so the patch helper resolves
+    // and prints the checkout rather than this building the path.
+    def launchRepo = remoteRepo ? '"\$launch_repo"' : repo
     def profArg = meta.sr_profile ? "-profile ${meta.sr_profile}" : ''
     def extraCfg = (meta.sr_configs ?: []).collect { "-c ${file(it, checkIfExists: true)}" }.join(' ')
     def nestedArgs = [profArg, '--input sr_samplesheet.yml', '--outdir sr_out', extraCfg]
@@ -57,14 +59,7 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     if [ '${remoteRepo}' = 'true' ]; then
         nextflow pull ${repo} ${revArg}
 
-        publish_module="\$NXF_ASSETS/${repo}/modules/local/publish_mismapping/main.nf"
-        pool_module="\$NXF_ASSETS/${repo}/modules/local/pool_training_reads/main.nf"
-        sed -i.bak 's|^    write_mismapping_bundle.py|    python "\${projectDir}/bin/write_mismapping_bundle.py"|' "\$publish_module"
-        sed -i.bak 's|^    pool_training_reads.py|    python "\${projectDir}/bin/pool_training_reads.py"|' "\$pool_module"
-        grep -F 'python "\${projectDir}/bin/write_mismapping_bundle.py"' "\$publish_module" >/dev/null || {
-            echo 'Failed to apply the superresolution Python-helper compatibility patch.' >&2
-            exit 1
-        }
+        launch_repo=\$(python "\$(command -v patch_sr_helpers.py)" "\$NXF_ASSETS" --repo ${repo})
     fi
 
     nextflow run ${launchRepo} \\
@@ -132,7 +127,12 @@ process RUN_SUPERRESOLUTION {
     def repo = meta.profiler == 'sr_amplicon' ? params.sr_amplicon_repo : params.sr_shotgun_repo
     if (!repo) error "RUN_SUPERRESOLUTION: params.${meta.profiler == 'sr_amplicon' ? 'sr_amplicon_repo' : 'sr_shotgun_repo'} is not set (sample ${meta.id})"
     // -r only applies to a Nextflow project name; a local checkout path takes none.
-    def rev_arg   = (repo.startsWith('/') || repo.startsWith('.')) ? '' : "-r ${params.sr_revision}"
+    def remoteRepo = !(repo.startsWith('/') || repo.startsWith('.'))
+    def rev_arg   = remoteRepo ? "-r ${params.sr_revision}" : ''
+    // As in BUILD_SUPERRESOLUTION_MISMAPPING: a named repo is pulled into this task's
+    // own asset dir first so its helpers can be made noexec-safe there, and the run is
+    // then launched from that resolved directory (which takes no -r).
+    def launchRepo = remoteRepo ? '"\$launch_repo"' : repo
     def prof_arg  = meta.sr_profile ? "-profile ${meta.sr_profile}" : ''
     def extra_cfg = (meta.sr_configs ?: []).collect { "-c ${file(it, checkIfExists: true)}" }.join(' ')
     // Pass presence-gate settings explicitly rather than via sr_configs: the nested
@@ -147,7 +147,7 @@ process RUN_SUPERRESOLUTION {
     if (presencePrior != null) presenceArgs << "--infer_presence_prior ${presencePrior}"
     if (presenceTemp != null) presenceArgs << "--infer_presence_temp ${presenceTemp}"
     def presenceArg = presenceArgs.join(' ')
-    def nestedArgs = [rev_arg, prof_arg, '--input sr_samplesheet.yml', '--outdir sr_out', extra_cfg,
+    def nestedArgs = [prof_arg, '--input sr_samplesheet.yml', '--outdir sr_out', extra_cfg,
                       "--mismapping_matrix ${mismapping_matrix}", presenceArg]
         .findAll { it }
         .join(' ')
@@ -173,7 +173,13 @@ process RUN_SUPERRESOLUTION {
     ${platform}
     printf '  references: %s\\n' "\$(realpath ${refs})" >> sr_samplesheet.yml
 
-    nextflow run ${repo} \\
+    if [ '${remoteRepo}' = 'true' ]; then
+        nextflow pull ${repo} ${rev_arg}
+
+        launch_repo=\$(python "\$(command -v patch_sr_helpers.py)" "\$NXF_ASSETS" --repo ${repo})
+    fi
+
+    nextflow run ${launchRepo} \\
         ${nestedArgs}
 
     python "\$(command -v normalize_sr_profile.py)" \\

@@ -183,3 +183,34 @@ def test_rewrite_genomes_csv_basenames(tmp_path):
     assert lines[0] == "genome_id,fasta_path,abundance"
     assert lines[1] == "genomeA,genomeA.fasta,0.7"
     assert lines[2] == "genomeB,genomeB.fasta,0.3"
+
+
+def _fake_sr_repo(tmp_path, script_block):
+    """A minimal pulled-pipeline layout: bin/ helpers plus one module."""
+    (tmp_path / "bin").mkdir()
+    (tmp_path / "bin" / "write_bundle.py").touch()
+    (tmp_path / "main.nf").touch()
+    (tmp_path / "nextflow.config").touch()
+    module = tmp_path / "modules" / "local" / "pub" / "main.nf"
+    module.parent.mkdir(parents=True)
+    module.write_text(script_block)
+    return module
+
+
+def test_patch_sr_helpers_rewrites_bare_calls(tmp_path):
+    module = _fake_sr_repo(
+        tmp_path,
+        'process PUB {\n    script:\n    """\n    write_bundle.py \\\n        --matrix x.csv\n    """\n}\n',
+    )
+    out = run("patch_sr_helpers.py", str(tmp_path))
+    assert out.returncode == 0, out.stderr
+    assert 'python "${projectDir}/bin/write_bundle.py" \\' in module.read_text()
+
+
+def test_patch_sr_helpers_flags_uncovered_call_shape(tmp_path):
+    # A call the rewrite cannot reach must fail the run, not reach the cluster
+    # and die there with exit 126.
+    _fake_sr_repo(tmp_path, 'process PUB {\n    script:\n    """\n    xargs write_bundle.py < args\n    """\n}\n')
+    out = run("patch_sr_helpers.py", str(tmp_path))
+    assert out.returncode == 1
+    assert "write_bundle.py" in out.stderr
