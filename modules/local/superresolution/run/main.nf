@@ -12,13 +12,73 @@
 // launchers; the nested run manages its own images, executor, and heavy-job resources.
 // The nested run does NOT inherit the outer -profile: set params.sr_profile (and
 // params.sr_configs for extra -c files).
+// Pull each nested pipeline ONCE per run and make its helpers noexec-safe there.
+// Every SR task used to pull for itself (a task-local asset dir, to dodge the shared
+// asset cache's concurrent-clone corruption); with any real fan-out that hammers the
+// GitHub API into 504s. One producer task per repo keeps the isolation and drops the
+// call count to one, and consumers stage the result rather than fetching it.
+process SR_PULL_REPO {
+    tag "${profiler}"
+    label 'process_single'
+    executor 'local'
+
+    input:
+    val profiler
+
+    output:
+    tuple val(profiler), path("sr_assets"), emit: assets
+    path "versions.yml",                    emit: versions
+
+    when:
+    task.ext.when == null || task.ext.when
+
+    script:
+    def repo = profiler == 'sr_amplicon' ? params.sr_amplicon_repo : params.sr_shotgun_repo
+    if (!repo) error "SR_PULL_REPO: params.${profiler == 'sr_amplicon' ? 'sr_amplicon_repo' : 'sr_shotgun_repo'} is not set"
+    def remoteRepo = !(repo.startsWith('/') || repo.startsWith('.'))
+    def revArg = remoteRepo ? "-r ${params.sr_revision}" : ''
+    """
+    # A supplied local checkout is launched in place and left untouched (it can carry
+    # its own equivalent patch), so this stays an empty marker for the channel join.
+    mkdir -p sr_assets
+    export NXF_ASSETS="\$PWD/sr_assets"
+
+    if [ '${remoteRepo}' = 'true' ]; then
+        # GitHub's API intermittently 504s; retry rather than fail the whole run.
+        for attempt in 1 2 3; do
+            nextflow pull ${repo} ${revArg} && break
+            [ "\$attempt" = 3 ] && exit 1
+            sleep \$((attempt * 30))
+        done
+
+        python "\$(command -v patch_sr_helpers.py)" "\$NXF_ASSETS" --repo ${repo}
+    fi
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        ${repo}: ${remoteRepo ? params.sr_revision : 'local'}
+        nextflow: \$(nextflow -version 2>&1 | grep -oE 'version [0-9.]+' | sed 's/version //')
+    END_VERSIONS
+    """
+
+    stub:
+    """
+    mkdir -p sr_assets
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        repo: stub
+    END_VERSIONS
+    """
+}
+
 process BUILD_SUPERRESOLUTION_MISMAPPING {
     tag "${meta.reference_set} (${meta.profiler})"
     label 'process_single'
     executor 'local'
 
     input:
-    tuple val(meta), val(read_paths), path(refs)
+    tuple val(meta), val(read_paths), path(refs), path(sr_assets)
 
     output:
     tuple val(meta), path("${meta.id}.mismapping_matrix.csv"), emit: mismapping
@@ -48,8 +108,6 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     assert reads.every { it } : "BUILD_SUPERRESOLUTION_MISMAPPING: empty read path for ${meta.reference_set}"
     def readCmds = reads.collect { "printf '    - %s\\n' '${it}' >> sr_samplesheet.yml" }.join('\n    ')
     """
-    export NXF_ASSETS="\$PWD/.nxf_assets"
-
     printf -- '- id: %s\\n' '${meta.id}' > sr_samplesheet.yml
     printf '  reads:\\n' >> sr_samplesheet.yml
     ${readCmds}
@@ -57,9 +115,11 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     printf '  references: %s\\n' "\$(realpath ${refs})" >> sr_samplesheet.yml
 
     if [ '${remoteRepo}' = 'true' ]; then
-        nextflow pull ${repo} ${revArg}
-
-        launch_repo=\$(python "\$(command -v patch_sr_helpers.py)" "\$NXF_ASSETS" --repo ${repo})
+        # SR_PULL_REPO already pulled and patched this checkout; the helper only
+        # resolves its version-dependent location here (it rewrites nothing when the
+        # patch is already applied, so concurrent consumers never write to the
+        # shared clone).
+        launch_repo=\$(python "\$(command -v patch_sr_helpers.py)" sr_assets --repo ${repo})
     fi
 
     nextflow run ${launchRepo} \\
@@ -113,7 +173,7 @@ process RUN_SUPERRESOLUTION {
     // RUN_AAP — this process is executor 'local' so the nested run reads them
     // directly, and the superresolution main.nf resolves relative paths against its
     // OWN projectDir, which a staged basename would break.
-    tuple val(meta), val(read_paths), path(refs), path(mismapping_matrix)
+    tuple val(meta), val(read_paths), path(refs), path(mismapping_matrix), path(sr_assets)
 
     output:
     tuple val(meta), path("${meta.id}.sr_profile.tsv"),          emit: profile
@@ -156,15 +216,6 @@ process RUN_SUPERRESOLUTION {
     assert reads.every { it } : "RUN_SUPERRESOLUTION: empty read path for ${meta.id}"
     def read_cmds = reads.collect { "printf '    - %s\\n' '${it}' >> sr_samplesheet.yml" }.join('\n    ')
     """
-    # Nextflow pulls a project into a SHARED asset cache (\$NXF_HOME/assets). One task
-    # per sample means several nested runs pull at once on a cold cache and one reads
-    # another's half-written clone: "Repository may be corrupted" — which then sticks
-    # until `nextflow drop`. A task-local asset dir removes the shared state, and as a
-    # bonus makes each run fetch the requested revision rather than a stale cached one.
-    # ponytail: costs one small clone per task; pre-warm a shared cache instead only if
-    # that ever shows up in the runtime.
-    export NXF_ASSETS="\$PWD/.nxf_assets"
-
     # One-sample YAML samplesheet; `references` must be absolute (the nested pipeline
     # resolves relative paths against its own projectDir).
     printf -- '- id: %s\\n' '${meta.id}' > sr_samplesheet.yml
@@ -174,9 +225,11 @@ process RUN_SUPERRESOLUTION {
     printf '  references: %s\\n' "\$(realpath ${refs})" >> sr_samplesheet.yml
 
     if [ '${remoteRepo}' = 'true' ]; then
-        nextflow pull ${repo} ${rev_arg}
-
-        launch_repo=\$(python "\$(command -v patch_sr_helpers.py)" "\$NXF_ASSETS" --repo ${repo})
+        # SR_PULL_REPO already pulled and patched this checkout; the helper only
+        # resolves its version-dependent location here (it rewrites nothing when the
+        # patch is already applied, so concurrent consumers never write to the
+        # shared clone).
+        launch_repo=\$(python "\$(command -v patch_sr_helpers.py)" sr_assets --repo ${repo})
     fi
 
     nextflow run ${launchRepo} \\

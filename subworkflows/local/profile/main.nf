@@ -14,6 +14,7 @@ include { SYLPH_PROFILE       } from '../../../modules/nf-core/sylph/profile/mai
 include { NORMALIZE_SYLPH     } from '../../../modules/local/sylph/normalize/main'
 include { RUN_AAP             } from '../../../modules/local/amplicon_analysis/main'
 include { SR_BUILD_REFS       } from '../../../modules/local/superresolution/build_refs/main'
+include { SR_PULL_REPO                     } from '../../../modules/local/superresolution/run/main'
 include { BUILD_SUPERRESOLUTION_MISMAPPING } from '../../../modules/local/superresolution/run/main'
 include { RUN_SUPERRESOLUTION               } from '../../../modules/local/superresolution/run/main'
 
@@ -215,6 +216,10 @@ workflow PROFILE {
 
     ch_sr_runs = ch_sr_self_in.mix(ch_sr_built_in)
 
+    // One pull per nested pipeline for the whole run, shared by every SR task.
+    SR_PULL_REPO(ch_sr_runs.map { referenceSet, meta, reads, refs -> meta.profiler }.unique())
+    ch_versions = ch_versions.mix(SR_PULL_REPO.out.versions.first())
+
     // Materialise exactly one matrix per reference set. The nested pipelines need a
     // sample-shaped input to build the simulation matrix, so select one representative
     // run; all subsequent sample runs reuse its matrix through --mismapping_matrix.
@@ -228,7 +233,13 @@ workflow PROFILE {
             ]
             [ representative, (readsList[0] instanceof List ? readsList[0] : [readsList[0]])*.toString(), refsList[0] ]
         }
-    BUILD_SUPERRESOLUTION_MISMAPPING(ch_sr_mismapping_in)
+    // combine, not join: several reference sets share one profiler's checkout.
+    BUILD_SUPERRESOLUTION_MISMAPPING(
+        ch_sr_mismapping_in
+            .map { meta, reads, refs -> [ meta.profiler, meta, reads, refs ] }
+            .combine(SR_PULL_REPO.out.assets, by: 0)
+            .map { profiler, meta, reads, refs, assets -> [ meta, reads, refs, assets ] }
+    )
     ch_versions = ch_versions.mix(BUILD_SUPERRESOLUTION_MISMAPPING.out.versions.first())
 
     // Reads go through as absolute path strings (val) — see RUN_SUPERRESOLUTION.
@@ -238,8 +249,10 @@ workflow PROFILE {
             .map { referenceSet, meta, reads, refs -> [ referenceSet, meta, reads, refs ] }
             .join(BUILD_SUPERRESOLUTION_MISMAPPING.out.mismapping.map { meta, matrix -> [ meta.reference_set, matrix ] }, by: 0)
             .map { referenceSet, meta, reads, refs, matrix ->
-                [ meta, (reads instanceof List ? reads : [reads])*.toString(), refs, matrix ]
+                [ meta.profiler, meta, (reads instanceof List ? reads : [reads])*.toString(), refs, matrix ]
             }
+            .combine(SR_PULL_REPO.out.assets, by: 0)
+            .map { profiler, meta, reads, refs, matrix, assets -> [ meta, reads, refs, matrix, assets ] }
     )
     ch_versions = ch_versions.mix(RUN_SUPERRESOLUTION.out.versions.first())
 
