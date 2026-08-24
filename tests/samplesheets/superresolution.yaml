@@ -9,6 +9,8 @@
 #        why they must carry real 515F/806R sites.
 #   S3 - shotgun reads, sr_shotgun, references built from the named `srA` collection
 #        (the whole panel, including genomes absent from this sample).
+#   S4 - as S3, sharing srA's reference set: two samples behind ONE mismapping
+#        matrix, which is what keeps the fan-out (combine, not join) honest.
 databases:
   srA:
     sequences:
@@ -47,6 +49,17 @@ samples:
     database: self
 
   - sample: S3
+    train_id: natA
+    train_fastq_1: tests/data/natural_R1.fastq.gz
+    train_fastq_2: tests/data/natural_R2.fastq.gz
+    platform: hq-illumina
+    genomes_csv: tests/data/genomes_S1.csv
+    num_reads: 2000
+    mode: shotgun
+    profiler: sr_shotgun
+    database: srA
+
+  - sample: S4
     train_id: natA
     train_fastq_1: tests/data/natural_R1.fastq.gz
     train_fastq_2: tests/data/natural_R2.fastq.gz

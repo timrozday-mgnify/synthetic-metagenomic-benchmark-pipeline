@@ -243,11 +243,13 @@ workflow PROFILE {
     ch_versions = ch_versions.mix(BUILD_SUPERRESOLUTION_MISMAPPING.out.versions.first())
 
     // Reads go through as absolute path strings (val) — see RUN_SUPERRESOLUTION.
-    // Joining restores the one shared matrix to every run in its reference set.
+    // combine, not join: every sample in a reference set needs the one shared
+    // matrix, and join is 1:1 — it would emit a single run per set and silently
+    // drop every other sample.
     RUN_SUPERRESOLUTION(
         ch_sr_runs
             .map { referenceSet, meta, reads, refs -> [ referenceSet, meta, reads, refs ] }
-            .join(BUILD_SUPERRESOLUTION_MISMAPPING.out.mismapping.map { meta, matrix -> [ meta.reference_set, matrix ] }, by: 0)
+            .combine(BUILD_SUPERRESOLUTION_MISMAPPING.out.mismapping.map { meta, matrix -> [ meta.reference_set, matrix ] }, by: 0)
             .map { referenceSet, meta, reads, refs, matrix ->
                 [ meta.profiler, meta, (reads instanceof List ? reads : [reads])*.toString(), refs, matrix ]
             }

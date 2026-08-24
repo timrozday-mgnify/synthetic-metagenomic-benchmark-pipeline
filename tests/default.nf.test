@@ -116,11 +116,12 @@ nextflow_pipeline {
                 // genome source is built: no sample references srA with sr_amplicon.
                 { assert path("${params.outdir}/databases/srA/srA_genome.sr_refs.fasta").exists() },
 
-                // Normalised profile next to truth.tsv for all three: self/shotgun,
-                // self/amplicon, and the named collection.
+                // Normalised profile next to truth.tsv for all four: self/shotgun,
+                // self/amplicon, and the two samples sharing the named collection.
                 { assert path("${params.outdir}/S1/S1.sr_profile.tsv").exists() },
                 { assert path("${params.outdir}/S2/S2.sr_profile.tsv").exists() },
                 { assert path("${params.outdir}/S3/S3.sr_profile.tsv").exists() },
+                { assert path("${params.outdir}/S4/S4.sr_profile.tsv").exists() },
 
                 // Raw composition CSV kept under profiling/sr/.
                 { assert path("${params.outdir}/S1/profiling/sr/S1.inferred_composition.csv").exists() },
@@ -132,10 +133,11 @@ nextflow_pipeline {
                 { assert path("${params.outdir}/mismapping/srA_sr_shotgun/mismapping_matrix.csv").exists() },
                 { assert !path("${params.outdir}/S1/profiling/sr/S1.mismapping_matrix.csv").exists() },
 
-                // Only the 'self' samples build their own references (S1, S2); S3 joins
-                // the collection's. One matrix build and one inference run per set.
+                // Only the 'self' samples build their own references (S1, S2); S3 and S4
+                // share the collection's. One matrix build per reference set, but one
+                // inference run per SAMPLE — S3 and S4 both reuse srA's single matrix.
                 { assert workflow.trace.succeeded().findAll { it.name.contains("BUILD_SUPERRESOLUTION_MISMAPPING") }.size() == 3 },
-                { assert workflow.trace.succeeded().findAll { it.name.contains("RUN_SUPERRESOLUTION") }.size() == 3 },
+                { assert workflow.trace.succeeded().findAll { it.name.contains("RUN_SUPERRESOLUTION") }.size() == 4 },
                 { assert workflow.trace.succeeded().findAll { it.name.contains("SR_BUILD_REFS") }.size() == 2 },
 
                 // S1 also lists sylph in extra_profilers: same reads, second profile.
