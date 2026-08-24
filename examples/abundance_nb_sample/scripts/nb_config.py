@@ -27,7 +27,7 @@ Schema (see ../config.yaml for a filled-in template):
     aap:      {configs?: [path, ...], profile?}         # optional; nested-AAP engine/-c files
     generation_modes:                                   # each sample is emitted once per mode
               [ {name, source: genome|ssu|amplicon, mode: shotgun|amplicon|long,
-                 profiler?, extra_profilers?: [...], primers?: [...]|path-to-TSV,
+                 profilers?: [...], primers?: [...]|path-to-TSV,
                  reads?: {...}}, ... ]
     panel:    [ {id, species, amplicon?, ssu?, genome?, taxonomy?, kingdom?,
                  presence?, nb?: {mean?, dispersion?}}, ... ]
@@ -223,17 +223,15 @@ def generation_modes(cfg):
         "name": rmode,
         "source": "genome" if primers else ("genome" if rmode == "shotgun" else "amplicon"),
         "mode": rmode,
-        "profiler": cfg["database"]["profilers"][0],
+        "profilers": [cfg["database"]["profilers"][0]],
         **({"primers": primers} if primers else {}),
     }]
 
 
 def mode_profilers(m):
-    """Every profiler a generation mode's samples are profiled with: the primary
-    `profiler:` (used by `--step all`) plus any `extra_profilers:` (re-profiled over
-    the same reads by `--step profile`)."""
-    profs = [m["profiler"]] if m.get("profiler") else []
-    return profs + list(m.get("extra_profilers") or [])
+    """Every profiler a generation mode's samples are profiled with (`profilers:`).
+    All are equal: one set of reads, one profile written per method."""
+    return list(m.get("profilers") or [])
 
 
 def mode_source_field(m):
@@ -384,20 +382,19 @@ def _selfcheck():
         else:
             raise AssertionError("expected SystemExit for unknown profiler")
 
-        # extra_profilers must also be declared in database.profilers.
+        # Every profiler a mode lists must also be declared in database.profilers.
         p.write_text(cfg_text.replace(
             "reads: {num_reads: 100, mode: amplicon,",
             "generation_modes: [{name: amp, source: amplicon, mode: amplicon, "
-            "profiler: aap, extra_profilers: [sr_amplicon]}]\n"
+            "profilers: [aap, sr_amplicon]}]\n"
             "reads: {num_reads: 100, mode: amplicon,"))
         try:
             load_config(p)
         except SystemExit as e:
             assert "sr_amplicon" in str(e), e
         else:
-            raise AssertionError("expected SystemExit for undeclared extra profiler")
-        assert mode_profilers({"profiler": "aap", "extra_profilers": ["sr_amplicon"]}) \
-            == ["aap", "sr_amplicon"]
+            raise AssertionError("expected SystemExit for undeclared profiler")
+        assert mode_profilers({"profilers": ["aap", "sr_amplicon"]}) == ["aap", "sr_amplicon"]
 
         # bad NB dispersion -> exits.
         p.write_text(cfg_text.replace("dispersion: 1.0", "dispersion: 0"))
@@ -415,8 +412,8 @@ def _selfcheck():
             sampling: {n_samples: 4, seed: 1, negative_binomial: {mean: 20, dispersion: 1.0}}
             database: {name: db, profilers: [sylph, aap], rfam_covariance_model: /abs/ribo, rfam_claninfo: /abs/ribo.clan}
             generation_modes:
-              - {name: wgs, source: genome, mode: shotgun, profiler: sylph, reads: {read_length_mean: 150}}
-              - {name: amp16s, source: ssu, mode: amplicon, profiler: aap, primers: [{pair_id: v4, forward: GTGYCAG, reverse: GGACTAC}]}
+              - {name: wgs, source: genome, mode: shotgun, profilers: [sylph], reads: {read_length_mean: 150}}
+              - {name: amp16s, source: ssu, mode: amplicon, profilers: [aap], primers: [{pair_id: v4, forward: GTGYCAG, reverse: GGACTAC}]}
             panel:
               - {id: a, species: genus_a, genome: refs/a.fna, ssu: refs/a.16s.fa, amplicon: refs/a.amp.fa}
               - {id: b, species: genus_b, genome: refs/b.fna, ssu: refs/b.16s.fa, amplicon: refs/b.amp.fa}

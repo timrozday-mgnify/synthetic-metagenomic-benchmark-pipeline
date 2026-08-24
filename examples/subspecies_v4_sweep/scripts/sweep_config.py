@@ -17,7 +17,7 @@ Schema (see ../config.yaml for a filled-in template):
     aap:      {configs?: [path, ...], profile?}         # optional; nested-AAP engine/-c files
     generation_modes:                                   # each sweep sample is emitted once per mode
               [ {name, source: genome|ssu|amplicon, mode: shotgun|amplicon|long,
-                 profiler?, extra_profilers?: [...], primers?: [...]|path-to-TSV,
+                 profilers?: [...], primers?: [...]|path-to-TSV,
                  reads?: {...}}, ... ]
     panel:    [ {id, species, amplicon?, ssu?, genome?, taxonomy?, kingdom?}, ... ]
 
@@ -170,17 +170,15 @@ def generation_modes(cfg):
         "name": rmode,
         "source": "genome" if primers else ("genome" if rmode == "shotgun" else "amplicon"),
         "mode": rmode,
-        "profiler": cfg["database"]["profilers"][0],
+        "profilers": [cfg["database"]["profilers"][0]],
         **({"primers": primers} if primers else {}),
     }]
 
 
 def mode_profilers(m):
-    """Every profiler a generation mode's samples are profiled with: the primary
-    `profiler:` (used by `--step all`) plus any `extra_profilers:` (re-profiled over
-    the same reads by `--step profile`)."""
-    profs = [m["profiler"]] if m.get("profiler") else []
-    return profs + list(m.get("extra_profilers") or [])
+    """Every profiler a generation mode's samples are profiled with (`profilers:`).
+    All are equal: one set of reads, one profile written per method."""
+    return list(m.get("profilers") or [])
 
 
 def mode_source_field(m):
@@ -327,8 +325,8 @@ def _selfcheck():
             sweep: {n_samples: 4, steepness: 6.0}
             database: {name: db, profilers: [sylph, aap], rfam_covariance_model: /abs/ribo, rfam_claninfo: /abs/ribo.clan}
             generation_modes:
-              - {name: wgs, source: genome, mode: shotgun, profiler: sylph, reads: {read_length_mean: 150}}
-              - {name: amp16s, source: ssu, mode: amplicon, profiler: aap, primers: [{pair_id: v4, forward: GTGYCAG, reverse: GGACTAC}]}
+              - {name: wgs, source: genome, mode: shotgun, profilers: [sylph], reads: {read_length_mean: 150}}
+              - {name: amp16s, source: ssu, mode: amplicon, profilers: [aap], primers: [{pair_id: v4, forward: GTGYCAG, reverse: GGACTAC}]}
             panel:
               - {id: a, species: genus_a, genome: refs/a.fna, ssu: refs/a.16s.fa, amplicon: refs/a.amp.fa}
               - {id: b, species: genus_b, genome: refs/b.fna, ssu: refs/b.16s.fa, amplicon: refs/b.amp.fa}
@@ -375,19 +373,19 @@ def _selfcheck():
         else:
             raise AssertionError("expected SystemExit for unknown profiler")
 
-        # extra_profilers are benchmarked over the same reads, and must be declared.
-        assert mode_profilers({"profiler": "sylph", "extra_profilers": ["sr_shotgun"]}) \
-            == ["sylph", "sr_shotgun"]
+        # Every profiler a mode lists is benchmarked over the same reads, and must
+        # be declared in database.profilers.
+        assert mode_profilers({"profilers": ["sylph", "sr_shotgun"]}) == ["sylph", "sr_shotgun"]
         p.write_text(gm_text.replace(
-            "profiler: sylph, reads:", "profiler: sylph, extra_profilers: [sr_shotgun], reads:"))
+            "profilers: [sylph], reads:", "profilers: [sylph, sr_shotgun], reads:"))
         try:
             load_config(p)
         except SystemExit as e:
             assert "sr_shotgun" in str(e), e
         else:
-            raise AssertionError("expected SystemExit for undeclared extra profiler")
+            raise AssertionError("expected SystemExit for undeclared profiler")
         p.write_text(gm_text.replace(
-            "profiler: sylph, reads:", "profiler: sylph, extra_profilers: [sr_shotgun], reads:"
+            "profilers: [sylph], reads:", "profilers: [sylph, sr_shotgun], reads:"
         ).replace("profilers: [sylph, aap]", "profilers: [sylph, aap, sr_shotgun]"))
         cfg4 = load_config(p)
         assert mode_profilers(generation_modes(cfg4)[0]) == ["sylph", "sr_shotgun"]

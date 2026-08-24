@@ -1,4 +1,4 @@
 - sample: P1
-  profiler: aap
+  profilers: [aap]
   benchmark_dir: tests/data
   database:

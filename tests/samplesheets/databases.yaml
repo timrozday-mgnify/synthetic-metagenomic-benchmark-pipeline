@@ -30,7 +30,7 @@ samples:
     genomes_csv: tests/data/genomes_S1.csv
     num_reads: 2000
     mode: shotgun
-    profiler: sylph
+    profilers: [sylph]
     database: commA
 
   - sample: S2
@@ -41,7 +41,7 @@ samples:
     genomes_csv: tests/data/genomes_S2.csv
     num_reads: 2000
     mode: amplicon
-    profiler: aap
+    profilers: [aap]
     database: ampA
 
   - sample: S3                 # uses the pre-built commP DB dir (no build step)
@@ -52,5 +52,5 @@ samples:
     genomes_csv: tests/data/genomes_S1.csv
     num_reads: 2000
     mode: shotgun
-    profiler: sylph
+    profilers: [sylph]
     database: commP

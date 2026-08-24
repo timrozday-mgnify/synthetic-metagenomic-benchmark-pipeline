@@ -57,7 +57,7 @@ scripts. Edit:
   that genome.
 - `generation_modes` — the read-generation styles to sweep; **every sample is emitted once per
   mode**. Each mode sets `name` (sample/CSV suffix), `source` (`genome`/`ssu`/`amplicon`),
-  `mode` (`shotgun`/`amplicon`/`long`), `profiler`, optional `reads:` overrides, and — when
+  `mode` (`shotgun`/`amplicon`/`long`), `profilers`, optional `reads:` overrides, and — when
   extracting amplicons from `genome`/`ssu` — a `primers:` list (or TSV path) run as in-silico PCR.
   The four supported combos: genomes+shotgun; genomes+primers+amplicon; 16S+primers+amplicon;
   pre-trimmed amplicon (`source: amplicon`, no primers). `database.profilers` must be the union of
@@ -76,7 +76,7 @@ uses).
 `generate_samplesheet.py` reads `config.yaml`, draws the NB abundance matrix (seeded), and
 writes a single `samplesheet.yaml` containing a top-level `databases: community_nb` block
 **and** the samples — 20 samples × `len(generation_modes)` rows (each with inline `train_*`,
-per-mode read-geometry columns, `mode`, `profiler`, and `database: community_nb`), plus
+per-mode read-geometry columns, `mode`, `profilers`, and `database: community_nb`), plus
 `genomes/sample_NN.<mode>.csv`. `run.sh` then does one `nextflow run --step all`, which —
 because training is deduped by `train_id` — trains the error model once, generates every
 sample, **builds the `community_nb` profiler DB in-pipeline from the samplesheet's `databases:`
@@ -105,16 +105,16 @@ nextflow run ../../main.nf -profile docker -c benchmark.config \
 ```
 
 `generate_profile_samplesheet.py` emits the same `databases:` block plus one row per
-already-generated **sample x profiler** — each generation mode's `profiler:` plus its
-`extra_profilers:`, read from `samplesheet.yaml` — with `benchmark_dir` at
+already-generated **sample x profiler** — each generation mode's `profilers:`, read
+from `samplesheet.yaml` — with `benchmark_dir` at
 `<results_dir>/<sample>`. See the root README's "Named sequence collections (`databases:`)".
 
 You do **not** need this pass just to benchmark the superresolution methods: each
-mode's `extra_profilers:` is emitted onto the samplesheet rows, so a single
+mode's `profilers:` list is emitted onto the samplesheet rows, so a single
 `--step all` run already profiles every sample with `sylph` + `sr_shotgun` (wgs) or
 `aap` + `sr_amplicon` (amplicon_16s), each dropping its own profile into the sample's
 benchmark dir. Use `--step profile` when you add a method *after* generating reads and
-don't want to regenerate them. Add or drop methods by editing `extra_profilers:` (and
+don't want to regenerate them. Add or drop methods by editing `profilers:` (and
 `database.profilers`) in `config.yaml`.
 
 ## Building the profiler DB out-of-band (optional)

@@ -53,7 +53,7 @@ workflow PROFILE {
     // simply has nothing to join and is dropped (see README).
     // ponytail: self DB is rebuilt per run (keyed by unique meta.id) even though
     // it depends only on the genomes; dedupe by meta.sample if it ever matters.
-    // combine, not join: join is 1:1 and consumes the key, so with extra_profilers
+    // combine, not join: join is 1:1 and consumes the key, so with several profilers
     // fanning a sample into several entries it would silently drop all but one.
     ch_self = ch_by_prof.sylph
         .filter { it[0].database == 'self' }

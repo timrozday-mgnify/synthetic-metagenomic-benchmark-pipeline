@@ -1,9 +1,9 @@
-# extra_profilers: one set of generated reads benchmarked by several profilers in a
-# single run. Reads are generated once per sample; each profiler writes its own
-# profile into that sample's benchmark dir, next to truth.tsv.
-#   E1 - shotgun: sylph (primary) + sr_shotgun, both against the `commA` collection.
-#   E2 - shotgun: sylph (primary) + sr_shotgun, both with `self` references.
-#   E3 - amplicon: aap (primary) + sr_amplicon, against the `ampA` collection
+# Several profilers over one set of generated reads, in a single run. Reads are
+# generated once per sample; each profiler writes its own profile into that sample's
+# benchmark dir, next to truth.tsv.
+#   E1 - shotgun: sylph + sr_shotgun, both against the `commA` collection.
+#   E2 - shotgun: sylph + sr_shotgun, both with `self` references.
+#   E3 - amplicon: aap + sr_amplicon, against the `ampA` collection
 #        (aap uses its ssu+taxonomy, sr_amplicon just the ssu).
 databases:
   commA:
@@ -33,8 +33,7 @@ samples:
     genomes_csv: tests/data/genomes_S1.csv
     num_reads: 2000
     mode: shotgun
-    profiler: sylph
-    extra_profilers: [sr_shotgun]
+    profilers: [sylph, sr_shotgun]
     database: commA
 
   - sample: E2
@@ -45,8 +44,7 @@ samples:
     genomes_csv: tests/data/genomes_S2.csv
     num_reads: 2000
     mode: shotgun
-    profiler: sylph
-    extra_profilers: [sr_shotgun]
+    profilers: [sylph, sr_shotgun]
     database: self
 
   - sample: E3
@@ -58,6 +56,5 @@ samples:
     num_reads: 2000
     mode: amplicon
     read_length_mean: 200
-    profiler: aap
-    extra_profilers: [sr_amplicon]
+    profilers: [aap, sr_amplicon]
     database: ampA

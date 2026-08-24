@@ -97,8 +97,8 @@ null => bundled set. It's global (not per-sample) and passed as an absolute host
   CSV (`self`) or a collection's `genome`/`ssu`. `RUN_SUPERRESOLUTION` normalises the
   resulting `inferred_composition.csv` into the same three-column contract sylph emits,
   in-process (bin/ is on PATH for local tasks), so there's no separate normalize module.
-- **`extra_profilers` fans a sample out across profilers.** `parseProfilers` (main.nf)
-  merges the row's `profiler` + `extra_profilers` (or params.extra_profilers) into
+- **`profilers` fans a sample out across profilers.** `parseProfilers` (main.nf)
+  normalises the row's `profilers` list (or params.profilers) into
   `meta.profilers`; the top workflow `flatMap`s one entry per profiler into PROFILE,
   same `meta.id`, differing `meta.profiler`. So reads are generated once and every
   method publishes into the same benchmark dir under its own filename. Consequence:
