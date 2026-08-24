@@ -137,4 +137,13 @@ nf-test test tests/default.nf.test --profile docker --tag e2e   # full (needs im
 pytest tests/bin/test_bin.py                                 # bin unit tests
 pre-commit run --all-files
 nextflow run main.nf -preview --input tests/samplesheets/test.yaml  # parse/DAG check
+
+# Catch nested-superresolution exit-126 (`Permission denied`) breakage without a cluster:
+# pull the upstream repos and check every bin/ helper call can be made noexec-safe.
+export NXF_ASSETS=$(mktemp -d)
+for r in timrozday-mgnify/superresolution-shotgun timrozday-mgnify/superresolution-amplicon; do
+  nextflow pull $r -r main && python bin/patch_sr_helpers.py "$NXF_ASSETS" --repo $r
+done
+# Reproduce the noexec failure itself locally: strip the exec bit before an e2e run.
+chmod -x bin/*.py && nf-test test tests/default.nf.test --profile docker --tag e2e
 ```
