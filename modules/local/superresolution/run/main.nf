@@ -12,6 +12,11 @@
 // launchers; the nested run manages its own images, executor, and heavy-job resources.
 // The nested run does NOT inherit the outer -profile: set params.sr_profile (and
 // params.sr_configs for extra -c files).
+// Each nested run keeps its work dir and cache OUTSIDE the task directory (under
+// <workDir>/nested/sr/<key>) and is launched with -resume, so a retried or re-run task
+// resumes the nested pipeline rather than repeating it. The key is the reference set
+// (matrix build) or the sample+flavour (inference): stable across outer runs, and never
+// shared by two tasks that could run at once. Wipe <workDir>/nested to start clean.
 // Pull each nested pipeline ONCE per run and make its helpers noexec-safe there.
 // Every SR task used to pull for itself (a task-local asset dir, to dodge the shared
 // asset cache's concurrent-clone corruption); with any real fan-out that hammers the
@@ -100,7 +105,9 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     def launchRepo = remoteRepo ? '"\$launch_repo"' : repo
     def profArg = meta.sr_profile ? "-profile ${meta.sr_profile}" : ''
     def extraCfg = (meta.sr_configs ?: []).collect { "-c ${file(it, checkIfExists: true)}" }.join(' ')
-    def nestedArgs = [profArg, '--input sr_samplesheet.yml', '--outdir sr_out', extraCfg]
+    def nestedDir = "${workflow.workDir}/nested/sr/${meta.id.replaceAll(/[^A-Za-z0-9._-]+/, '_')}"
+    def nestedArgs = [profArg, '--input sr_samplesheet.yml', '--outdir sr_out', extraCfg,
+                      "-w '${nestedDir}/work'", '-resume']
         .findAll { it }
         .join(' ')
     def platform = meta.platform ? "printf '  platform: %s\\n' '${meta.platform}' >> sr_samplesheet.yml" : 'true'
@@ -121,6 +128,12 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
         # shared clone).
         launch_repo=\$(python "\$(command -v patch_sr_helpers.py)" sr_assets --repo ${repo})
     fi
+
+    # NXF_CACHE_DIR moves the nested run's .nextflow cache + history out of this task
+    # directory, which -resume needs to find its previous session. The launch dir stays
+    # the task dir, so the relative --input/--outdir paths above keep working.
+    export NXF_CACHE_DIR='${nestedDir}/cache'
+    mkdir -p "\$NXF_CACHE_DIR"
 
     nextflow run ${launchRepo} \\
         ${nestedArgs}
@@ -207,8 +220,10 @@ process RUN_SUPERRESOLUTION {
     if (presencePrior != null) presenceArgs << "--infer_presence_prior ${presencePrior}"
     if (presenceTemp != null) presenceArgs << "--infer_presence_temp ${presenceTemp}"
     def presenceArg = presenceArgs.join(' ')
+    def nestedDir = "${workflow.workDir}/nested/sr/${meta.id.replaceAll(/[^A-Za-z0-9._-]+/, '_')}_${meta.profiler}"
     def nestedArgs = [prof_arg, '--input sr_samplesheet.yml', '--outdir sr_out', extra_cfg,
-                      "--mismapping_matrix ${mismapping_matrix}", presenceArg]
+                      "--mismapping_matrix ${mismapping_matrix}", presenceArg,
+                      "-w '${nestedDir}/work'", '-resume']
         .findAll { it }
         .join(' ')
     def platform  = meta.platform ? "printf '  platform: %s\\n' '${meta.platform}' >> sr_samplesheet.yml" : 'true'
@@ -231,6 +246,12 @@ process RUN_SUPERRESOLUTION {
         # shared clone).
         launch_repo=\$(python "\$(command -v patch_sr_helpers.py)" sr_assets --repo ${repo})
     fi
+
+    # NXF_CACHE_DIR moves the nested run's .nextflow cache + history out of this task
+    # directory, which -resume needs to find its previous session. The launch dir stays
+    # the task dir, so the relative --input/--outdir paths above keep working.
+    export NXF_CACHE_DIR='${nestedDir}/cache'
+    mkdir -p "\$NXF_CACHE_DIR"
 
     nextflow run ${launchRepo} \\
         ${nestedArgs}

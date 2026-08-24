@@ -116,6 +116,16 @@ null => bundled set. It's global (not per-sample) and passed as an absolute host
   actually references is built (a collection feeding both superresolution flavours
   yields two reference FASTAs, keyed `"<name>:<genome|ssu>"`). mapseq collections need explicit
   per-sequence `taxonomy` + a pre-extracted `ssu` (no barrnap step in-pipeline).
+- **Nested pipelines resume too.** `RUN_AAP`, `BUILD_SUPERRESOLUTION_MISMAPPING` and
+  `RUN_SUPERRESOLUTION` launch their nested `nextflow run` with `-resume`, a `-w` under
+  `${workDir}/nested/<aap|sr>/<key>` and `NXF_CACHE_DIR` pointing at that same directory
+  (which is what relocates `.nextflow/{history,cache}` out of the ephemeral task dir —
+  the launch dir stays the task dir so the relative `--input`/`--outdir` still resolve).
+  So a retried or re-run outer task resumes hours of nested work instead of repeating it.
+  The key must be stable across runs and unique between concurrent tasks: the sample+flavour
+  for inference, the reference set for the matrix, and DB name + an order-independent digest
+  of the batch's sample ids for AAP. These dirs persist deliberately — `nextflow clean`
+  won't touch them; `rm -rf <workDir>/nested` forces nested runs from scratch.
 - **Stub tests run on the host** (no `--profile`, so no container engine); stub
   blocks must use only coreutils (no tool calls). Real/e2e tests use
   `--profile docker` + `--tag e2e`; stub selection is `--tag stub`.
