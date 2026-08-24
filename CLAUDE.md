@@ -66,6 +66,7 @@ nf-test, pre-commit + GitHub Actions).
 | MAPSEQ_PREP, MAPSEQ_OTU | `smb-skiver` | `build_mapseq_refs.py` / `build_mapseq_otu.py` (stdlib python; bin/ on PATH) |
 | SR_BUILD_REFS | `smb-genome-blender` | `build_sr_refs.py` (stdlib python) |
 | RUN_SUPERRESOLUTION | *none* (`executor local`) | nested `nextflow run` + `normalize_sr_profile.py` |
+| SR_PULL_REPO | *none* (`executor local`) | one `nextflow pull` per nested repo + `patch_sr_helpers.py` |
 
 Images above are `ghcr.io/timrozday-mgnify/<image>:${params.<image>_tag}`. Third-party
 tools use pinned biocontainers via the singularity/docker ternary: `SYLPH_BUILD_DB`

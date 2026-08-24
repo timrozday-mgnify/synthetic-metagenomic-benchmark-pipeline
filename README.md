@@ -458,22 +458,23 @@ over `0.001, 0.01, 0.1` and use temperatures `1.0, 2.0` (the production defaults
 adds an `sr_presence` summary row (0.5 call threshold) with presence Jaccard, precision,
 recall, and calls per sample against the realised zero/non-zero truth.
 
-Each task pulls the pipeline into its own asset dir rather than the shared
-`~/.nextflow/assets`: concurrent nested runs would otherwise read each other's
-half-written clone (`Repository may be corrupted`). So every run fetches the revision
-you asked for — pin `--sr_revision` to a tag or commit for a reproducible benchmark,
-since the default `main` moves.
+A single `SR_PULL_REPO` task pulls each nested pipeline once per run, into its own
+asset dir rather than the shared `~/.nextflow/assets`: concurrent pulls would
+otherwise read each other's half-written clone (`Repository may be corrupted`), while
+one pull per SR task hammers the GitHub API into `504`s. Every SR task then stages
+that one checkout. So every run fetches the revision you asked for — pin
+`--sr_revision` to a tag or commit for a reproducible benchmark, since the default
+`main` moves.
 
 Like AAP, the wrapper runs on the host (`executor local`) and the nested run does
 **not** inherit the outer `-profile`: set `--sr_profile docker` (or supply an engine
 config via `--sr_configs`). `--sr_configs` is also where you scale the inference down
 for small runs — see `tests/sr_fast.config`.
 
-For named superresolution repositories, the wrapper prepares its task-local nested
-asset checkout (`bin/patch_sr_helpers.py`) to launch non-executable helper scripts
-through Python. This supports
-HPC work filesystems mounted with `noexec`; no additional user configuration is
-required. When using a local `--sr_*_repo` checkout, apply the same Python launch
+For named superresolution repositories, `SR_PULL_REPO` prepares the pulled checkout
+(`bin/patch_sr_helpers.py`) to launch non-executable helper scripts through Python.
+This supports HPC work filesystems mounted with `noexec`; no additional user
+configuration is required. When using a local `--sr_*_repo` checkout, apply the same Python launch
 change there instead.
 
 ### Custom PIMENTO primers
