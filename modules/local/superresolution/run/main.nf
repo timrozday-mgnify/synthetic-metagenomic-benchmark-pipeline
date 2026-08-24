@@ -57,7 +57,15 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     printf '  references: %s\\n' "\$(realpath ${refs})" >> sr_samplesheet.yml
 
     if [ '${remoteRepo}' = 'true' ]; then
-        nextflow pull ${repo} ${revArg}
+        # GitHub's API intermittently 504s, and a task-local asset dir means every SR
+        # task pulls for itself — so one flaky call would otherwise kill the task.
+        # ponytail: 3 tries is enough for a blip; if pulls become the bottleneck,
+        # pre-warm one shared clone and copy it per task instead.
+        for attempt in 1 2 3; do
+            nextflow pull ${repo} ${revArg} && break
+            [ "\$attempt" = 3 ] && exit 1
+            sleep \$((attempt * 30))
+        done
 
         launch_repo=\$(python "\$(command -v patch_sr_helpers.py)" "\$NXF_ASSETS" --repo ${repo})
     fi
@@ -174,7 +182,15 @@ process RUN_SUPERRESOLUTION {
     printf '  references: %s\\n' "\$(realpath ${refs})" >> sr_samplesheet.yml
 
     if [ '${remoteRepo}' = 'true' ]; then
-        nextflow pull ${repo} ${rev_arg}
+        # GitHub's API intermittently 504s, and a task-local asset dir means every SR
+        # task pulls for itself — so one flaky call would otherwise kill the task.
+        # ponytail: 3 tries is enough for a blip; if pulls become the bottleneck,
+        # pre-warm one shared clone and copy it per task instead.
+        for attempt in 1 2 3; do
+            nextflow pull ${repo} ${rev_arg} && break
+            [ "\$attempt" = 3 ] && exit 1
+            sleep \$((attempt * 30))
+        done
 
         launch_repo=\$(python "\$(command -v patch_sr_helpers.py)" "\$NXF_ASSETS" --repo ${repo})
     fi
