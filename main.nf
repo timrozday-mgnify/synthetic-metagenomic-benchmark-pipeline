@@ -279,13 +279,31 @@ workflow {
             def dir = resolveFile(row.benchmark_dir)
             def reads = files("${dir}/*.fastq.gz").sort()
             if (!reads) error "No *.fastq.gz found in benchmark_dir '${dir}' for sample ${row.sample}"
+            // Amplicon reads: the pair they were amplified with, so sr_amplicon extracts
+            // its reference amplicons from the same region (it defaults to V4 515F/806R,
+            // which silently matches nothing against, say, V1-V3 reads). One row is one
+            // set of already-generated reads, so exactly one pair.
+            // One row is one already-generated benchmark dir. `subsample: N` says that dir
+            // is the N-depth subsample of `sample`, and derives the same id/publish layout
+            // the generate step used, so the profile lands next to that depth's truth.tsv.
+            def sub = row.subsample
+            if (sub instanceof List) {
+                error "profile-only row ${row.sample}: `subsample` must be the single depth of this benchmark_dir, not a list — emit one row per depth"
+            }
+            def subN = (sub == null || sub.toString().trim() in ['', 'none']) ? null : sub
+            def pairs = parsePrimerPairs(row.primers)
+            if (pairs.size() > 1) {
+                error "profile-only row ${row.sample}: `primers` must name the ONE pair these reads were amplified with, got ${pairs*.getAt(0)}"
+            }
             def meta = [
-                id:       row.sample,
-                sample:   row.sample,   // profile-only: no subsampling, one run per sample
-                publish_subdir: '',
+                id:       subN != null ? "${row.sample}.sub${subN}" : row.sample,
+                sample:   row.sample,
+                publish_subdir: subN != null ? "subsample_${subN}" : '',
                 mode:     (row.mode ?: 'paired'),
                 platform: row.platform,
                 profilers: parseProfilers(row, defaultProfilers),
+                primer_sets: pairs,
+                primer: pairs ? pairs[0][0] : null,
                 database: (row.database ?: ''),
                 aap_configs: effAapConfigs,
                 aap_profile: effAapProfile,

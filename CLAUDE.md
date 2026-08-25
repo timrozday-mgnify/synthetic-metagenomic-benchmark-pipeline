@@ -96,12 +96,19 @@ null => bundled set. It's global (not per-sample) and passed as an absolute host
   `{genome_id}|{n}|{orig}` headers (`bin/build_sr_refs.py`), from the sample's genomes
   CSV (`self`) or a collection's `genome`/`ssu`. `RUN_SUPERRESOLUTION` normalises the
   resulting `inferred_composition.csv` into the same three-column contract sylph emits,
-  in-process (bin/ is on PATH for local tasks), so there's no separate normalize module.
+  in-process (bin/ is on PATH for local tasks), so there's no separate normalize module,
+  once per batched sample. A sample whose reads hit no reference is not a failure: the
+  nested pipelines report an all-zero composition with `status=no_reference_hits` in
+  `inference_diagnostics.csv` (upstream `infer_composition.py` / `shotgun_infer.py`).
 - **`profilers` fans a sample out across profilers.** `parseProfilers` (main.nf)
   normalises the row's `profilers` list (or params.profilers) into
   `meta.profilers`; the top workflow `flatMap`s one entry per profiler into PROFILE,
   same `meta.id`, differing `meta.profiler`. So reads are generated once and every
-  method publishes into the same benchmark dir under its own filename. Consequence:
+  method publishes into the same benchmark dir under its own filename.
+  Both nested-pipeline profilers then batch back up: `RUN_AAP` runs one nested pipeline per
+  DB config, `RUN_SUPERRESOLUTION` one per *reference set* (`srSetKey` — collection/`self`
+  source + flavour + primer). The reference set is the largest safe SR batch because the
+  mis-mapping matrix and primer pair are per-run CLI flags, not per-row samplesheet fields. Consequence:
   any per-sample join in PROFILE must use `combine(by:)`, not `join(by:)` — `join` is
   1:1 and would silently drop all but one of the fanned-out entries (this is why the
   `self` paths combine against `ch_aux`, and why the SR refs join keys on id+profiler).
@@ -122,9 +129,9 @@ null => bundled set. It's global (not per-sample) and passed as an absolute host
   (which is what relocates `.nextflow/{history,cache}` out of the ephemeral task dir —
   the launch dir stays the task dir so the relative `--input`/`--outdir` still resolve).
   So a retried or re-run outer task resumes hours of nested work instead of repeating it.
-  The key must be stable across runs and unique between concurrent tasks: the sample+flavour
-  for inference, the reference set for the matrix, and DB name + an order-independent digest
-  of the batch's sample ids for AAP. These dirs persist deliberately — `nextflow clean`
+  The key must be stable across runs and unique between concurrent tasks: the reference set
+  for the matrix, the reference set + an order-independent digest of the batch's sample ids
+  for SR inference, and DB name + the same digest for AAP. These dirs persist deliberately — `nextflow clean`
   won't touch them; `rm -rf <workDir>/nested` forces nested runs from scratch.
 - **Stub tests run on the host** (no `--profile`, so no container engine); stub
   blocks must use only coreutils (no tool calls). Real/e2e tests use
