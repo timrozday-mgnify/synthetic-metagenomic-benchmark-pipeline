@@ -283,14 +283,22 @@ workflow {
             // its reference amplicons from the same region (it defaults to V4 515F/806R,
             // which silently matches nothing against, say, V1-V3 reads). One row is one
             // set of already-generated reads, so exactly one pair.
+            // One row is one already-generated benchmark dir. `subsample: N` says that dir
+            // is the N-depth subsample of `sample`, and derives the same id/publish layout
+            // the generate step used, so the profile lands next to that depth's truth.tsv.
+            def sub = row.subsample
+            if (sub instanceof List) {
+                error "profile-only row ${row.sample}: `subsample` must be the single depth of this benchmark_dir, not a list — emit one row per depth"
+            }
+            def subN = (sub == null || sub.toString().trim() in ['', 'none']) ? null : sub
             def pairs = parsePrimerPairs(row.primers)
             if (pairs.size() > 1) {
                 error "profile-only row ${row.sample}: `primers` must name the ONE pair these reads were amplified with, got ${pairs*.getAt(0)}"
             }
             def meta = [
-                id:       row.sample,
-                sample:   row.sample,   // profile-only: no subsampling, one run per sample
-                publish_subdir: '',
+                id:       subN != null ? "${row.sample}.sub${subN}" : row.sample,
+                sample:   row.sample,
+                publish_subdir: subN != null ? "subsample_${subN}" : '',
                 mode:     (row.mode ?: 'paired'),
                 platform: row.platform,
                 profilers: parseProfilers(row, defaultProfilers),

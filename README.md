@@ -254,8 +254,10 @@ another region match nothing unless the pair is given. It also separates the
 mis-mapping matrices of samples amplified differently off one panel. Omit it for
 V4 reads, shotgun reads, or any other profiler.
 
-Subsampling is a generate-stage feature; the profile-only step ignores any
-`subsample` field.
+One row is one directory of already-generated reads. A `subsample: N` field says
+that directory is the N-depth subsample the generate step wrote to
+`<sample>/subsample_N/`, and reproduces the same naming (`<sample>.subN.*`) and
+publish location — so emit one row per depth rather than a list.
 
 `benchmark_dir` is a directory containing the reads (`*.fastq.gz`). The predicted
 profile is published to `<outdir>/<sample>/`, so point `--outdir` at the benchmark
