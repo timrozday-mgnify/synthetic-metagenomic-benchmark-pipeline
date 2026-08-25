@@ -458,6 +458,15 @@ Output `<sample>.sr_profile.tsv` uses the same three columns as the sylph one
 so both abundance columns carry it). The raw `inferred_composition.csv` and inference
 diagnostics go under `<sample>/profiling/sr/`.
 
+Every sample sharing a *reference set* — the same collection (or the same source
+sample's own genomes), flavour and primer pair — is profiled in **one** nested
+superresolution run, the way `aap` batches by database config. That's the largest safe
+batch: the mis-mapping matrix and primer pair are per-run flags of the nested pipeline,
+while `id`/`reads`/`platform`/`references` are per-row. A sample whose reads hit no
+reference is reported rather than fatal — its composition comes back all-zero with
+`status=no_reference_hits` in `inference_diagnostics.csv`, and the rest of the batch is
+unaffected.
+
 Both current superresolution pipelines also emit `presence_prob`, a regularised
 posterior probability that each reference genome is present. The wrapper leaves their
 modality-specific defaults unchanged, but exposes independent benchmarking controls:

@@ -232,21 +232,37 @@ workflow PROFILE {
     SR_PULL_REPO(ch_sr_runs.map { referenceSet, meta, reads, refs -> meta.profiler }.unique())
     ch_versions = ch_versions.mix(SR_PULL_REPO.out.versions.first())
 
+    // One batch per reference set — the nested pipeline's samplesheet is a multi-row
+    // YAML list, and everything else its command line fixes (the matrix, the primer
+    // pair, the repo) is exactly what srSetKey already keys on. Sort the group by
+    // sample id: groupTuple emits in arrival (task-completion) order, which varies
+    // between runs, and an order that moves re-hashes the task and throws away the
+    // nested -resume (same reason as the AAP batch above).
+    ch_sr_grouped = ch_sr_runs
+        .groupTuple(by: 0)
+        .map { referenceSet, metas, readsList, refsList ->
+            // Stamp the set onto every meta: it names the batch's nested work dir and tag,
+            // and without it two flavours of the same single sample would collide there.
+            def rows = [metas, readsList, refsList].transpose()
+                .collect { meta, reads, refs -> [ meta + [ reference_set: referenceSet ], reads, refs ] }
+                .sort { a, b -> a[0].id <=> b[0].id }
+            [ referenceSet, rows ]
+        }
+
     // Materialise exactly one matrix per reference set. The nested pipelines need a
     // sample-shaped input to build the simulation matrix, so select one representative
     // run; all subsequent sample runs reuse its matrix through --mismapping_matrix.
-    ch_sr_mismapping_in = ch_sr_runs
-        .groupTuple(by: 0)
-        .map { referenceSet, metas, readsList, refsList ->
-            // Deterministic representative (groupTuple's order is arrival order): a different
-            // sample each run means a different matrix, which invalidates every SR run reusing it.
-            def pick = (0..<metas.size()).min { metas[it].id }
-            def representative = metas[pick] + [
+    ch_sr_mismapping_in = ch_sr_grouped
+        .map { referenceSet, rows ->
+            // Deterministic representative (rows are id-sorted above): a different sample
+            // each run means a different matrix, which invalidates every SR run reusing it.
+            def (meta, reads, refs) = rows[0]
+            def representative = meta + [
                 id: "mismapping_${referenceSet.replaceAll(/[^A-Za-z0-9._-]+/, '_')}",
                 reference_set: referenceSet,
                 reference_set_dir: referenceSet.replaceAll(/[^A-Za-z0-9._-]+/, '_'),
             ]
-            [ representative, (readsList[pick] instanceof List ? readsList[pick] : [readsList[pick]])*.toString(), refsList[pick] ]
+            [ representative, (reads instanceof List ? reads : [reads])*.toString(), refs ]
         }
     // combine, not join: several reference sets share one profiler's checkout.
     BUILD_SUPERRESOLUTION_MISMAPPING(
@@ -257,25 +273,37 @@ workflow PROFILE {
     )
     ch_versions = ch_versions.mix(BUILD_SUPERRESOLUTION_MISMAPPING.out.versions.first())
 
-    // Reads go through as absolute path strings (val) — see RUN_SUPERRESOLUTION.
-    // combine, not join: every sample in a reference set needs the one shared
-    // matrix, and join is 1:1 — it would emit a single run per set and silently
-    // drop every other sample.
+    // One nested run per reference set. Reads go through as absolute path strings (val)
+    // — see RUN_SUPERRESOLUTION. layout carries the per-sample samplesheet rows; only the
+    // representative's refs is staged, since within a set they're either the one shared
+    // collection file or byte-identical per-depth copies of the sample's own ('self').
     RUN_SUPERRESOLUTION(
-        ch_sr_runs
-            .map { referenceSet, meta, reads, refs -> [ referenceSet, meta, reads, refs ] }
-            .combine(BUILD_SUPERRESOLUTION_MISMAPPING.out.mismapping.map { meta, matrix -> [ meta.reference_set, matrix ] }, by: 0)
-            .map { referenceSet, meta, reads, refs, matrix ->
-                [ meta.profiler, meta, (reads instanceof List ? reads : [reads])*.toString(), refs, matrix ]
+        ch_sr_grouped
+            .map { referenceSet, rows ->
+                def layout = rows.collect { meta, reads, refs ->
+                    [ meta.id, meta.platform ?: '', (reads instanceof List ? reads : [reads])*.toString() ]
+                }
+                [ referenceSet, rows*.getAt(0), layout, rows[0][2] ]
             }
+            .combine(BUILD_SUPERRESOLUTION_MISMAPPING.out.mismapping.map { meta, matrix -> [ meta.reference_set, matrix ] }, by: 0)
+            .map { referenceSet, metas, layout, refs, matrix -> [ metas[0].profiler, metas, layout, refs, matrix ] }
             .combine(SR_PULL_REPO.out.assets, by: 0)
-            .map { profiler, meta, reads, refs, matrix, assets -> [ meta, reads, refs, matrix, assets ] }
+            .map { profiler, metas, layout, refs, matrix, assets -> [ metas, layout, refs, matrix, assets ] }
     )
     ch_versions = ch_versions.mix(RUN_SUPERRESOLUTION.out.versions.first())
+
+    // Demux the batched output back to per-sample [meta, profile] for the emitted
+    // contract, as the AAP batch does. Publishing is per-sample via the
+    // RUN_SUPERRESOLUTION publishDir in modules.config.
+    ch_sr_out = RUN_SUPERRESOLUTION.out.profile
+        .flatMap { metas, files ->
+            def fl = files instanceof List ? files : [files]
+            metas.collect { m -> [ m, fl.find { it.name == "${m.id}.sr_profile.tsv" } ] }
+        }
 
     emit:
     sylph    = NORMALIZE_SYLPH.out.profile      // [ meta, sylph_profile.tsv ]
     aap      = ch_aap_out                       // [ meta, aap_out/<id> ]
-    sr       = RUN_SUPERRESOLUTION.out.profile  // [ meta, sr_profile.tsv ]
+    sr       = ch_sr_out                        // [ meta, sr_profile.tsv ]
     versions = ch_versions
 }
