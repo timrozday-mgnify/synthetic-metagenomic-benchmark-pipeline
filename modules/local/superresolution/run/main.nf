@@ -150,6 +150,22 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     # to a sample's composition. The representative nested run must yield one bundle.
     find sr_out/mismapping -type f -name mismapping_matrix.csv -print 2>/dev/null | sort > matrix_paths.txt
     matrix_count=\$(wc -l < matrix_paths.txt | tr -d ' ')
+
+    # A nested failure downstream of the matrix can leave nothing published under
+    # sr_out/. The matrix itself is still in the nested work dir — in several copies,
+    # since Nextflow stages it into every consumer task — so fall back to those when
+    # they are all byte-identical (a differing set means two producer tasks disagreed,
+    # which is not something to guess at).
+    if [ "\$matrix_count" -eq 0 ] && [ "\$nested_status" -ne 0 ]; then
+        find '${nestedDir}/work' -type f -name mismapping_matrix.csv -print 2>/dev/null | sort > work_matrices.txt
+        distinct=\$(while read -r m; do cksum "\$m"; done < work_matrices.txt | awk '{print \$1, \$2}' | sort -u | wc -l | tr -d ' ')
+        if [ -s work_matrices.txt ] && [ "\$distinct" -eq 1 ]; then
+            echo "WARN: nested run exited \$nested_status without publishing a matrix; recovering it from the nested work dir." >&2
+            sed -n '1p' work_matrices.txt > matrix_paths.txt
+            matrix_count=1
+        fi
+    fi
+
     if [ "\$matrix_count" -ne 1 ]; then
         echo "Expected exactly one nested superresolution mismapping matrix under sr_out/mismapping/, found \$matrix_count (nested exit status \$nested_status)." >&2
         if [ "\$matrix_count" -gt 0 ]; then
