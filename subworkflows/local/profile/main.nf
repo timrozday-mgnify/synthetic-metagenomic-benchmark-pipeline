@@ -22,6 +22,14 @@ include { RUN_SUPERRESOLUTION               } from '../../../modules/local/super
 // (keep in sync with the same map in build_databases).
 def srSources() { [ sr_shotgun: 'genome', sr_amplicon: 'ssu' ] }
 
+// Reference set a superresolution sample belongs to: everything that changes the
+// reference amplicons, and so the mis-mapping matrix measured over them. The primer pair
+// is part of it — two samples off the same panel amplified with different primers cover
+// different regions and must not share a matrix.
+def srSetKey(meta, base) {
+    "${base}:${meta.profiler}${meta.primer ? ':' + meta.primer : ''}".toString()
+}
+
 workflow PROFILE {
     take:
     ch_reads         // [ val(meta), reads ]                 meta: id, mode, profiler, database
@@ -209,14 +217,14 @@ workflow PROFILE {
         .join(SR_BUILD_REFS.out.refs.map { meta, refs -> [ "${meta.id}:${meta.profiler}".toString(), refs ] }, by: 0)
         // A self reference set belongs to the source sample, so all of its
         // subsampling depths reuse one matrix while distinct samples remain isolated.
-        .map { key, meta, reads, refs -> [ "self:${meta.sample ?: meta.id}:${meta.profiler}", meta, reads, refs ] }
+        .map { key, meta, reads, refs -> [ srSetKey(meta, "self:${meta.sample ?: meta.id}"), meta, reads, refs ] }
 
     // Named collection: join by "<name>:<source>", the key BUILD_DATABASES emits.
     ch_sr_built_in = ch_sr.built
         .map { meta, reads -> [ "${meta.database}:${srSources()[meta.profiler]}".toString(), meta, reads ] }
         .combine(ch_sr_dbs, by: 0)
         // Named collections are reference sets shared by every matching sample.
-        .map { key, meta, reads, refs -> [ "${meta.database}:${meta.profiler}", meta, reads, refs ] }
+        .map { key, meta, reads, refs -> [ srSetKey(meta, meta.database), meta, reads, refs ] }
 
     ch_sr_runs = ch_sr_self_in.mix(ch_sr_built_in)
 

@@ -22,6 +22,18 @@
 // asset cache's concurrent-clone corruption); with any real fan-out that hammers the
 // GitHub API into 504s. One producer task per repo keeps the isolation and drops the
 // call count to one, and consumers stage the result rather than fetching it.
+// The nested amplicon pipeline extracts its reference amplicons with its OWN in-silico
+// PCR, defaulting to 515F/806R (V4). A sample amplified with any other pair must be told
+// which region to cut, or its reads and the reference amplicons cover different parts of
+// the 16S and NOT ONE READ hits a reference. meta.primer_sets/meta.primer carry the pair
+// the reads were generated with (--step all); a profile-only row has neither and falls
+// back to the nested default.
+def srPrimerArgs(meta) {
+    if (meta.profiler != 'sr_amplicon') return ''
+    def pair = (meta.primer_sets ?: []).find { it[0] == meta.primer }
+    pair ? "--fwd_primer ${pair[1]} --rev_primer ${pair[2]}" : ''
+}
+
 process SR_PULL_REPO {
     tag "${profiler}"
     label 'process_single'
@@ -107,7 +119,7 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     def extraCfg = (meta.sr_configs ?: []).collect { "-c ${file(it, checkIfExists: true)}" }.join(' ')
     def nestedDir = "${workflow.workDir}/nested/sr/${meta.id.replaceAll(/[^A-Za-z0-9._-]+/, '_')}"
     def nestedArgs = [profArg, '--input sr_samplesheet.yml', '--outdir sr_out', extraCfg,
-                      "-w '${nestedDir}/work'", '-resume']
+                      srPrimerArgs(meta), "-w '${nestedDir}/work'", '-resume']
         .findAll { it }
         .join(' ')
     def platform = meta.platform ? "printf '  platform: %s\\n' '${meta.platform}' >> sr_samplesheet.yml" : 'true'
@@ -248,7 +260,7 @@ process RUN_SUPERRESOLUTION {
     def presenceArg = presenceArgs.join(' ')
     def nestedDir = "${workflow.workDir}/nested/sr/${meta.id.replaceAll(/[^A-Za-z0-9._-]+/, '_')}_${meta.profiler}"
     def nestedArgs = [prof_arg, '--input sr_samplesheet.yml', '--outdir sr_out', extra_cfg,
-                      "--mismapping_matrix ${mismapping_matrix}", presenceArg,
+                      "--mismapping_matrix ${mismapping_matrix}", presenceArg, srPrimerArgs(meta),
                       "-w '${nestedDir}/work'", '-resume']
         .findAll { it }
         .join(' ')
