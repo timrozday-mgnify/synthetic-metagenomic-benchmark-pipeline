@@ -1,0 +1,38 @@
+# sr_settings fan-out, for the e2e suite: the same reads profiled under three real
+# superresolution-amplicon settings, in one run.
+#
+# `align.p01` and `align.p001` differ ONLY in the presence-gate prior, so they share a
+# reference set and therefore ONE mis-mapping matrix, splitting at the inference run.
+# `sim.p01` changes the matrix mode and gets a matrix of its own. So: 3 profiles, 2
+# matrices — the cost story the fan-out exists for.
+#
+# No `mseq:` here (unlike the stub-only sr_settings.yaml, which carries a placeholder to
+# exercise the plumbing). Supplying one needs a real mapseq classification from a prior
+# run against this same reference set, which there is nowhere to get inside a single
+# pipeline run.
+samples:
+  - sample: E1
+    train_id: natA
+    train_fastq_1: tests/data/natural_R1.fastq.gz
+    train_fastq_2: tests/data/natural_R2.fastq.gz
+    platform: hq-illumina
+    genomes_csv: tests/data/genomes_S2_ssu.csv
+    num_reads: 2000
+    mode: amplicon
+    read_length_mean: 200
+    profilers: [sr_amplicon]
+    database: self
+    sr_settings:
+      - name: align.p01
+        mismapping_method: align
+        align_backend: exact-hash
+        align_tau: 0
+        infer_presence_prior: 0.01
+      - name: align.p001
+        mismapping_method: align
+        align_backend: exact-hash
+        align_tau: 0
+        infer_presence_prior: 0.001
+      - name: sim.p01
+        mismapping_method: simulate
+        infer_presence_prior: 0.01
