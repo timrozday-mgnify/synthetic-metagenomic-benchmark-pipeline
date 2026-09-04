@@ -139,6 +139,12 @@ nextflow_pipeline {
                 { assert !path("${params.outdir}/S1/profiling/sr/S1.mismapping_matrix.csv").exists() },
                 { assert !path("${params.outdir}/S2/profiling/sr/S2.mismapping_matrix.npz").exists() },
 
+                // Reads are generated once per SAMPLE, not per sample x profiler (S1 fans
+                // out to sr_shotgun + sylph). Asserted here as well as in the e2e test:
+                // e2e only runs on main, so a samplesheet gaining a sample used to drift
+                // this count and not be caught until after merge.
+                { assert workflow.trace.succeeded().findAll { it.name.contains("GENOME_BLENDER_GENERATE") }.size() == 4 },
+
                 // Only the 'self' samples build their own references (S1, S2); S3 and S4
                 // share the collection's. One matrix build AND one batched inference run
                 // per reference set — S3 and S4 go into srA's single nested run together.
@@ -507,7 +513,8 @@ nextflow_pipeline {
 
                 // Fan-out for real: S1's reads are generated once and profiled
                 // by both sr_shotgun and sylph, each publishing into the same dir.
-                { assert workflow.trace.succeeded().findAll { it.name.contains("GENOME_BLENDER_GENERATE") }.size() == 3 },
+                // One generate per SAMPLE (S1-S4), not per sample x profiler.
+                { assert workflow.trace.succeeded().findAll { it.name.contains("GENOME_BLENDER_GENERATE") }.size() == 4 },
                 { assert path("${params.outdir}/S1/S1.sylph_profile.tsv").readLines().get(0)
                     == "genome_id\tpredicted_rel_abundance\tpredicted_tax_rel_abundance" },
                 { assert path("${params.outdir}/S1/profiling/sylph/S1.sylph.tsv").exists() }
