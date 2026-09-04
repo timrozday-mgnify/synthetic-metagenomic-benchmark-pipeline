@@ -126,6 +126,11 @@ nextflow_pipeline {
                 // Raw composition CSV kept under profiling/sr/.
                 { assert path("${params.outdir}/S1/profiling/sr/S1.inferred_composition.csv").exists() },
 
+                // sr_amplicon's own mapseq classification lands beside it, so a
+                // re-profiling run can hand it back as `mseq:`. sr_shotgun has none.
+                { assert path("${params.outdir}/S2/profiling/sr/S2.obs.mseq.gz").exists() },
+                { assert !path("${params.outdir}/S1/profiling/sr/S1.obs.mseq.gz").exists() },
+
                 // A reusable matrix is published per reference set, rather than once
                 // inside every sample's profiling directory.
                 { assert path("${params.outdir}/mismapping/self_S1_sr_shotgun/mismapping_matrix.csv").exists() },
@@ -146,6 +151,46 @@ nextflow_pipeline {
 
                 // S1 also lists sylph in profilers: same reads, second profile.
                 { assert path("${params.outdir}/S1/S1.sylph_profile.tsv").exists() }
+            )
+        }
+    }
+
+    test("sr_settings fan-out and a supplied mseq - stub") {
+        tag "stub"
+        options "-stub"
+        when {
+            params {
+                input  = "${projectDir}/tests/samplesheets/sr_settings.yaml"
+                outdir = "$outputDir"
+            }
+        }
+        then {
+            def sheet = path("${params.outdir}/S2/profiling/sr/S2.fast.nested_samplesheet.yml").text
+            def provenance = path("${params.outdir}/mismapping").list()
+                .collect { path("${it}/mismapping_provenance.json").text }
+            assertAll(
+                { assert workflow.success },
+
+                // One profile per setting, all in the source sample's benchmark dir.
+                { assert path("${params.outdir}/S2/S2.fast.sr_profile.tsv").exists() },
+                { assert path("${params.outdir}/S2/S2.fast_strict.sr_profile.tsv").exists() },
+                { assert path("${params.outdir}/S2/S2.simulated.sr_profile.tsv").exists() },
+
+                // fast + fast_strict differ only in the inference knobs, so they share a
+                // reference set and its matrix; `simulated` changes the matrix mode and
+                // gets its own. Two matrices, three inference runs.
+                { assert workflow.trace.succeeded().findAll { it.name.contains("BUILD_SUPERRESOLUTION_MISMAPPING") }.size() == 2 },
+                { assert workflow.trace.succeeded().findAll { it.name.contains("RUN_SUPERRESOLUTION") }.size() == 3 },
+                { assert path("${params.outdir}/mismapping").list().size() == 2 },
+
+                // The knobs really reach the two matrix builds, differently.
+                { assert provenance.any { it.contains("--align_backend exact-hash") } },
+                { assert provenance.any { it.contains("--mismapping_method simulate") } },
+
+                // The supplied classification is in the nested samplesheet, so the nested
+                // run skips its own mapping — and therefore publishes none of its own.
+                { assert sheet.contains("mseq: ") && sheet.contains("S2.obs.mseq.gz") },
+                { assert !path("${params.outdir}/S2/profiling/sr/S2.fast.obs.mseq.gz").exists() }
             )
         }
     }

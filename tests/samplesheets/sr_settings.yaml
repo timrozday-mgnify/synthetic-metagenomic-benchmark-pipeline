@@ -1,0 +1,39 @@
+# superresolution parameter fan-out + supplied mapseq results.
+#
+# One set of amplicon reads, benchmarked under three named `sr_settings:` knob sets.
+# `fast` and `fast_strict` differ only in the presence-gate prior, so they share one
+# reference set and therefore ONE mis-mapping matrix, splitting only at the (cheap)
+# inference run. `simulated` changes the matrix mode, so it gets a reference set — and a
+# matrix — of its own.
+#
+# `mseq:` hands the nested amplicon pipeline a mapseq classification of these reads
+# against this same reference set (a previous run's mapseq/<id>/<id>.obs.mseq.gz), so no
+# setting re-maps the reads. Mapping is the expensive stage; the knobs being swept here
+# are all downstream of it.
+samples:
+  - sample: S2
+    train_id: natA
+    train_fastq_1: tests/data/natural_R1.fastq.gz
+    train_fastq_2: tests/data/natural_R2.fastq.gz
+    platform: hq-illumina
+    genomes_csv: tests/data/genomes_S2_ssu.csv
+    num_reads: 2000
+    mode: amplicon
+    read_length_mean: 200
+    profilers: [sr_amplicon]
+    database: self
+    mseq: tests/data/S2.obs.mseq.gz
+    sr_settings:
+      - name: fast
+        mismapping_method: align
+        align_backend: exact-hash
+        align_tau: 0
+        infer_presence_prior: 0.01
+      - name: fast_strict
+        mismapping_method: align
+        align_backend: exact-hash
+        align_tau: 0
+        infer_presence_prior: 0.001
+      - name: simulated
+        mismapping_method: simulate
+        infer_presence_prior: 0.01

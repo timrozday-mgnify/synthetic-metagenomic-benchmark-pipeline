@@ -22,12 +22,28 @@ include { RUN_SUPERRESOLUTION               } from '../../../modules/local/super
 // (keep in sync with the same map in build_databases).
 def srSources() { [ sr_shotgun: 'genome', sr_amplicon: 'ssu' ] }
 
+// One superresolution knob, resolved for this sample: the row's `sr_settings:` entry
+// wins, and anything it leaves out falls back to the run-global sr_<kind>_<name> param.
+// A key present-but-null in the entry is an explicit "use the nested default".
+def srOpt(meta, kind, name) {
+    def opts = meta.sr_opts ?: [:]
+    opts.containsKey(name) ? opts[name] : params["sr_${kind}_${name}"]
+}
+
 // Reference set a superresolution sample belongs to: everything that changes the
 // reference amplicons, and so the mis-mapping matrix measured over them. The primer pair
 // is part of it — two samples off the same panel amplified with different primers cover
 // different regions and must not share a matrix.
+//
+// So is the matrix mode, but ONLY under an `sr_settings:` fan-out, where samples off one
+// panel deliberately carry different modes and must not collapse onto one matrix. A
+// run-global mode (the sr_* params) applies to every sample equally and cannot collide,
+// so it stays out of the key and an ordinary run's published mismapping/<set>/ paths are
+// unchanged. Settings differing only in the inference knobs keep the same key on purpose
+// — they share the expensive matrix and split later, at the inference batch.
 def srSetKey(meta, base) {
-    "${base}:${meta.profiler}${meta.primer ? ':' + meta.primer : ''}".toString()
+    def mode = meta.sr_setting ? srMatrixKey(meta) : ''
+    "${base}:${meta.profiler}${meta.primer ? ':' + meta.primer : ''}${mode}".toString()
 }
 
 // Nested superresolution command-line flags, composed here and stamped onto `meta` so
@@ -44,11 +60,11 @@ def srMatrixArgs(meta) {
     def flags = []
     if (kind == 'amplicon') {
         ['mismapping_method', 'align_backend', 'align_tau'].each { name ->
-            def value = params["sr_amplicon_${name}"]
+            def value = srOpt(meta, kind, name)
             if (value != null) flags << "--${name} ${value}"
         }
     }
-    def extra = params["sr_${kind}_matrix_args"]
+    def extra = srOpt(meta, kind, 'matrix_args')
     if (extra) flags << extra.toString()
     flags.join(' ')
 }
@@ -58,9 +74,11 @@ def srInferenceArgs(meta) {
     def kind = meta.profiler == 'sr_amplicon' ? 'amplicon' : 'shotgun'
     def flags = []
     ['infer_presence', 'infer_presence_prior', 'infer_presence_temp'].each { name ->
-        def value = params["sr_${kind}_${name}"]
+        def value = srOpt(meta, kind, name)
         if (value != null) flags << "--${name} ${value}"
     }
+    def extra = srOpt(meta, kind, 'inference_args')
+    if (extra) flags << extra.toString()
     flags.join(' ')
 }
 
@@ -249,6 +267,9 @@ workflow PROFILE {
         .map { meta, reads -> [ meta.sample ?: meta.id, meta, reads ] }
         .combine(ch_aux, by: 0)
         .map { id, meta, reads, csv, fastas -> [ meta, reads, csv, fastas ] }
+    // ponytail: keyed by meta.id, so an sr_settings fan-out rebuilds the same 'self'
+    // FASTA once per setting. It's a stdlib-python reshuffle of already-staged files;
+    // dedupe by meta.sample if a large panel ever makes it worth a join.
     SR_BUILD_REFS(ch_sr_self.map { meta, reads, csv, fastas -> [ meta, csv, fastas, '' ] })
     ch_versions = ch_versions.mix(SR_BUILD_REFS.out.versions.first())
 
@@ -274,30 +295,31 @@ workflow PROFILE {
     SR_PULL_REPO(ch_sr_runs.map { referenceSet, meta, reads, refs -> meta.profiler }.unique())
     ch_versions = ch_versions.mix(SR_PULL_REPO.out.versions.first())
 
-    // One batch per reference set — the nested pipeline's samplesheet is a multi-row
-    // YAML list, and everything else its command line fixes (the matrix, the primer
-    // pair, the repo) is exactly what srSetKey already keys on. Sort the group by
-    // sample id: groupTuple emits in arrival (task-completion) order, which varies
-    // between runs, and an order that moves re-hashes the task and throws away the
-    // nested -resume (same reason as the AAP batch above).
-    ch_sr_grouped = ch_sr_runs
-        .groupTuple(by: 0)
-        .map { referenceSet, metas, readsList, refsList ->
-            // Stamp the set onto every meta: it names the batch's nested work dir and tag,
-            // and without it two flavours of the same single sample would collide there.
-            def rows = [metas, readsList, refsList].transpose()
-                .collect { meta, reads, refs ->
-                    [ meta + [ reference_set: referenceSet,
-                               inference_args: srInferenceArgs(meta) ], reads, refs ] }
-                .sort { a, b -> a[0].id <=> b[0].id }
-            [ referenceSet, rows ]
-        }
+    // Batching happens at two levels, because the nested pipeline takes some settings
+    // per-row (the samplesheet) and the rest as run-global CLI flags:
+    //   - the mis-mapping matrix is built once per REFERENCE SET (which srSetKey already
+    //     keys on the panel, primer pair and matrix mode);
+    //   - inference batches split that set further by the presence-gate flags, which are
+    //     also per-run — so an sr_settings sweep that varies only the inference knobs
+    //     still shares one matrix, and only pays for the cheap half twice.
+    // Both groups are sorted by sample id: groupTuple emits in arrival (task-completion)
+    // order, which varies between runs, and an order that moves re-hashes the task and
+    // throws away the nested -resume (same reason as the AAP batch above).
+    //
+    // Stamp the set onto every meta: it names the batch's nested work dir and tag, and
+    // without it two flavours of the same single sample would collide there.
+    ch_sr_rows = ch_sr_runs.map { referenceSet, meta, reads, refs ->
+        [ referenceSet, meta + [ reference_set: referenceSet,
+                                 inference_args: srInferenceArgs(meta) ], reads, refs ]
+    }
 
     // Materialise exactly one matrix per reference set. The nested pipelines need a
     // sample-shaped input to build the simulation matrix, so select one representative
     // run; all subsequent sample runs reuse its matrix through --mismapping_matrix.
-    ch_sr_mismapping_in = ch_sr_grouped
-        .map { referenceSet, rows ->
+    ch_sr_mismapping_in = ch_sr_rows
+        .groupTuple(by: 0)
+        .map { referenceSet, metas, readsList, refsList ->
+            def rows = [metas, readsList, refsList].transpose().sort { a, b -> a[0].id <=> b[0].id }
             // Deterministic representative (rows are id-sorted above): a different sample
             // each run means a different matrix, which invalidates every SR run reusing it.
             def (meta, reads, refs) = rows[0]
@@ -319,15 +341,30 @@ workflow PROFILE {
     )
     ch_versions = ch_versions.mix(BUILD_SUPERRESOLUTION_MISMAPPING.out.versions.first())
 
-    // One nested run per reference set. Reads go through as absolute path strings (val)
-    // — see RUN_SUPERRESOLUTION. layout carries the per-sample samplesheet rows; only the
-    // representative's refs is staged, since within a set they're either the one shared
-    // collection file or byte-identical per-depth copies of the sample's own ('self').
+    // One nested run per (reference set, inference settings). Reads go through as absolute
+    // path strings (val) — see RUN_SUPERRESOLUTION. layout carries the per-sample
+    // samplesheet rows; only the representative's refs is staged, since within a set
+    // they're either the one shared collection file or byte-identical per-depth copies of
+    // the sample's own ('self').
+    ch_sr_infer_grouped = ch_sr_rows
+        .map { referenceSet, meta, reads, refs ->
+            [ [ referenceSet, meta.inference_args ], meta, reads, refs ]
+        }
+        .groupTuple(by: 0)
+        .map { key, metas, readsList, refsList ->
+            def rows = [metas, readsList, refsList].transpose().sort { a, b -> a[0].id <=> b[0].id }
+            [ key[0], rows ]
+        }
+
     RUN_SUPERRESOLUTION(
-        ch_sr_grouped
+        ch_sr_infer_grouped
             .map { referenceSet, rows ->
                 def layout = rows.collect { meta, reads, refs ->
-                    [ meta.id, meta.platform ?: '', (reads instanceof List ? reads : [reads])*.toString() ]
+                    // A precomputed mapseq classification (sr_amplicon only — the shotgun
+                    // sibling has no mapseq stage), '' when the nested run should map for
+                    // itself.
+                    def mseq = (meta.profiler == 'sr_amplicon' ? meta.mseq : null) ?: ''
+                    [ meta.id, meta.platform ?: '', (reads instanceof List ? reads : [reads])*.toString(), mseq ]
                 }
                 [ referenceSet, rows*.getAt(0), layout, rows[0][2] ]
             }

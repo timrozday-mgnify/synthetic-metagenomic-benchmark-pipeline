@@ -216,8 +216,22 @@ workflow SYNTHETIC_METAGENOMIC_BENCHMARK {
         // once and benchmarked by each method, which writes its own profile into the
         // same sample dir. meta.id is unchanged, so all output stays co-located with
         // that sample's truth.tsv; only meta.profiler differs.
+        // superresolution profilers fan out a second time, over the sample's
+        // `sr_settings:` knob sets — each is a separate matrix + nested run, so it needs
+        // its own meta.id to keep its profile file and nested work dir apart (meta.sample
+        // still routes it into this sample's benchmark dir). The unnamed fallback entry
+        // leaves meta.id alone, so a samplesheet without sr_settings is unchanged.
+        def noSetting = [[ name: null, opts: [:] ]]
         ch_reads_by_profiler = ch_reads.flatMap { meta, reads ->
-            meta.profilers.collect { prof -> [ meta + [ profiler: prof ], reads ] }
+            meta.profilers.collectMany { prof ->
+                def settings = prof.startsWith('sr_') ? (meta.sr_settings ?: noSetting) : noSetting
+                settings.collect { st ->
+                    [ meta + [ profiler:   prof,
+                               sr_setting: st.name,
+                               sr_opts:    st.opts,
+                               id:         st.name ? "${meta.id}.${st.name}" : meta.id ], reads ]
+                }
+            }
         }
 
         PROFILE(ch_reads_by_profiler, ch_aux, BUILD_DATABASES.out.sylph_dbs, BUILD_DATABASES.out.mapseq_dbs,

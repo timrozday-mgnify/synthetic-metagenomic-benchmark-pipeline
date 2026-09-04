@@ -136,6 +136,8 @@ databases (see [Named sequence collections](#named-sequence-collections-database
 | `profilers` | Optional list of profilers run against the generated reads: `sylph` (WGS), `aap` (amplicon), `sr_shotgun` (superresolution, WGS), `sr_amplicon` (superresolution, 16S). Reads are generated once; every listed profiler writes its own profile into that sample's dir. Blank → `params.profilers` (default none = generate only, no profiling). |
 | `database` | Database to profile against, by name. A name defined in the samplesheet `databases:` block is built (or its prebuilt dir consumed) by the pipeline — works for every profiler. Otherwise: for `sylph`, a key in `params.sylph_databases`, or `self` to build the DB from this sample's reference genomes; for `aap`, blank (DB comes from `--aap_config`); for `sr_shotgun`/`sr_amplicon`, a defined collection or `self` (there is no params fallback). |
 | `subsample` | Optional list of read depths to sweep (absolute read/pair counts). The full draw is generated once, then subsampled to each depth — each gets its own `subsample_<N>/` output dir with its own reads + ground truth + profile. `none`/`null`/empty/omitted → a single full-depth run in `<sample>/`. |
+| `sr_settings` | Optional list of named superresolution knob sets. Each `sr_*` profiler on the row runs **once per entry** — its own mis-mapping matrix and nested run — writing `<id>.<name>.sr_profile.tsv`. See [Sweeping superresolution settings](#sweeping-superresolution-settings). Blank → the samplesheet's top-level `sr_settings:`, else the run-global `sr_*` params. |
+| `mseq` | Optional (`sr_amplicon` only). A mapseq classification of this sample's reads against this same reference set — a previous run's `profiling/sr/<id>.obs.mseq.gz`. Supplying it makes the nested run skip its own read mapping, which is what makes an `sr_settings` sweep affordable. |
 | `chunks` | Optional. Split generation of `num_reads` across N parallel `generate-reads` calls (merged back into one reads-set + BAM before subsampling/ground truth), useful for large `num_reads`. Blank → `params.chunks` (default `1`, no chunking). |
 
 Relative `genomes_csv` / FASTA / FASTQ paths resolve against the pipeline
@@ -485,6 +487,43 @@ for mode in "simulate" "align minimap2 0" "align exact-hash 0" "align kmer 1"; d
 done
 ```
 
+### Sweeping superresolution settings
+
+The params above are run-global. To compare several settings **in one run**, put an
+`sr_settings:` list in the samplesheet — per row, or top-level as the default for every
+row. Each entry is a `name` plus any of the `sr_<amplicon|shotgun>_*` knob names above
+with the prefix dropped:
+
+```yaml
+sr_settings:
+  - {name: simulate.p01, mismapping_method: simulate, infer_presence_prior: 0.01}
+  - {name: exact.p01,    mismapping_method: align, align_backend: exact-hash, align_tau: 0,
+                         infer_presence_prior: 0.01}
+  - {name: exact.p001,   mismapping_method: align, align_backend: exact-hash, align_tau: 0,
+                         infer_presence_prior: 0.001}
+```
+
+Each `sr_*` profiler on a row runs once per entry, publishing
+`<id>.<name>.sr_profile.tsv` next to the same `truth.tsv`. A knob an entry omits falls
+back to the corresponding param, so a partial entry still works.
+
+What it costs is the point:
+
+- Entries agreeing on every **matrix** knob (`mismapping_method`, `align_backend`,
+  `align_tau`, `matrix_args`) share a reference set and therefore **one** mis-mapping
+  matrix — `exact.p01` and `exact.p001` above build one matrix between them and split
+  only at the inference run. The matrix mode is mixed into the reference-set key (and so
+  into the `mismapping/<set>/` directory name) whenever `sr_settings` is in play.
+- Entries differing in the **inference** knobs are separate nested runs, because those
+  are per-run CLI flags in the nested pipeline, not per-row samplesheet fields.
+- The other expensive stage, mapping the reads, can be skipped outright: hand the row's
+  `mseq:` column a previous run's `profiling/sr/<id>.obs.mseq.gz` and no entry re-maps
+  anything. It must be a classification of those reads against that same reference set,
+  and it carries the read-prep settings it was made with.
+
+`examples/sr_amplicon_param_sweep/` is a worked two-phase version of exactly this: one
+`--step all` run to generate and map, then one `--step profile` run over the whole grid.
+
 Neither needs an external database: the only reference input is one combined FASTA
 over the community, which the pipeline builds for you with headers
 `{genome_id}|{n}|{orig}`. It comes from either:
@@ -601,7 +640,8 @@ Published under `results/<sample>/`:
 | `<sample>.sorted.bam` (+ `.bai`) | Ground-truth read→reference mapping. References are named `<genome_id>:<contig_id>`. |
 | `<sample>.truth.tsv` | Ground-truth profile: `genome_id, target_rel_abundance, realized_n_reads, realized_rel_abundance`. |
 | `<sample>.sylph_profile.tsv` | Predicted profile (sylph), when `profilers` includes `sylph`. |
-| `<sample>/profiling/` | Raw profiler outputs (`sylph/`, `aap/`). |
+| `<sample>/profiling/` | Raw profiler outputs (`sylph/`, `aap/`, `sr/`). |
+| `<sample>/profiling/sr/<id>.obs.mseq.gz` | `sr_amplicon` only: mapseq's classification of the reads against the reference amplicons. Feed it back as a row's `mseq:` to re-profile without re-mapping. Absent when that run was itself given one. |
 
 Built profiler databases (from a samplesheet `databases:` block) are published under
 `results/databases/<name>/` — `<name>.syldb` (sylph) and/or

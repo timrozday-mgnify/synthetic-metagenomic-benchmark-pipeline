@@ -1,0 +1,96 @@
+databases:
+  community_v4:
+    sequences:
+    - id: bacteroides_fragilis
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_param_sweep/references/16S/bacteroides_fragilis.ssu.fasta
+      taxonomy: Bacteria;Bacteroides;fragilis
+    - id: bacteroides_thetaiotaomicron
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_param_sweep/references/16S/bacteroides_thetaiotaomicron.ssu.fasta
+      taxonomy: Bacteria;Bacteroides;thetaiotaomicron
+    - id: bacteroides_uniformis
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_param_sweep/references/16S/bacteroides_uniformis.ssu.fasta
+      taxonomy: Bacteria;Bacteroides;uniformis
+    - id: bacteroides_uniformis_strain2
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_param_sweep/references/16S/bacteroides_uniformis_strain2.ssu.fasta
+      taxonomy: Bacteria;Bacteroides;uniformis
+    - id: bacteroides_vulgatus
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_param_sweep/references/16S/bacteroides_vulgatus.ssu.fasta
+      taxonomy: Bacteria;Bacteroides;vulgatus
+    - id: clostridium_bolteae
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_param_sweep/references/16S/clostridium_bolteae.ssu.fasta
+      taxonomy: Bacteria;Clostridium;bolteae
+    - id: collinsella_aerofaciens
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_param_sweep/references/16S/collinsella_aerofaciens.ssu.fasta
+      taxonomy: Bacteria;Collinsella;aerofaciens
+    - id: eggerthella_lenta
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_param_sweep/references/16S/eggerthella_lenta.ssu.fasta
+      taxonomy: Bacteria;Eggerthella;lenta
+    - id: methanobrevibacter_smithii
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_param_sweep/references/16S/methanobrevibacter_smithii.ssu.fasta
+      taxonomy: Archaea;Methanobrevibacter;smithii
+    - id: roseburia_intestinalis
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_param_sweep/references/16S/roseburia_intestinalis.ssu.fasta
+      taxonomy: Bacteria;Roseburia;intestinalis
+sr_settings:
+- name: simulate.p01
+  mismapping_method: simulate
+  infer_presence: true
+  infer_presence_prior: 0.01
+  infer_presence_temp: 1.0
+- name: simulate.p001
+  mismapping_method: simulate
+  infer_presence: true
+  infer_presence_prior: 0.001
+  infer_presence_temp: 1.0
+- name: exact.p01
+  mismapping_method: align
+  align_backend: exact-hash
+  align_tau: 0
+  matrix_args: --align_ambiguity_weight 0.3
+  infer_presence: true
+  infer_presence_prior: 0.01
+  infer_presence_temp: 1.0
+- name: exact.p001
+  mismapping_method: align
+  align_backend: exact-hash
+  align_tau: 0
+  matrix_args: --align_ambiguity_weight 0.3
+  infer_presence: true
+  infer_presence_prior: 0.001
+  infer_presence_temp: 1.0
+- name: kmer1.p01
+  mismapping_method: align
+  align_backend: kmer
+  align_tau: 1
+  matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+  infer_presence: true
+  infer_presence_prior: 0.01
+  infer_presence_temp: 1.0
+- name: kmer1.p001
+  mismapping_method: align
+  align_backend: kmer
+  align_tau: 1
+  matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+  infer_presence: true
+  infer_presence_prior: 0.001
+  infer_presence_temp: 1.0
+samples:
+- sample: community.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/community.515-YF-806BR
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: community.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/community.515-YF-806BR/subsample_100000
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  subsample: 100000
