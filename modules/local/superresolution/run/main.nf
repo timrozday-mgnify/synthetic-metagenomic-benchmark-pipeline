@@ -51,6 +51,26 @@ def srNestedArgs(meta, key) {
     (meta[key] ?: '').toString()
 }
 
+// Shell lines that write the nested multi-sample YAML samplesheet, one row per batched
+// sample. layout row: [ id, platform, [read paths], mseq ]. A non-empty mseq is a
+// precomputed mapseq classification of those reads against this reference set — the
+// nested amplicon pipeline then skips its own read mapping, which is the expensive stage
+// and the whole point of a settings sweep over the cheap ones. `references` must be
+// absolute (the nested pipeline resolves relative paths against its own projectDir) and
+// is shared by the whole reference set, so it comes from the \$refs_abs the caller sets.
+// At file scope because the stub writes the same sheet as the real script, and the two
+// blocks share no locals.
+def srSheetCmds(layout) {
+    layout.collect { id, platform, reads, mseq ->
+        ([ "printf -- '- id: %s\\n' '${id}' >> sr_samplesheet.yml",
+           "printf '  reads:\\n' >> sr_samplesheet.yml" ] +
+         reads.collect { "printf '    - %s\\n' '${it}' >> sr_samplesheet.yml" } +
+         (platform ? [ "printf '  platform: %s\\n' '${platform}' >> sr_samplesheet.yml" ] : []) +
+         (mseq ? [ "printf '  mseq: %s\\n' '${mseq}' >> sr_samplesheet.yml" ] : []) +
+         [ "printf '  references: %s\\n' \"\$refs_abs\" >> sr_samplesheet.yml" ]).join('\n    ')
+    }.join('\n    ')
+}
+
 process SR_PULL_REPO {
     tag "${profiler}"
     label 'process_single'
@@ -147,6 +167,10 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
         .findAll { it }
         .join(' ')
     def platform = meta.platform ? "printf '  platform: %s\\n' '${meta.platform}' >> sr_samplesheet.yml" : 'true'
+    // The representative's own composition is a by-product here, but the nested run still
+    // maps its reads to produce it. A supplied classification skips that; sr_amplicon only.
+    def mseqPath = (meta.profiler == 'sr_amplicon' ? meta.mseq : null) ?: ''
+    def mseq = mseqPath ? "printf '  mseq: %s\\n' '${mseqPath}' >> sr_samplesheet.yml" : 'true'
     def reads = (read_paths instanceof List ? read_paths : [read_paths]).collect { it.toString() }
     assert reads.every { it } : "BUILD_SUPERRESOLUTION_MISMAPPING: empty read path for ${meta.reference_set}"
     def readCmds = reads.collect { "printf '    - %s\\n' '${it}' >> sr_samplesheet.yml" }.join('\n    ')
@@ -155,6 +179,7 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     printf '  reads:\\n' >> sr_samplesheet.yml
     ${readCmds}
     ${platform}
+    ${mseq}
     printf '  references: %s\\n' "\$(realpath ${refs})" >> sr_samplesheet.yml
 
     if [ '${remoteRepo}' = 'true' ]; then
@@ -265,7 +290,7 @@ process RUN_SUPERRESOLUTION {
     input:
     // One batch per reference set — the nested samplesheet is a multi-row YAML list, and
     // everything the command line fixes (matrix, primer pair, repo, presence params) is
-    // constant across the set. layout is one [id, platform, [read paths]] per sample.
+    // constant across the set. layout is one [id, platform, [read paths], mseq] per sample.
     // Reads are NOT staged: they're passed as absolute host paths (val), matching
     // RUN_AAP — this process is executor 'local' so the nested run reads them
     // directly, and the superresolution main.nf resolves relative paths against its
@@ -275,6 +300,11 @@ process RUN_SUPERRESOLUTION {
     output:
     tuple val(metas), path("*.sr_profile.tsv"),      emit: profile
     tuple val(metas), path("sr_out/composition/**"), emit: composition
+    // sr_amplicon's mapseq classification of each sample's reads. Published so it can be
+    // handed straight back as a `mseq:` samplesheet column: re-profiling the same reads
+    // under different settings then skips the run's one genuinely expensive stage.
+    // Optional — the shotgun sibling has no mapseq step.
+    tuple val(metas), path("sr_out/mapseq/**"), optional: true, emit: obs_mseq
     path "versions.yml",                             emit: versions
 
     when:
@@ -303,8 +333,12 @@ process RUN_SUPERRESOLUTION {
     // Persistent home for the nested run's cache + work dir, keyed by the batch identity
     // (reference set + the exact set of samples): stable across outer runs and distinct
     // between concurrently running batches — two runs must never share one nested cache.
+    // presenceArg is in the digest as well as the ids: two inference settings over the
+    // same reference set are two concurrent tasks, and they must never share a nested
+    // cache. (Their ids differ too when they came from `sr_settings:`, but the digest
+    // should not depend on that being how they were fanned out.)
     def batch_id   = java.security.MessageDigest.getInstance('MD5')
-                         .digest(metas*.id.sort().join(',').bytes).encodeHex().toString()[0..7]
+                         .digest((metas*.id.sort() + [presenceArg]).join(',').bytes).encodeHex().toString()[0..7]
     def set_dir    = (meta.reference_set ?: meta.id).replaceAll(/[^A-Za-z0-9._-]+/, '_')
     def nestedDir  = "${workflow.workDir}/nested/sr/${set_dir}-${batch_id}"
     def nestedArgs = [prof_arg, '--input sr_samplesheet.yml', '--outdir sr_out', extra_cfg,
@@ -313,22 +347,14 @@ process RUN_SUPERRESOLUTION {
         .findAll { it }
         .join(' ')
     assert layout.every { it[2] } : "RUN_SUPERRESOLUTION: empty read paths in layout for ${metas*.id}"
-    def sheet_cmds = layout.collect { id, platform, reads ->
-        ([ "printf -- '- id: %s\\n' '${id}' >> sr_samplesheet.yml",
-           "printf '  reads:\\n' >> sr_samplesheet.yml" ] +
-         reads.collect { "printf '    - %s\\n' '${it}' >> sr_samplesheet.yml" } +
-         (platform ? [ "printf '  platform: %s\\n' '${platform}' >> sr_samplesheet.yml" ] : []) +
-         [ "printf '  references: %s\\n' \"\$refs_abs\" >> sr_samplesheet.yml" ]).join('\n    ')
-    }.join('\n    ')
+    def sheet_cmds = srSheetCmds(layout)
     def norm_cmds = metas*.id.collect { id ->
         """comp=sr_out/composition/${id}/${id}.inferred_composition.csv
     [ -f "\$comp" ] || { echo "RUN_SUPERRESOLUTION: nested run produced no composition for ${id}" >&2; exit 1; }
     python "\$(command -v normalize_sr_profile.py)" --composition "\$comp" --output ${id}.sr_profile.tsv"""
     }.join('\n    ')
     """
-    # Multi-sample YAML samplesheet, one entry per batched sample; `references` must be
-    # absolute (the nested pipeline resolves relative paths against its own projectDir)
-    # and is shared by the whole reference set.
+    # Multi-sample YAML samplesheet, one entry per batched sample — see srSheetCmds.
     refs_abs=\$(realpath ${refs})
     : > sr_samplesheet.yml
     ${sheet_cmds}
@@ -370,9 +396,25 @@ process RUN_SUPERRESOLUTION {
     def stub_cmds = metas*.id.collect { id ->
         """mkdir -p sr_out/composition/${id}
     printf 'sample,genome_id,observed_rel_abundance,inferred_mean,inferred_lo,inferred_hi\\n' > sr_out/composition/${id}/${id}.inferred_composition.csv
-    printf 'genome_id\\tpredicted_rel_abundance\\tpredicted_tax_rel_abundance\\n' > ${id}.sr_profile.tsv"""
+    cp sr_samplesheet.yml sr_out/composition/${id}/${id}.nested_samplesheet.yml
+    printf 'genome_id\\tpredicted_rel_abundance\\tpredicted_tax_rel_abundance\\n' > ${id}.sr_profile.tsv""" +
+        // Only the amplicon sibling maps reads, and only when it wasn't handed a
+        // classification already — same condition the live nested run applies.
+        ((metas[0].profiler == 'sr_amplicon' && !layout.find { it[0] == id }[3])
+         ? """
+    mkdir -p sr_out/mapseq/${id}
+    printf '#stub\\n' | gzip > sr_out/mapseq/${id}/${id}.obs.mseq.gz""" : '')
     }.join('\n    ')
+    def sheet_cmds = srSheetCmds(layout)
     """
+    # Same samplesheet the live script writes, published beside each sample's stub
+    # composition. A stub cannot run the nested pipeline, but it can prove what the
+    # pipeline would have been handed — per-sample reads, platform and `mseq:` — which a
+    # silently dropped row or path would otherwise hide until an e2e run.
+    refs_abs=\$(realpath ${refs})
+    : > sr_samplesheet.yml
+    ${sheet_cmds}
+
     ${stub_cmds}
 
     cat <<-END_VERSIONS > versions.yml

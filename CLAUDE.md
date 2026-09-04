@@ -100,6 +100,27 @@ null => bundled set. It's global (not per-sample) and passed as an absolute host
   once per batched sample. A sample whose reads hit no reference is not a failure: the
   nested pipelines report an all-zero composition with `status=no_reference_hits` in
   `inference_diagnostics.csv` (upstream `infer_composition.py` / `shotgun_infer.py`).
+- **`sr_settings` fans a superresolution sample out across parameter sets.** A row's
+  (or the samplesheet's top-level) `sr_settings:` is a list of named knob maps;
+  `parseSrSettings` (main.nf) validates them against `srSettingKeys()` and the top
+  workflow's profiler fan-out emits one entry per setting for each `sr_*` profiler, with
+  `meta.id = "<id>.<name>"` (so profiles and nested work dirs don't collide) and
+  `meta.sr_opts` carrying the knobs. `srOpt` in PROFILE resolves each knob from
+  `sr_opts` first, then the run-global `sr_<kind>_<knob>` param — so nothing changes for
+  a samplesheet without `sr_settings`. Two levels of batching follow, because the nested
+  pipeline takes matrix settings per *run*, not per row: the matrix key joins
+  `srSetKey` only under a fan-out (one matrix per distinct matrix-knob combination), and
+  inference groups by `[reference set, inference_args]` on top of it, so settings that
+  differ only in the presence gate share the expensive matrix. `examples/sr_amplicon_param_sweep`
+  is the worked case.
+- **`mseq:` skips the nested amplicon pipeline's read mapping.** RUN_SUPERRESOLUTION
+  emits it as a per-row `mseq:` in the nested samplesheet (a val path, like the reads),
+  and superresolution-amplicon branches READS_TO_FASTA + MAPSEQ_OBS around it. The
+  benchmark publishes each run's own classification to
+  `<sample>/profiling/sr/<id>.obs.mseq.gz` so it can be handed straight back. Mapping is
+  the run's dominant cost and no swept knob changes it, which is what makes a settings
+  sweep affordable — but the file is only valid against the reference set and read-prep
+  settings it was made with.
 - **`profilers` fans a sample out across profilers.** `parseProfilers` (main.nf)
   normalises the row's `profilers` list (or params.profilers) into
   `meta.profilers`; the top workflow `flatMap`s one entry per profiler into PROFILE,

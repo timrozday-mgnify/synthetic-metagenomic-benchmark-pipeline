@@ -81,6 +81,44 @@ def parseProfilers(row, defaultProfilers) {
     list.collect { it?.toString()?.trim() }.findAll { it }.unique()
 }
 
+// Knobs a superresolution `sr_settings:` entry may set. The first four reach the
+// matrix build, the rest the inference run; a key absent from an entry falls back to
+// the matching sr_<amplicon|shotgun>_<key> param. Kept as a method, not a top-level
+// `def`: a script-level variable is local to the run body and invisible in here.
+def srSettingKeys() {
+    ['mismapping_method', 'align_backend', 'align_tau', 'matrix_args',
+     'infer_presence', 'infer_presence_prior', 'infer_presence_temp', 'inference_args']
+}
+
+// Superresolution parameter fan-out. A row's (or the samplesheet's) `sr_settings:` is
+// a list of named knob maps; the sample's sr_* profilers run once per entry, each with
+// its own mis-mapping matrix, its own nested run and its own `<id>.<name>.sr_profile.tsv`.
+// Absent => one unnamed entry taking every knob from params — the pre-fan-out behaviour,
+// which is why the fallback entry must have a null name (it must not rename anything).
+def parseSrSettings(row, defaultSettings) {
+    def v = (row.sr_settings != null) ? row.sr_settings : defaultSettings
+    if (v == null) return [[ name: null, opts: [:] ]]
+    if (!(v instanceof List)) {
+        error "sr_settings must be a YAML list of named knob maps (got ${v.getClass().simpleName})"
+    }
+    def known = srSettingKeys()
+    def out = v.findAll { it != null }.collect { e ->
+        if (!(e instanceof Map)) error "sr_settings entry '${e}' must be a map with a 'name'"
+        def name = (e.name ?: e.id)?.toString()?.trim()
+        if (!name) error "sr_settings entry ${e} needs a 'name' (it names the output file)"
+        if (!(name ==~ /[A-Za-z0-9._-]+/)) {
+            error "sr_settings name '${name}' must be [A-Za-z0-9._-]+ (it becomes part of a filename)"
+        }
+        def unknown = e.keySet().findAll { !(it in known) && !(it in ['name', 'id']) }
+        if (unknown) error "sr_settings '${name}': unknown key(s) ${unknown} (expected ${known})"
+        [ name: name, opts: known.collectEntries { k -> [ (k): e[k] ] }.findAll { k, val -> val != null } ]
+    }
+    if (out*.name.unique().size() != out.size()) {
+        error "sr_settings names must be unique (got ${out*.name})"
+    }
+    out ?: [[ name: null, opts: [:] ]]
+}
+
 workflow {
     main:
     if (!params.input) {
@@ -141,6 +179,9 @@ workflow {
     def effAapProfile = (loaded instanceof Map ? loaded.aap_profile : null) ?: params.aap_profile
     def effSrConfigs  = parseNestedConfigs((loaded instanceof Map && loaded.sr_configs != null) ? loaded.sr_configs : params.sr_configs)
     def effSrProfile  = (loaded instanceof Map ? loaded.sr_profile : null) ?: params.sr_profile
+    // Samplesheet-level default for the superresolution fan-out; a row's own
+    // `sr_settings:` wins. No params equivalent — a sweep is a samplesheet, not a flag.
+    def defaultSrSettings = (loaded instanceof Map) ? loaded.sr_settings : null
 
     //
     // Named sequence collections -> profiler DBs. A collection is built (or its
@@ -248,6 +289,14 @@ workflow {
                 // Primer pairs for in-silico PCR (empty => no extraction, use the
                 // genomes_csv FASTAs directly). Each pair is extracted + run separately.
                 primer_sets: parsePrimerPairs(row.primers),
+                // superresolution knob sets this sample is benchmarked under (one
+                // nested run + matrix each); [[name:null, opts:[:]]] = params only.
+                sr_settings: parseSrSettings(row, defaultSrSettings),
+                // Precomputed mapseq classification handed to sr_amplicon instead of
+                // letting it map the reads again. An absolute path string, not a staged
+                // file: RUN_SUPERRESOLUTION is executor 'local' and the nested run reads
+                // it directly, exactly as it does the reads.
+                mseq: (row.mseq ? resolveFile(row.mseq).toString() : null),
             ]
             def genomesCsv = resolveFile(row.genomes_csv)
             // Resolve the FASTA files referenced by the genomes CSV so Nextflow stages them.
@@ -331,6 +380,8 @@ workflow {
                 aap_profile: effAapProfile,
                 sr_configs:  effSrConfigs,
                 sr_profile:  effSrProfile,
+                sr_settings: parseSrSettings(row, defaultSrSettings),
+                mseq: (row.mseq ? resolveFile(row.mseq).toString() : null),
             ]
             [ meta, reads ]
         }

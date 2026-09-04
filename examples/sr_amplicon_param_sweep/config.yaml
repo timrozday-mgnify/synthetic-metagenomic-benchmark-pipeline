@@ -1,0 +1,73 @@
+# Config for the superresolution-amplicon parameter sweep. This one file is the single
+# source of truth for both generator scripts - no paths or metadata are hard-coded in
+# Python. Relative paths resolve against this file's dir.
+#
+# Edit the two train FASTQ paths and the panel's `ssu` paths, then `./run.sh`.
+#
+# The community is FIXED (every panel member at equal abundance). What is swept is the
+# superresolution-amplicon parameters, via the samplesheet's `sr_settings:` fan-out:
+# every generated benchmark dir is profiled once per grid point, each writing its own
+# `<id>.<setting>.sr_profile.tsv` next to the same truth.tsv.
+
+train:
+  id: sc2200627
+  # Real reads the sequencing-error model is trained from (once, shared by all samples).
+  fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina        # 2x300 MiSeq amplicon tails may fit 'lq-illumina' better
+
+reads:
+  num_reads: 1000000           # 500k pairs x 2 (pipeline counts paired reads as pairs*2)
+  subsample: [none, 100000]    # one benchmark dir per depth; `none` = full depth
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+
+# In-silico PCR pair the reads are amplified with. sr_amplicon cuts its OWN reference
+# amplicons with the same pair, so this is emitted onto every samplesheet row - a
+# mismatch here means not one read hits a reference.
+primers:
+  - {pair_id: 515-YF-806BR, forward: GTGYCAGCMGCCGCGGTAA, reverse: GGACTACNVGGGTWTCTAAT}
+
+# The parameter grid. Each axis is a list of named knob maps; the sweep is their
+# cartesian product, and a grid point's name (axis names joined with '.') becomes part
+# of its output filename. Knob names are the pipeline's sr_settings keys:
+#   matrix : mismapping_method, align_backend, align_tau, matrix_args
+#   infer  : infer_presence, infer_presence_prior, infer_presence_temp, inference_args
+#
+# Cost: the mis-mapping matrix is built once per DISTINCT COMBINATION OF THE MATRIX
+# KNOBS, and the grid points sharing one reuse it. The 3x2 grid below is 6 profiles per
+# benchmark dir but only 3 matrices - which is the whole reason to sweep the inference
+# knobs in the same run rather than in six separate ones.
+sr_sweep:
+  grid:
+    matrix:
+      - {name: simulate, mismapping_method: simulate}
+      - {name: exact, mismapping_method: align, align_backend: exact-hash, align_tau: 0,
+         matrix_args: --align_ambiguity_weight 0.3}
+      - {name: kmer1, mismapping_method: align, align_backend: kmer, align_tau: 1,
+         matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096}
+    infer:
+      - {name: p01, infer_presence: true, infer_presence_prior: 0.01, infer_presence_temp: 1.0}
+      - {name: p001, infer_presence: true, infer_presence_prior: 0.001, infer_presence_temp: 1.0}
+
+# In-pipeline profiler database, emitted into both samplesheets' `databases:` block and
+# built during the run. sr_amplicon needs only `ssu` per sequence (no Rfam, no mapseq DB
+# - it builds its reference amplicons itself by in-silico PCR).
+database:
+  name: community_v4
+
+# One entry per genome. `taxonomy` is derived from the id unless given; `kingdom: archaea`
+# flips the domain. Two entries of the same species (a strain pair) are what makes the
+# sub-species question interesting, but nothing here requires it.
+panel:
+  - {id: bacteroides_fragilis,          ssu: references/16S/bacteroides_fragilis.ssu.fasta}
+  - {id: bacteroides_thetaiotaomicron,  ssu: references/16S/bacteroides_thetaiotaomicron.ssu.fasta}
+  - {id: bacteroides_uniformis,         ssu: references/16S/bacteroides_uniformis.ssu.fasta}
+  - {id: bacteroides_uniformis_strain2, ssu: references/16S/bacteroides_uniformis_strain2.ssu.fasta, taxonomy: "Bacteria;Bacteroides;uniformis"}
+  - {id: bacteroides_vulgatus,          ssu: references/16S/bacteroides_vulgatus.ssu.fasta}
+  - {id: clostridium_bolteae,           ssu: references/16S/clostridium_bolteae.ssu.fasta}
+  - {id: collinsella_aerofaciens,       ssu: references/16S/collinsella_aerofaciens.ssu.fasta}
+  - {id: eggerthella_lenta,             ssu: references/16S/eggerthella_lenta.ssu.fasta}
+  - {id: methanobrevibacter_smithii,    ssu: references/16S/methanobrevibacter_smithii.ssu.fasta, kingdom: archaea}
+  - {id: roseburia_intestinalis,        ssu: references/16S/roseburia_intestinalis.ssu.fasta}
