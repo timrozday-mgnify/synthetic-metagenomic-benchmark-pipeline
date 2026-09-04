@@ -40,7 +40,7 @@ Preprocessing walks the run tree once and writes four tidy tables into the run d
 
 Superresolution's simulated mis-mapping matrices are pipeline outputs rather than
 preprocessed tables. They are published once per reference set at
-`<pipeline-dir>/mismapping/<reference-set>/mismapping_matrix.csv`; the benchmark
+`<pipeline-dir>/mismapping/<reference-set>/mismapping_matrix.{csv,npz}`; the benchmark
 report discovers and summarises them from that location.
 
 The report then reads those CSVs (all heavy compute is already done) and builds the plots.

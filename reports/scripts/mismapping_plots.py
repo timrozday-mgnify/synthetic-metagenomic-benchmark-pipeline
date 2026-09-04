@@ -23,13 +23,93 @@ _BAND = 13
 _PAD_ANGLE = 0.006
 
 
+def load_npz_mismapping_matrix(path: Path, max_references: int = 80
+                               ) -> tuple[pd.DataFrame, str, int]:
+    """Load a superresolution ``.npz`` matrix, retaining its most mis-mapped references.
+
+    Two layouts, both written by ``superresolution-amplicon``:
+
+    * **labelled CSR** — one row and column per reference.
+    * **grouped** (``format='grouped'``) — ``M[a, j] = S[group[a], group[j]]`` over the
+      *distinct* amplicons, because a tie-cluster matrix is constant on exact-duplicate
+      groups. A GTDB-scale reference set is 10^6 references and 10^5 groups, and its
+      square form does not exist anywhere; the figure is therefore drawn over groups,
+      each labelled by one member reference and its group size.
+
+      Grouped cells carry ``S[a, b] * size[b]`` — the probability a read from group ``a``
+      lands anywhere in group ``b`` — not the per-reference ``S[a, b]``. Rows still sum
+      to 1, and the two agree exactly when every group is a singleton, but a
+      99,590-member duplicate group has a per-reference diagonal of 1e-5 and would read
+      as an empty heatmap while actually keeping all of its mass.
+
+    Returns the sub-matrix, its flavour, and the number of rows the full matrix has.
+    """
+    with np.load(path, allow_pickle=False) as archive:
+        grouped = "format" in archive and str(archive["format"]) == "grouped"
+        indptr, indices, data = archive["indptr"], archive["indices"], archive["data"]
+        shape = tuple(int(n) for n in archive["shape"])
+        stored = archive["refseqs"]
+        refseqs = (stored.tobytes().decode().split("\n") if stored.dtype == np.uint8
+                   else stored.astype(str).tolist())
+        group = archive["group"] if grouped else None
+
+    rows = np.repeat(np.arange(shape[0]), np.diff(indptr))
+    if group is None:
+        keep = np.sort(np.argsort(-_offdiagonal_mass(indptr, indices, data, shape))[:max_references])
+        labels = [refseqs[index] for index in keep]
+        total, flavour = shape[0], "amplicon"
+    else:
+        # Rank groups by how many references' worth of mass leaves them: a duplicate
+        # group of 5,000 leaking 1% matters more than a singleton leaking 40%.
+        sizes = np.bincount(group, minlength=shape[0])
+        leaked = sizes * (1.0 - _diagonal(indptr, indices, data, shape[0]))
+        keep = np.sort(np.argsort(-leaked)[:max_references])
+        order = np.argsort(group, kind="stable")[::-1]
+        representative = np.zeros(shape[0], dtype=np.int64)
+        representative[group[order]] = order          # reversed, so the first member wins
+        labels = [f"{refseqs[representative[g]]} (x{sizes[g]})" for g in keep]
+        total, flavour = len(refseqs), "amplicon (grouped)"
+
+    position = {index: slot for slot, index in enumerate(keep)}
+    block = np.zeros((len(keep), len(keep)), dtype=float)
+    for source, column, value in zip(rows, indices, data):
+        row_slot, column_slot = position.get(int(source)), position.get(int(column))
+        if row_slot is not None and column_slot is not None:
+            block[row_slot, column_slot] = value * (1 if group is None else sizes[column])
+    return pd.DataFrame(block, index=labels, columns=labels), flavour, total
+
+
+def _diagonal(indptr: np.ndarray, indices: np.ndarray, data: np.ndarray, n: int) -> np.ndarray:
+    """Diagonal of a CSR matrix given its raw arrays."""
+    diagonal = np.zeros(n, dtype=float)
+    for row in range(n):
+        span = slice(indptr[row], indptr[row + 1])
+        hit = indices[span] == row
+        if hit.any():
+            diagonal[row] = data[span][hit][0]
+    return diagonal
+
+
+def _offdiagonal_mass(indptr: np.ndarray, indices: np.ndarray, data: np.ndarray,
+                      shape: tuple[int, int]) -> np.ndarray:
+    """Row + column off-diagonal mass per reference, the same rank the dense path uses."""
+    rows = np.repeat(np.arange(shape[0]), np.diff(indptr))
+    off = rows != indices
+    mass = np.zeros(shape[0], dtype=float)
+    np.add.at(mass, rows[off], data[off])
+    np.add.at(mass, indices[off], data[off])
+    return mass
+
+
 def load_mismapping_matrix(path: Path, max_references: int = 80) -> tuple[pd.DataFrame, str, int]:
-    """Load a dense or sparse matrix, retaining its most mis-mapped references.
+    """Load a dense, sparse, or ``.npz`` matrix, retaining its most mis-mapped references.
 
     Sparse shotgun matrices use source/destination/probability triplets.  Limiting
     those to their largest off-diagonal masses avoids materialising a potentially
     very large chunk-by-chunk square frame merely to draw a report figure.
     """
+    if path.suffix == ".npz":
+        return load_npz_mismapping_matrix(path, max_references)
     header = pd.read_csv(path, nrows=0).columns.tolist()
     sparse_columns = next(
         (columns for columns in (("src_chunk", "dst_chunk", "prob"), ("src", "dst", "prob"))

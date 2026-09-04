@@ -427,15 +427,63 @@ superresolution pipelines via a nested `nextflow run`. The repo is named by
 `--sr_shotgun_repo` / `--sr_amplicon_repo` at `--sr_revision`; a local checkout path
 works in the same slot (handy for testing unpushed changes).
 
-Both infer composition by Bayesian inversion of a mis-mapping matrix measured by
-simulate-and-map, so they resolve genomes that share near-identical sequence — the
-case sylph and mapseq collapse. The benchmark materialises that expensive matrix once
-per superresolution reference set, then supplies it to every matching sample-level
-run. It is published as
-`<outdir>/mismapping/<reference-set>/mismapping_matrix.csv`; sample
+Both infer composition by Bayesian inversion of a mis-mapping matrix, so they resolve
+genomes that share near-identical sequence — the case sylph and mapseq collapse. The
+benchmark materialises that matrix once per superresolution reference set, then supplies
+it to every matching sample-level run. It is published as
+`<outdir>/mismapping/<reference-set>/mismapping_matrix.{csv,npz}`, alongside the nested
+run's `mismapping_provenance.json` recording how it was actually built; sample
 `profiling/sr/` directories retain the composition and diagnostics only. A named
 collection is one shared reference set, while `database: self` is one reference set
 per source sample (shared across that sample's subsampling depths).
+
+The extension follows whatever the nested pipeline writes — current
+`superresolution-amplicon` emits a compressed `.npz` (a labelled CSR, or the *grouped*
+form for database-scale reference sets, which stores one entry per distinct amplicon pair
+instead of per reference pair). Everything downstream, including
+`reports/scripts/mismapping_plots.py`, reads all three forms.
+
+### Benchmarking how `M` is built
+
+`superresolution-amplicon` can build `M` several ways, and which one to use is itself a
+benchmark question. The mode is fixed per benchmark run — set it, give the run its own
+`--outdir`, and compare the reports:
+
+| param | values | meaning |
+|-------|--------|---------|
+| `--sr_amplicon_mismapping_method` | `simulate` \| `align` | Measure `M` by simulating errored reads and mapping them, or read it off reference-to-reference distances. |
+| `--sr_amplicon_align_backend` | `minimap2` \| `exact-hash` \| `kmer` | `align` only. All-vs-all alignment; byte-identical amplicon grouping; or grouping widened to `align_tau` by a pigeonhole filter. |
+| `--sr_amplicon_align_tau` | integer | Cluster radius in edit operations. `0` for `exact-hash`, `>= 1` for `kmer`. |
+| `--sr_amplicon_matrix_args` | free-form flags | Anything without a named param above (`--align_ambiguity_weight`, `--max_ambiguous_bases`, `--max_postings`, `--sim_n_per_ref`, `--sim_error_model` …). |
+| `--sr_shotgun_matrix_args` | free-form flags | The same escape hatch for the shotgun sibling. |
+
+These reach the **matrix build only**: per-sample inference runs receive the finished
+matrix through `--mismapping_matrix` and never build one. Invalid combinations are
+rejected before any reads are generated.
+
+> **Nested flags must travel on `meta`, not be read from `params` in a process script.**
+> Nextflow hashes a task from its declared inputs and its *source* script, not from the
+> interpolated command line. A flag read out of `params` inside a `script:` block leaves
+> the task hash unchanged, so `-resume` hands a run that differs only by that flag the
+> previous run's output — a mode sweep silently compares one matrix against itself. The
+> `PROFILE` subworkflow therefore composes `matrix_args` / `inference_args` and stamps
+> them onto `meta`, which *is* hashed. The mode is also mixed into the nested work-dir
+> key so the nested run's own `-resume` cache is not shared either. **Follow this pattern
+> for any new nested knob** — the failure is silent, and it produces a plausible-looking
+> benchmark.
+
+Verified live across all four modes on the `tests/data` fixtures: each writes a distinct
+matrix and a `mismapping_provenance.json` recording what was actually built.
+
+```bash
+# simulate-and-map (the nested default) vs three alignment modes, one outdir each
+for mode in "simulate" "align minimap2 0" "align exact-hash 0" "align kmer 1"; do
+  set -- $mode
+  nextflow run . -profile docker --input samplesheet.yaml --outdir "results/M_$1_${2:-none}_${3:-0}" \
+    --sr_amplicon_mismapping_method "$1" \
+    ${2:+--sr_amplicon_align_backend "$2"} ${2:+--sr_amplicon_align_tau "${3:-0}"}
+done
+```
 
 Neither needs an external database: the only reference input is one combined FASTA
 over the community, which the pipeline builds for you with headers

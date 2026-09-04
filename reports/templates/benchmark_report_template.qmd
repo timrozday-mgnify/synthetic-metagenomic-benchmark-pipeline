@@ -100,7 +100,10 @@ PIPELINE_DIR = _pipeline_dir if _pipeline_dir.is_absolute() else RUN_DIR / _pipe
 _sr_mismapping_dir = Path(superresolution_mismapping_dir)
 SR_MISMAPPING_DIR = (_sr_mismapping_dir if _sr_mismapping_dir.is_absolute()
                      else PIPELINE_DIR / _sr_mismapping_dir)
-SR_MATRICES = sorted(SR_MISMAPPING_DIR.glob("*/mismapping_matrix.csv")) if SR_MISMAPPING_DIR.exists() else []
+SR_MATRICES = sorted(
+    p for pattern in ("*/mismapping_matrix.csv", "*/mismapping_matrix.npz")
+    for p in (SR_MISMAPPING_DIR.glob(pattern) if SR_MISMAPPING_DIR.exists() else [])
+)
 
 
 ABUNDANCE = pd.read_csv(_resolve(abundance_csv))

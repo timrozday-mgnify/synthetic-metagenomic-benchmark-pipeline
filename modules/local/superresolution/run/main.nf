@@ -39,6 +39,18 @@ def srPrimerArgs(meta) {
     pair ? "--fwd_primer ${pair[1]} --rev_primer ${pair[2]}" : ''
 }
 
+// Nested command-line flags composed by the PROFILE subworkflow and carried on `meta`.
+//
+// They are on `meta` rather than read from `params` here for one reason: Nextflow hashes
+// a task from its *source* script plus its declared inputs, NOT from the interpolated
+// command. A flag read out of `params` inside this script therefore leaves the task hash
+// unchanged, and `-resume` hands a run that differs only by that flag the previous run's
+// output — a mode sweep would silently compare one matrix against itself. `meta` is a
+// `val` input, so it is hashed, and changing a setting invalidates the task.
+def srNestedArgs(meta, key) {
+    (meta[key] ?: '').toString()
+}
+
 process SR_PULL_REPO {
     tag "${profiler}"
     label 'process_single'
@@ -103,8 +115,14 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     tuple val(meta), val(read_paths), path(refs), path(sr_assets)
 
     output:
-    tuple val(meta), path("${meta.id}.mismapping_matrix.csv"), emit: mismapping
-    path "versions.yml",                                       emit: versions
+    // The nested pipelines have moved from a dense CSV to a compressed .npz (labelled
+    // CSR, or the grouped form for database-scale reference sets). Accept either: this
+    // module only carries the file to --mismapping_matrix, which reads all of them.
+    tuple val(meta), path("${meta.id}.mismapping_matrix.{csv,npz}"), emit: mismapping
+    // How the matrix was actually built, lifted out of the nested bundle so a mode sweep
+    // can be attributed without re-deriving it from the benchmark's own params.
+    tuple val(meta), path("${meta.id}.mismapping_provenance.json"), optional: true, emit: provenance
+    path "versions.yml",                                            emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -122,9 +140,10 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     def launchRepo = remoteRepo ? '"\$launch_repo"' : repo
     def profArg = meta.sr_profile ? "-profile ${meta.sr_profile}" : ''
     def extraCfg = (meta.sr_configs ?: []).collect { "-c ${file(it, checkIfExists: true)}" }.join(' ')
-    def nestedDir = "${workflow.workDir}/nested/sr/${meta.id.replaceAll(/[^A-Za-z0-9._-]+/, '_')}"
+    def nestedDir = "${workflow.workDir}/nested/sr/${meta.id.replaceAll(/[^A-Za-z0-9._-]+/, '_')}${meta.matrix_key ?: ''}"
     def nestedArgs = [profArg, '--input sr_samplesheet.yml', '--outdir sr_out', extraCfg,
-                      srPrimerArgs(meta), "-w '${nestedDir}/work'", '-resume']
+                      srPrimerArgs(meta), srNestedArgs(meta, 'matrix_args'),
+                      "-w '${nestedDir}/work'", '-resume']
         .findAll { it }
         .join(' ')
     def platform = meta.platform ? "printf '  platform: %s\\n' '${meta.platform}' >> sr_samplesheet.yml" : 'true'
@@ -165,7 +184,7 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     # Current superresolution-amplicon and superresolution-shotgun revisions publish
     # generated matrices in an opaque-key bundle under mismapping/, rather than next
     # to a sample's composition. The representative nested run must yield one bundle.
-    find sr_out/mismapping -type f -name mismapping_matrix.csv -print 2>/dev/null | sort > matrix_paths.txt
+    find sr_out/mismapping -type f \\( -name mismapping_matrix.npz -o -name mismapping_matrix.csv \\) -print 2>/dev/null | sort > matrix_paths.txt
     matrix_count=\$(wc -l < matrix_paths.txt | tr -d ' ')
 
     # A nested failure downstream of the matrix can leave nothing published under
@@ -174,7 +193,7 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     # they are all byte-identical (a differing set means two producer tasks disagreed,
     # which is not something to guess at).
     if [ "\$matrix_count" -eq 0 ] && [ "\$nested_status" -ne 0 ]; then
-        find '${nestedDir}/work' -type f -name mismapping_matrix.csv -print 2>/dev/null | sort > work_matrices.txt
+        find '${nestedDir}/work' -type f \\( -name mismapping_matrix.npz -o -name mismapping_matrix.csv \\) -print 2>/dev/null | sort > work_matrices.txt
         distinct=\$(while read -r m; do cksum "\$m"; done < work_matrices.txt | awk '{print \$1, \$2}' | sort -u | wc -l | tr -d ' ')
         if [ -s work_matrices.txt ] && [ "\$distinct" -eq 1 ]; then
             echo "WARN: nested run exited \$nested_status without publishing a matrix; recovering it from the nested work dir." >&2
@@ -194,7 +213,12 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
         exit 1
     fi
     matrix_path=\$(sed -n '1p' matrix_paths.txt)
-    cp "\$matrix_path" ${meta.id}.mismapping_matrix.csv
+    cp "\$matrix_path" "${meta.id}.mismapping_matrix.\${matrix_path##*.}"
+    # Sits beside the matrix inside the nested bundle. Absent from a work-dir recovery,
+    # and from a sibling that does not write one, so its absence is not an error.
+    if [ -f "\$(dirname "\$matrix_path")/provenance.json" ]; then
+        cp "\$(dirname "\$matrix_path")/provenance.json" ${meta.id}.mismapping_provenance.json
+    fi
     if [ "\$nested_status" -ne 0 ]; then
         echo "WARN: nested superresolution run exited \$nested_status but produced the mismapping matrix; continuing." >&2
     fi
@@ -208,8 +232,22 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
 
     stub:
     def repo = meta.profiler == 'sr_amplicon' ? params.sr_amplicon_repo : params.sr_shotgun_repo
+    // Each sibling's real extension, so the stub exercises the same discovery, output
+    // glob and publishing paths as a live run. Nothing downstream of a stub reads the
+    // contents, so an empty .npz is enough — its name is the part under test.
+    def stubMatrix = meta.profiler == 'sr_amplicon'
+        ? "touch ${meta.id}.mismapping_matrix.npz"
+        : "echo 'src,dst,prob' > ${meta.id}.mismapping_matrix.csv"
     """
-    echo 'src,dst,prob' > ${meta.id}.mismapping_matrix.csv
+    ${stubMatrix}
+
+    # The composed mode flags, in the slot a live run fills with the nested pipeline's
+    # own provenance.json. A stub cannot run the nested pipeline, but it can prove the
+    # sweep params reached its command line — a silent empty string here would make
+    # every mode in a sweep produce the same matrix.
+    cat <<-EOF > ${meta.id}.mismapping_provenance.json
+    {"stub": true, "matrix_args": "${srNestedArgs(meta, 'matrix_args')}"}
+    EOF
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -257,18 +295,11 @@ process RUN_SUPERRESOLUTION {
     def launchRepo = remoteRepo ? '"\$launch_repo"' : repo
     def prof_arg  = meta.sr_profile ? "-profile ${meta.sr_profile}" : ''
     def extra_cfg = (meta.sr_configs ?: []).collect { "-c ${file(it, checkIfExists: true)}" }.join(' ')
-    // Pass presence-gate settings explicitly rather than via sr_configs: the nested
-    // amplicon and shotgun pipelines have different defaults and can be swept
-    // independently in one benchmark invocation.
-    def srKind = meta.profiler == 'sr_amplicon' ? 'amplicon' : 'shotgun'
-    def presence = params["sr_${srKind}_infer_presence"]
-    def presencePrior = params["sr_${srKind}_infer_presence_prior"]
-    def presenceTemp = params["sr_${srKind}_infer_presence_temp"]
-    def presenceArgs = []
-    if (presence != null) presenceArgs << "--infer_presence ${presence}"
-    if (presencePrior != null) presenceArgs << "--infer_presence_prior ${presencePrior}"
-    if (presenceTemp != null) presenceArgs << "--infer_presence_temp ${presenceTemp}"
-    def presenceArg = presenceArgs.join(' ')
+    // Presence-gate settings, composed onto meta by the PROFILE subworkflow so they
+    // are part of the task hash — see srNestedArgs. Passed explicitly rather than via
+    // sr_configs because the nested amplicon and shotgun pipelines have different
+    // defaults and are swept independently.
+    def presenceArg = srNestedArgs(meta, 'inference_args')
     // Persistent home for the nested run's cache + work dir, keyed by the batch identity
     // (reference set + the exact set of samples): stable across outer runs and distinct
     // between concurrently running batches — two runs must never share one nested cache.
