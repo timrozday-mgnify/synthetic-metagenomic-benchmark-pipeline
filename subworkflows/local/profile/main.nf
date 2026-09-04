@@ -30,6 +30,48 @@ def srSetKey(meta, base) {
     "${base}:${meta.profiler}${meta.primer ? ':' + meta.primer : ''}".toString()
 }
 
+// Nested superresolution command-line flags, composed here and stamped onto `meta` so
+// they reach the tasks as a hashed input. Composing them inside the process script
+// instead would leave the task hash unchanged when a setting changes, and `-resume`
+// would hand a sweep the previous setting's result. See srNestedArgs in the module.
+
+// Mis-mapping *mode*, for the matrix build only: the per-sample inference runs get the
+// finished matrix through --mismapping_matrix and never build one. The named params
+// cover superresolution-amplicon's three mode knobs; sr_<kind>_matrix_args is the escape
+// hatch for the rest, and for the shotgun sibling, whose knobs differ.
+def srMatrixArgs(meta) {
+    def kind = meta.profiler == 'sr_amplicon' ? 'amplicon' : 'shotgun'
+    def flags = []
+    if (kind == 'amplicon') {
+        ['mismapping_method', 'align_backend', 'align_tau'].each { name ->
+            def value = params["sr_amplicon_${name}"]
+            if (value != null) flags << "--${name} ${value}"
+        }
+    }
+    def extra = params["sr_${kind}_matrix_args"]
+    if (extra) flags << extra.toString()
+    flags.join(' ')
+}
+
+// Presence/absence gate, for the inference runs.
+def srInferenceArgs(meta) {
+    def kind = meta.profiler == 'sr_amplicon' ? 'amplicon' : 'shotgun'
+    def flags = []
+    ['infer_presence', 'infer_presence_prior', 'infer_presence_temp'].each { name ->
+        def value = params["sr_${kind}_${name}"]
+        if (value != null) flags << "--${name} ${value}"
+    }
+    flags.join(' ')
+}
+
+// Short digest of the matrix mode, mixed into the nested work dir so two benchmark runs
+// differing only by mode never share a nested -resume cache either.
+def srMatrixKey(meta) {
+    def args = srMatrixArgs(meta)
+    args ? '-' + java.security.MessageDigest.getInstance('MD5')
+                     .digest(args.bytes).encodeHex().toString()[0..7] : ''
+}
+
 workflow PROFILE {
     take:
     ch_reads         // [ val(meta), reads ]                 meta: id, mode, profiler, database
@@ -244,7 +286,9 @@ workflow PROFILE {
             // Stamp the set onto every meta: it names the batch's nested work dir and tag,
             // and without it two flavours of the same single sample would collide there.
             def rows = [metas, readsList, refsList].transpose()
-                .collect { meta, reads, refs -> [ meta + [ reference_set: referenceSet ], reads, refs ] }
+                .collect { meta, reads, refs ->
+                    [ meta + [ reference_set: referenceSet,
+                               inference_args: srInferenceArgs(meta) ], reads, refs ] }
                 .sort { a, b -> a[0].id <=> b[0].id }
             [ referenceSet, rows ]
         }
@@ -261,6 +305,8 @@ workflow PROFILE {
                 id: "mismapping_${referenceSet.replaceAll(/[^A-Za-z0-9._-]+/, '_')}",
                 reference_set: referenceSet,
                 reference_set_dir: referenceSet.replaceAll(/[^A-Za-z0-9._-]+/, '_'),
+                matrix_args: srMatrixArgs(meta),
+                matrix_key: srMatrixKey(meta),
             ]
             [ representative, (reads instanceof List ? reads : [reads])*.toString(), refs ]
         }

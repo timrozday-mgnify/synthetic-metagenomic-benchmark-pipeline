@@ -90,6 +90,28 @@ workflow {
         error "params.step must be one of: all | generate | profile | train (got '${params.step}')"
     }
 
+    // superresolution mis-mapping mode. Checked here rather than only inside the nested
+    // run, which is minutes of read generation away: a typo in a sweep should fail in
+    // the first second, not after the reads are made.
+    if (params.sr_amplicon_mismapping_method != null
+        && !(params.sr_amplicon_mismapping_method in ['simulate', 'align'])) {
+        error "sr_amplicon_mismapping_method must be 'simulate' or 'align' " +
+              "(got '${params.sr_amplicon_mismapping_method}')"
+    }
+    if (params.sr_amplicon_align_backend != null) {
+        if (!(params.sr_amplicon_align_backend in ['minimap2', 'exact-hash', 'kmer'])) {
+            error "sr_amplicon_align_backend must be 'minimap2', 'exact-hash' or 'kmer' " +
+                  "(got '${params.sr_amplicon_align_backend}')"
+        }
+        if (params.sr_amplicon_mismapping_method == 'simulate') {
+            error "sr_amplicon_align_backend only applies to " +
+                  "sr_amplicon_mismapping_method = 'align'"
+        }
+    }
+    if (params.sr_amplicon_align_tau != null && (params.sr_amplicon_align_tau as int) < 0) {
+        error "sr_amplicon_align_tau must be >= 0 (got '${params.sr_amplicon_align_tau}')"
+    }
+
     // YAML samplesheet: either a bare list of sample maps, or a map with
     // `samples:` (the list) and an optional `databases:` block of named sequence
     // collections used to build/select profiler DBs. See README for the schema.

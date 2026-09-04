@@ -129,9 +129,10 @@ nextflow_pipeline {
                 // A reusable matrix is published per reference set, rather than once
                 // inside every sample's profiling directory.
                 { assert path("${params.outdir}/mismapping/self_S1_sr_shotgun/mismapping_matrix.csv").exists() },
-                { assert path("${params.outdir}/mismapping/self_S2_sr_amplicon/mismapping_matrix.csv").exists() },
+                { assert path("${params.outdir}/mismapping/self_S2_sr_amplicon/mismapping_matrix.npz").exists() },
                 { assert path("${params.outdir}/mismapping/srA_sr_shotgun/mismapping_matrix.csv").exists() },
                 { assert !path("${params.outdir}/S1/profiling/sr/S1.mismapping_matrix.csv").exists() },
+                { assert !path("${params.outdir}/S2/profiling/sr/S2.mismapping_matrix.npz").exists() },
 
                 // Only the 'self' samples build their own references (S1, S2); S3 and S4
                 // share the collection's. One matrix build AND one batched inference run
@@ -145,6 +146,37 @@ nextflow_pipeline {
 
                 // S1 also lists sylph in profilers: same reads, second profile.
                 { assert path("${params.outdir}/S1/S1.sylph_profile.tsv").exists() }
+            )
+        }
+    }
+
+    test("mis-mapping mode reaches the nested matrix build - stub") {
+        tag "stub"
+        options "-stub"
+        when {
+            params {
+                input  = "${projectDir}/tests/samplesheets/superresolution.yaml"
+                outdir = "$outputDir"
+                sr_amplicon_mismapping_method = "align"
+                sr_amplicon_align_backend     = "kmer"
+                sr_amplicon_align_tau         = 1
+                sr_amplicon_matrix_args       = "--align_ambiguity_weight 0.3"
+                sr_shotgun_matrix_args        = "--sim_n_per_chunk 25"
+            }
+        }
+        then {
+            def amplicon = path("${params.outdir}/mismapping/self_S2_sr_amplicon/mismapping_provenance.json").text
+            def shotgun  = path("${params.outdir}/mismapping/self_S1_sr_shotgun/mismapping_provenance.json").text
+            assertAll(
+                { assert workflow.success },
+                // Every amplicon knob, named and free-form, on the build command line.
+                { assert amplicon.contains("--mismapping_method align") },
+                { assert amplicon.contains("--align_backend kmer") },
+                { assert amplicon.contains("--align_tau 1") },
+                { assert amplicon.contains("--align_ambiguity_weight 0.3") },
+                // The shotgun sibling has different knobs and must not inherit these.
+                { assert shotgun.contains("--sim_n_per_chunk 25") },
+                { assert !shotgun.contains("align_backend") }
             )
         }
     }
