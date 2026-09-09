@@ -10,7 +10,9 @@ Run `python scripts/sr_sweep.py --selfcheck` to exercise the grid expansion and 
 database block without touching the pipeline.
 """
 import itertools
+import math
 import sys
+from collections import Counter
 from pathlib import Path
 
 import yaml
@@ -118,6 +120,49 @@ def n_matrices(sweep_settings):
                 for s in sweep_settings})
 
 
+def logistic_fracs(n, k):
+    """n fractions in [0,1], symmetric, denser near the 0/1 extremes (logistic
+    spacing). Endpoints are rescaled to land exactly on 0 and 1."""
+    s = [1 / (1 + math.exp(-k * (2 * i / (n - 1) - 1))) for i in range(n)]
+    lo, hi = s[0], s[-1]
+    return [(v - lo) / (hi - lo) for v in s]
+
+
+def sweep_pair(cfg):
+    """(species, major_id, minor_id) - the one species with two panel entries, whose
+    split the abundance sweep varies. major is the first listed of the two."""
+    counts = Counter(_species(m) for m in cfg["panel"])
+    dup = sorted(sp for sp, n in counts.items() if n == 2)
+    if len(dup) != 1:
+        sys.exit("config.yaml: an abundance sweep (sweep.n_samples > 1) needs exactly "
+                 f"one species with two panel entries; found {dup or 'none'}")
+    major, minor = (m["id"] for m in cfg["panel"] if _species(m) == dup[0])
+    return dup[0], major, minor
+
+
+def _species(member):
+    return taxonomy(member).rsplit(";", 1)[-1]
+
+
+def samples(cfg):
+    """[(sample_id, {genome_id: abundance})], one entry per sweep sample - the single
+    source of truth for sample naming, shared by both phases. `sweep.n_samples` unset
+    or 1 keeps the original single flat, equal-abundance `community` sample; higher
+    sweeps the intra-species split of the doubled panel member from 0 -> 1 (logistic
+    spacing, `sweep.steepness`), every other species staying at 1."""
+    sweep = cfg.get("sweep") or {}
+    n = int(sweep.get("n_samples") or 1)
+    flat = {m["id"]: 1 for m in cfg["panel"]}
+    if n < 2:
+        return [("community", flat)]
+    _sp, major, minor = sweep_pair(cfg)
+    out = []
+    for i, a in enumerate(logistic_fracs(n, float(sweep.get("steepness", 6.0))), 1):
+        # major + minor always sum to 1, i.e. one species' worth, like every other.
+        out.append((f"S{i:02d}_a{a:.2f}", {**flat, major: a, minor: 1 - a}))
+    return out
+
+
 def depths(cfg):
     """Subsample depths, `None` for full depth. One benchmark dir per depth."""
     v = cfg["reads"].get("subsample") or [None]
@@ -143,6 +188,20 @@ def _selfcheck():
     assert taxonomy({"id": "bacteroides_fragilis"}) == "Bacteria;Bacteroides;fragilis"
     assert taxonomy({"id": "methanobrevibacter_smithii", "kingdom": "archaea"}) \
         == "Archaea;Methanobrevibacter;smithii"
+
+    # No `sweep:` -> the original single flat community.
+    panel = [{"id": "a_one"}, {"id": "b_two"},
+             {"id": "b_two_strain2", "taxonomy": "Bacteria;B;two"}]
+    cfg["panel"] = panel
+    assert samples(cfg) == [("community", {"a_one": 1, "b_two": 1, "b_two_strain2": 1})]
+
+    # Abundance sweep: unique ids, the pair splits 0 -> 1, everything else fixed.
+    cfg["sweep"] = {"n_samples": 5, "steepness": 6.0}
+    sm = samples(cfg)
+    assert len(sm) == 5 and len({i for i, _ in sm}) == 5, sm
+    assert sm[0][1]["b_two"] == 0 and sm[-1][1]["b_two"] == 1, sm
+    for _i, ab in sm:
+        assert ab["a_one"] == 1 and abs(ab["b_two"] + ab["b_two_strain2"] - 1) < 1e-9, ab
     print("sr_sweep selfcheck OK")
 
 

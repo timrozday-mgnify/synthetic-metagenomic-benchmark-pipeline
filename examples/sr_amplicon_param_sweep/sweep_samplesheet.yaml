@@ -75,19 +75,380 @@ sr_settings:
   infer_presence_prior: 0.001
   infer_presence_temp: 1.0
 samples:
-- sample: community.515-YF-806BR
+- sample: S01_a0.00.515-YF-806BR
   profilers:
   - sr_amplicon
-  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/community.515-YF-806BR
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S01_a0.00.515-YF-806BR
   database: community_v4
   primers:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-- sample: community.515-YF-806BR
+- sample: S01_a0.00.515-YF-806BR
   profilers:
   - sr_amplicon
-  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/community.515-YF-806BR/subsample_100000
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S01_a0.00.515-YF-806BR/subsample_100000
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  subsample: 100000
+- sample: S02_a0.00.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S02_a0.00.515-YF-806BR
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S02_a0.00.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S02_a0.00.515-YF-806BR/subsample_100000
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  subsample: 100000
+- sample: S03_a0.01.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S03_a0.01.515-YF-806BR
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S03_a0.01.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S03_a0.01.515-YF-806BR/subsample_100000
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  subsample: 100000
+- sample: S04_a0.01.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S04_a0.01.515-YF-806BR
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S04_a0.01.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S04_a0.01.515-YF-806BR/subsample_100000
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  subsample: 100000
+- sample: S05_a0.03.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S05_a0.03.515-YF-806BR
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S05_a0.03.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S05_a0.03.515-YF-806BR/subsample_100000
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  subsample: 100000
+- sample: S06_a0.05.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S06_a0.05.515-YF-806BR
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S06_a0.05.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S06_a0.05.515-YF-806BR/subsample_100000
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  subsample: 100000
+- sample: S07_a0.10.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S07_a0.10.515-YF-806BR
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S07_a0.10.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S07_a0.10.515-YF-806BR/subsample_100000
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  subsample: 100000
+- sample: S08_a0.17.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S08_a0.17.515-YF-806BR
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S08_a0.17.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S08_a0.17.515-YF-806BR/subsample_100000
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  subsample: 100000
+- sample: S09_a0.28.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S09_a0.28.515-YF-806BR
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S09_a0.28.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S09_a0.28.515-YF-806BR/subsample_100000
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  subsample: 100000
+- sample: S10_a0.42.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S10_a0.42.515-YF-806BR
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S10_a0.42.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S10_a0.42.515-YF-806BR/subsample_100000
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  subsample: 100000
+- sample: S11_a0.58.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S11_a0.58.515-YF-806BR
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S11_a0.58.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S11_a0.58.515-YF-806BR/subsample_100000
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  subsample: 100000
+- sample: S12_a0.72.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S12_a0.72.515-YF-806BR
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S12_a0.72.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S12_a0.72.515-YF-806BR/subsample_100000
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  subsample: 100000
+- sample: S13_a0.83.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S13_a0.83.515-YF-806BR
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S13_a0.83.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S13_a0.83.515-YF-806BR/subsample_100000
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  subsample: 100000
+- sample: S14_a0.90.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S14_a0.90.515-YF-806BR
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S14_a0.90.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S14_a0.90.515-YF-806BR/subsample_100000
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  subsample: 100000
+- sample: S15_a0.95.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S15_a0.95.515-YF-806BR
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S15_a0.95.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S15_a0.95.515-YF-806BR/subsample_100000
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  subsample: 100000
+- sample: S16_a0.97.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S16_a0.97.515-YF-806BR
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S16_a0.97.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S16_a0.97.515-YF-806BR/subsample_100000
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  subsample: 100000
+- sample: S17_a0.99.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S17_a0.99.515-YF-806BR
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S17_a0.99.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S17_a0.99.515-YF-806BR/subsample_100000
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  subsample: 100000
+- sample: S18_a0.99.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S18_a0.99.515-YF-806BR
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S18_a0.99.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S18_a0.99.515-YF-806BR/subsample_100000
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  subsample: 100000
+- sample: S19_a1.00.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S19_a1.00.515-YF-806BR
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S19_a1.00.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S19_a1.00.515-YF-806BR/subsample_100000
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  subsample: 100000
+- sample: S20_a1.00.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S20_a1.00.515-YF-806BR
+  database: community_v4
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S20_a1.00.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_param_sweep/S20_a1.00.515-YF-806BR/subsample_100000
   database: community_v4
   primers:
   - pair_id: 515-YF-806BR

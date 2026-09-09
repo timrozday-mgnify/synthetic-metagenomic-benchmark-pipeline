@@ -20,24 +20,37 @@ sys.path.insert(0, str(Path(__file__).resolve().parent / "scripts"))
 import sr_sweep as sw
 
 HERE = Path(__file__).resolve().parent
-SAMPLE = "community"
 
 
 def main():
     cfg = sw.load_config(sys.argv[1] if len(sys.argv) > 1 else HERE / "config.yaml")
     reads, train = cfg["reads"], cfg["train"]
 
-    # Equal abundance for every panel member: this example sweeps parameters, not
-    # composition, so the community is a flat mixture.
+    # One row per sweep sample: a flat equal-abundance `community` with no `sweep:`
+    # block, otherwise `sweep.n_samples` samples varying the doubled species' split.
     (HERE / "genomes").mkdir(exist_ok=True)
-    csv = HERE / "genomes" / f"{SAMPLE}.csv"
-    with open(csv, "w") as fh:
-        fh.write("genome_id,fasta_path,abundance\n")
-        for m in cfg["panel"]:
-            fh.write(f"{m['id']},{sw.resolve(cfg, m['ssu'])},1\n")
+    rows = []
+    for sample, abundance in sw.samples(cfg):
+        csv = HERE / "genomes" / f"{sample}.csv"
+        with open(csv, "w") as fh:
+            fh.write("genome_id,fasta_path,abundance\n")
+            for m in cfg["panel"]:
+                fh.write(f"{m['id']},{sw.resolve(cfg, m['ssu'])},{abundance[m['id']]:.6g}\n")
+        rows.append(_row(cfg, sample, csv))
 
-    row = {
-        "sample": SAMPLE,
+    doc = {"databases": sw.database_block(cfg), "samples": rows}
+    with open(HERE / "samplesheet.yaml", "w") as fh:
+        sw.dump_yaml(doc, fh)
+
+    print(f"Wrote samplesheet.yaml: {len(rows)} sample(s) x {len(cfg['primers'])} "
+          f"primer pair(s) x {len(sw.depths(cfg))} depth(s), {len(cfg['panel'])} "
+          f"genomes in '{cfg['database']['name']}'")
+
+
+def _row(cfg, sample, csv):
+    reads, train = cfg["reads"], cfg["train"]
+    return {
+        "sample": sample,
         "train_id": train["id"],
         "train_fastq_1": sw.resolve(cfg, train["fastq_1"]),
         "train_fastq_2": sw.resolve(cfg, train["fastq_2"]),
@@ -53,13 +66,6 @@ def main():
         "profilers": ["sr_amplicon"],
         "database": cfg["database"]["name"],
     }
-    doc = {"databases": sw.database_block(cfg), "samples": [row]}
-    with open(HERE / "samplesheet.yaml", "w") as fh:
-        sw.dump_yaml(doc, fh)
-
-    print(f"Wrote samplesheet.yaml: 1 row x {len(cfg['primers'])} primer pair(s) x "
-          f"{len(sw.depths(cfg))} depth(s), {len(cfg['panel'])} genomes in "
-          f"'{cfg['database']['name']}'")
 
 
 if __name__ == "__main__":

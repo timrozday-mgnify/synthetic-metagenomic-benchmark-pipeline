@@ -1,9 +1,20 @@
 # superresolution-amplicon parameter sweep
 
-Compares **superresolution-amplicon settings against one another** on a fixed synthetic
-community, rather than comparing profilers. Every panel member sits at equal abundance;
-what varies is the parameter grid, and every grid point is scored against the same
+Compares **superresolution-amplicon settings against one another** on a synthetic
+community, rather than comparing profilers. Every grid point is scored against the same
 ground truth.
+
+Two independent sweeps run at once:
+
+- **Composition** (`sweep:` in `config.yaml`, the same shape as
+  `examples/subspecies_v4_sweep`): the one species with two panel entries is split
+  major 0 → 1 across `sweep.n_samples` samples (logistic spacing, `sweep.steepness`,
+  denser at the extremes), always summing to 1, while every other species stays at equal
+  abundance. Set `n_samples: 1` (or drop the block) for a single flat `community` sample.
+- **Parameters** (`sr_sweep.grid:`): the superresolution-amplicon knobs.
+
+Both multiply: `n_samples` × `reads.subsample` depths × grid points profiles. The shipped
+config is 20 × 2 × 6 = 240 — cheap only because of the two reuse tricks below.
 
 The two things that make this cheap enough to be a grid rather than a series of separate
 runs:
@@ -49,7 +60,8 @@ touching the pipeline.
 
 Two runs, back to back:
 
-1. `generate_samplesheet.py` → `samplesheet.yaml` (+ `genomes/community.csv`), then
+1. `generate_samplesheet.py` → `samplesheet.yaml` (+ one `genomes/<sample>.csv` per
+   sweep sample), then
    `--step all`. Trains the error model, generates the amplicon reads at every
    `reads.subsample` depth, builds `community_v4` in-pipeline from the samplesheet's
    `databases:` block, and profiles each depth **once** at the nested pipeline's own
@@ -65,18 +77,22 @@ Per grid point, next to the truth it is scored against:
 
 ```
 results/sr_amplicon_param_sweep/
-  community.515-YF-806BR/
+  S01_a0.00.515-YF-806BR/                             <- one per sweep sample
     truth.tsv
-    community.515-YF-806BR.simulate.p01.sr_profile.tsv
-    community.515-YF-806BR.exact.p01.sr_profile.tsv
+    S01_a0.00.515-YF-806BR.simulate.p01.sr_profile.tsv
+    S01_a0.00.515-YF-806BR.exact.p01.sr_profile.tsv
     ...
-    profiling/sr/community.515-YF-806BR.obs.mseq.gz     <- phase 1; reused by phase 2
+    profiling/sr/S01_a0.00.515-YF-806BR.obs.mseq.gz     <- phase 1; reused by phase 2
     subsample_100000/...                                <- same, per depth
+  S02_a0.00.515-YF-806BR/ ...
   mismapping/
     community_v4_sr_amplicon_515-YF-806BR-<digest>/     <- one per matrix knob combo
       mismapping_matrix.npz
       mismapping_provenance.json                        <- how that matrix was built
 ```
+
+The reference set does not depend on the composition, so all `n_samples` samples share
+those matrices — the abundance sweep costs inference runs, not matrices.
 
 The `<digest>` in a reference-set directory is of the matrix knobs; `mismapping_provenance.json`
 inside it spells them out, so a grid point is attributable without re-deriving it from

@@ -4,9 +4,10 @@
 #
 # Edit the two train FASTQ paths and the panel's `ssu` paths, then `./run.sh`.
 #
-# The community is FIXED (every panel member at equal abundance). What is swept is the
-# superresolution-amplicon parameters, via the samplesheet's `sr_settings:` fan-out:
-# every generated benchmark dir is profiled once per grid point, each writing its own
+# Two things are swept, independently: the community's intra-species split (`sweep:`
+# below, as in examples/subspecies_v4_sweep) and the superresolution-amplicon parameters
+# (`sr_sweep:`, via the samplesheet's `sr_settings:` fan-out). Every generated benchmark
+# dir is profiled once per grid point, each writing its own
 # `<id>.<setting>.sr_profile.tsv` next to the same truth.tsv.
 
 train:
@@ -22,6 +23,18 @@ reads:
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0
+
+# Abundance sweep, same shape as examples/subspecies_v4_sweep: the one species with two
+# panel entries (bacteroides_uniformis / _strain2 below) is split major 0 -> 1 across
+# n_samples samples, always summing to 1, while every other species stays at 1. Higher
+# steepness bunches more samples near the 0/1 extremes.
+# Cost is multiplicative with everything else: n_samples x depths x sr grid points
+# inference runs - but the mis-mapping matrix count is unchanged (the reference set is
+# the same for every sample).
+# Omit this block (or set n_samples: 1) for the original single flat `community` sample.
+sweep:
+  n_samples: 20
+  steepness: 6.0
 
 # In-silico PCR pair the reads are amplified with. sr_amplicon cuts its OWN reference
 # amplicons with the same pair, so this is emitted onto every samplesheet row - a

@@ -27,19 +27,19 @@ import sr_sweep as sw
 
 HERE = Path(__file__).resolve().parent
 DEFAULT_RESULTS_DIR = HERE.parent.parent / "results" / "sr_amplicon_param_sweep"
-SAMPLE = "community"
 
 
 def benchmark_dirs(cfg, results_dir):
     """(sample_id, dir, depth, pair) per generated benchmark dir, mirroring the generate
-    step's fan-out: one sample per primer pair, one subdir per subsample depth."""
-    for pair in cfg["primers"]:
-        sample = f"{SAMPLE}.{pair['pair_id']}"
-        for depth in sw.depths(cfg):
-            d = results_dir / sample
-            if depth:
-                d = d / f"subsample_{depth}"
-            yield sample, d, depth, pair
+    step's fan-out: one sample per sweep sample x primer pair, one subdir per depth."""
+    for base, _abundance in sw.samples(cfg):
+        for pair in cfg["primers"]:
+            sample = f"{base}.{pair['pair_id']}"
+            for depth in sw.depths(cfg):
+                d = results_dir / sample
+                if depth:
+                    d = d / f"subsample_{depth}"
+                yield sample, d, depth, pair
 
 
 def main():
