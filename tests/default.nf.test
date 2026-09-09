@@ -201,6 +201,35 @@ nextflow_pipeline {
         }
     }
 
+    test("sr_settings fan-out - stub") {
+        tag "stub"
+        options "-stub"
+        // Stub twin of the e2e "sr_settings fan-out" test below, over the same
+        // samplesheet. It guards that test's task counts and output paths on every PR —
+        // e2e runs only on main, and a count that drifts there is not caught until after
+        // merge (which is exactly how the GENOME_BLENDER_GENERATE count went stale).
+        when {
+            params {
+                input  = "${projectDir}/tests/samplesheets/sr_settings_e2e.yaml"
+                outdir = "$outputDir"
+            }
+        }
+        then {
+            assertAll(
+                { assert workflow.success },
+                { assert path("${params.outdir}/E1/E1.align.p01.sr_profile.tsv").exists() },
+                { assert path("${params.outdir}/E1/E1.align.p001.sr_profile.tsv").exists() },
+                { assert path("${params.outdir}/E1/E1.sim.p01.sr_profile.tsv").exists() },
+                { assert workflow.trace.succeeded().findAll { it.name.contains("BUILD_SUPERRESOLUTION_MISMAPPING") }.size() == 2 },
+                { assert workflow.trace.succeeded().findAll { it.name.contains("RUN_SUPERRESOLUTION") }.size() == 3 },
+                { assert workflow.trace.succeeded().findAll { it.name.contains("GENOME_BLENDER_GENERATE") }.size() == 1 },
+                { assert path("${params.outdir}/mismapping").list().size() == 2 },
+                // No sample supplies `mseq:`, so each run publishes its own classification.
+                { assert path("${params.outdir}/E1/profiling/sr/E1.align.p01.obs.mseq.gz").exists() }
+            )
+        }
+    }
+
     test("mis-mapping mode reaches the nested matrix build - stub") {
         tag "stub"
         options "-stub"
@@ -518,6 +547,66 @@ nextflow_pipeline {
                 { assert path("${params.outdir}/S1/S1.sylph_profile.tsv").readLines().get(0)
                     == "genome_id\tpredicted_rel_abundance\tpredicted_tax_rel_abundance" },
                 { assert path("${params.outdir}/S1/profiling/sylph/S1.sylph.tsv").exists() }
+            )
+        }
+    }
+
+    test("sr_settings fan-out") {
+        tag "e2e"
+        // The fan-out for real: one set of reads, three superresolution-amplicon
+        // settings, two of which share a mis-mapping matrix. Everything here is checked
+        // by the stub test too, except the only things a stub cannot check — that the
+        // nested pipeline accepts these flag combinations, that two genuinely different
+        // matrix modes both produce a usable matrix, and that each setting's inference
+        // yields a real profile rather than the same one three times.
+        when {
+            params {
+                input      = "${projectDir}/tests/samplesheets/sr_settings_e2e.yaml"
+                outdir     = "$outputDir"
+                sr_profile = "docker"
+                sr_configs = [ "${projectDir}/tests/sr_fast.config" ]
+            }
+        }
+        then {
+            def profiles = ["align.p01", "align.p001", "sim.p01"].collect {
+                path("${params.outdir}/E1/E1.${it}.sr_profile.tsv")
+            }
+            assertAll(
+                { assert workflow.success },
+
+                // One profile per setting, all beside the one truth they are scored against.
+                { assert path("${params.outdir}/E1/E1.truth.tsv").exists() },
+                { assert profiles.every { it.exists() } },
+                { assert profiles.every { p -> p.readLines().get(0)
+                    == "genome_id\tpredicted_rel_abundance\tpredicted_tax_rel_abundance" } },
+
+                // Real inference, not an empty contract: the community's genomes, and
+                // abundances that renormalise to 1.
+                { assert profiles.every { p -> p.readLines().size() > 1 } },
+                { assert profiles.every { p -> p.readLines().drop(1)
+                    .collect { it.split("\t")[0] }.every { it in ["genomeA", "genomeB"] } } },
+                { assert profiles.every { p -> Math.abs(p.readLines().drop(1)
+                    .collect { it.split("\t")[1] as double }.sum() - 1.0) < 1e-5 } },
+
+                // The cost story: three settings, but the two agreeing on every matrix
+                // knob share a reference set and so build ONE matrix between them.
+                { assert workflow.trace.succeeded().findAll { it.name.contains("BUILD_SUPERRESOLUTION_MISMAPPING") }.size() == 2 },
+                { assert workflow.trace.succeeded().findAll { it.name.contains("RUN_SUPERRESOLUTION") }.size() == 3 },
+                { assert workflow.trace.succeeded().findAll { it.name.contains("GENOME_BLENDER_GENERATE") }.size() == 1 },
+
+                // Each matrix records the mode it was actually built in, so a swept point
+                // is attributable. Both modes must appear, or the settings collapsed.
+                { assert path("${params.outdir}/mismapping").list().size() == 2 },
+                { assert path("${params.outdir}/mismapping").list()
+                    .collect { path("${it}/mismapping_provenance.json").text }
+                    .any { it.contains("\"mismapping_method\": \"align\"") } },
+                { assert path("${params.outdir}/mismapping").list()
+                    .collect { path("${it}/mismapping_provenance.json").text }
+                    .any { it.contains("\"mismapping_method\": \"simulate\"") } },
+
+                // The classification a sweep would feed back as `mseq:` is published for
+                // each setting's run, since none of them was given one.
+                { assert path("${params.outdir}/E1/profiling/sr/E1.align.p01.obs.mseq.gz").exists() }
             )
         }
     }
