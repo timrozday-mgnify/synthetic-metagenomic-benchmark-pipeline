@@ -181,17 +181,22 @@ nextflow_pipeline {
                 { assert path("${params.outdir}/S2/S2.fast.sr_profile.tsv").exists() },
                 { assert path("${params.outdir}/S2/S2.fast_strict.sr_profile.tsv").exists() },
                 { assert path("${params.outdir}/S2/S2.simulated.sr_profile.tsv").exists() },
+                { assert path("${params.outdir}/S2/S2.kmer_fixed.sr_profile.tsv").exists() },
+                { assert path("${params.outdir}/S2/S2.kmer_latent.sr_profile.tsv").exists() },
 
                 // fast + fast_strict differ only in the inference knobs, so they share a
-                // reference set and its matrix; `simulated` changes the matrix mode and
-                // gets its own. Two matrices, three inference runs.
-                { assert workflow.trace.succeeded().findAll { it.name.contains("BUILD_SUPERRESOLUTION_MISMAPPING") }.size() == 2 },
-                { assert workflow.trace.succeeded().findAll { it.name.contains("RUN_SUPERRESOLUTION") }.size() == 3 },
-                { assert path("${params.outdir}/mismapping").list().size() == 2 },
+                // reference set and its matrix; so do kmer_fixed + kmer_latent, which
+                // differ only in whether the distance decay is fitted. `simulated`
+                // changes the matrix mode and gets its own. Three matrices, five
+                // inference runs.
+                { assert workflow.trace.succeeded().findAll { it.name.contains("BUILD_SUPERRESOLUTION_MISMAPPING") }.size() == 3 },
+                { assert workflow.trace.succeeded().findAll { it.name.contains("RUN_SUPERRESOLUTION") }.size() == 5 },
+                { assert path("${params.outdir}/mismapping").list().size() == 3 },
 
-                // The knobs really reach the two matrix builds, differently.
+                // The knobs really reach the matrix builds, differently.
                 { assert provenance.any { it.contains("--align_backend exact-hash") } },
                 { assert provenance.any { it.contains("--mismapping_method simulate") } },
+                { assert provenance.any { it.contains("--align_distance_decay 0.007") } },
 
                 // The supplied classification is in the nested samplesheet, so the nested
                 // run skips its own mapping — and therefore publishes none of its own.

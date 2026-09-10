@@ -455,8 +455,10 @@ benchmark question. The mode is fixed per benchmark run — set it, give the run
 |-------|--------|---------|
 | `--sr_amplicon_mismapping_method` | `simulate` \| `align` | Measure `M` by simulating errored reads and mapping them, or read it off reference-to-reference distances. |
 | `--sr_amplicon_align_backend` | `minimap2` \| `exact-hash` \| `kmer` | `align` only. All-vs-all alignment; byte-identical amplicon grouping; or grouping widened to `align_tau` by a pigeonhole filter. |
-| `--sr_amplicon_align_tau` | integer | Cluster radius in edit operations. `0` for `exact-hash`, `>= 1` for `kmer`. A radius above `0` needs `--align_distance_decay` with it (below) — without one, every reference inside the radius is treated as an exact duplicate and near-identical strains come out far more confusable than the mapper actually finds them. |
-| `--sr_amplicon_matrix_args` | free-form flags | Anything without a named param above (`--align_distance_decay`, `--align_ambiguity_weight`, `--max_ambiguous_bases`, `--max_postings`, `--sim_n_per_ref`, `--sim_error_model` …). Set `--align_distance_decay` to about the per-base error rate whenever `align_tau >= 1`: at 0.5% flat error, `--align_distance_decay 0.007` fits the `simulate` measurement on the two-strain *B. uniformis* set better than `exact-hash` does, where the default of `1` misses it by 2.5x on mean row L1. |
+| `--sr_amplicon_align_tau` | integer | Cluster radius in edit operations. `0` for `exact-hash`, `>= 1` for `kmer`. A radius above `0` needs a decay with it (below) — without one, every reference inside the radius is treated as an exact duplicate and near-identical strains come out far more confusable than the mapper actually finds them. |
+| `--sr_amplicon_align_distance_decay` | number \| `auto` | A cluster member `d` edits away takes `c**d` of a uniform share. A no-op at `align_tau 0`, and the whole story above it: set it to about the per-base error rate. At 0.5% flat error, `0.007` fits the `simulate` measurement on the two-strain *B. uniformis* set better than `exact-hash` does, where the default of `1` misses it by 2.5x on mean row L1. `auto` has the nested run measure that rate off its error model instead of taking a number on trust (0.0059 at the nested defaults). Or leave it and set `--sr_amplicon_infer_distance_decay`, which fits it per sample. |
+| `--sr_amplicon_align_decay_model` | absolute path | `auto` only: a **pre-trained** skiver `model.pt` whose per-base error rate is measured, instead of the flat rates. Nothing is trained for it — `align` mode never runs the nested skiver subworkflow. |
+| `--sr_amplicon_matrix_args` | free-form flags | Anything without a named param above (`--align_ambiguity_weight`, `--max_ambiguous_bases`, `--max_postings`, `--sim_n_per_ref`, `--sim_error_model` …). A knob that *does* have a named param must not also appear here: the run refuses a flag given twice rather than letting the nested `nextflow run` silently keep the last one. |
 | `--sr_shotgun_matrix_args` | free-form flags | The same escape hatch for the shotgun sibling. |
 
 These reach the **matrix build only**: per-sample inference runs receive the finished
@@ -502,7 +504,9 @@ sr_settings:
   - {name: exact.p001,   mismapping_method: align, align_backend: exact-hash, align_tau: 0,
                          infer_presence_prior: 0.001}
   - {name: kmer1.p01,    mismapping_method: align, align_backend: kmer, align_tau: 1,
-                         matrix_args: '--align_distance_decay 0.007',
+                         align_distance_decay: 0.007, infer_presence_prior: 0.01}
+  - {name: kmer1_latent.p01, mismapping_method: align, align_backend: kmer, align_tau: 1,
+                         align_distance_decay: 0.007, infer_distance_decay: true,
                          infer_presence_prior: 0.01}
 ```
 
@@ -513,9 +517,10 @@ back to the corresponding param, so a partial entry still works.
 What it costs is the point:
 
 - Entries agreeing on every **matrix** knob (`mismapping_method`, `align_backend`,
-  `align_tau`, `matrix_args`) share a reference set and therefore **one** mis-mapping
-  matrix — `exact.p01` and `exact.p001` above build one matrix between them and split
-  only at the inference run. The matrix mode is mixed into the reference-set key (and so
+  `align_tau`, `align_distance_decay`, `align_decay_model`, `matrix_args`) share a
+  reference set and therefore **one** mis-mapping matrix — `exact.p01` and `exact.p001`
+  above build one matrix between them and split only at the inference run, and so do
+  `kmer1.p01` and `kmer1_latent.p01`, which differ only in whether the decay is fitted. The matrix mode is mixed into the reference-set key (and so
   into the `mismapping/<set>/` directory name) whenever `sr_settings` is in play.
 - Entries differing in the **inference** knobs are separate nested runs, because those
   are per-run CLI flags in the nested pipeline, not per-row samplesheet fields.
@@ -570,6 +575,17 @@ over `0.001, 0.01, 0.1` and use temperatures `1.0, 2.0` (the production defaults
 `infer_mode=nuts` does not support it. `reports/scripts/benchmark_preprocess.py` now
 adds an `sr_presence` summary row (0.5 call threshold) with presence Jaccard, precision,
 recall, and calls per sample against the realised zero/non-zero truth.
+
+`--sr_amplicon_infer_distance_decay` (with `--sr_amplicon_infer_decay_sigma`) is the
+other inference-side knob, and it is `sr_amplicon`-only. The mis-mapping matrix is built
+once per reference set and shared by every sample in it, so a fixed
+`align_distance_decay` has to suit all of them; the latent fits the decay per sample
+against that same matrix, reported as `distance_decay` in the nested
+`inference_diagnostics.csv`. It needs `align_tau >= 1` — at tau 0 every distance is 0 and
+the decay cancels — and it is identified by rows holding both an exact duplicate and a
+near neighbour, so on a reference set without those it falls back on its prior. Since it
+changes no matrix knob, a fixed-vs-latent pair in one `sr_settings` grid costs one extra
+inference run and no extra matrix; both sweep examples ship that pair.
 
 A single `SR_PULL_REPO` task pulls each nested pipeline once per run, into its own
 asset dir rather than the shared `~/.nextflow/assets`: concurrent pulls would

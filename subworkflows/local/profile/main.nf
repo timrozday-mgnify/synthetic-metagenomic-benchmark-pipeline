@@ -53,33 +53,42 @@ def srSetKey(meta, base) {
 
 // Mis-mapping *mode*, for the matrix build only: the per-sample inference runs get the
 // finished matrix through --mismapping_matrix and never build one. The named params
-// cover superresolution-amplicon's three mode knobs; sr_<kind>_matrix_args is the escape
-// hatch for the rest, and for the shotgun sibling, whose knobs differ.
+// cover superresolution-amplicon's mode and decay knobs; sr_<kind>_matrix_args is the
+// escape hatch for the rest, and for the shotgun sibling, whose knobs differ.
 def srMatrixArgs(meta) {
     def kind = meta.profiler == 'sr_amplicon' ? 'amplicon' : 'shotgun'
-    def flags = []
-    if (kind == 'amplicon') {
-        ['mismapping_method', 'align_backend', 'align_tau'].each { name ->
-            def value = srOpt(meta, kind, name)
-            if (value != null) flags << "--${name} ${value}"
-        }
-    }
-    def extra = srOpt(meta, kind, 'matrix_args')
-    if (extra) flags << extra.toString()
-    flags.join(' ')
+    def named = (kind == 'amplicon')
+        ? ['mismapping_method', 'align_backend', 'align_tau', 'align_distance_decay',
+           'align_decay_model']
+        : []
+    srArgs(meta, kind, named, 'matrix_args')
 }
 
-// Presence/absence gate, for the inference runs.
+// Presence/absence gate and the latent distance decay, for the inference runs. The decay
+// knobs are superresolution-amplicon's alone; the shotgun sibling has no such parameter
+// and would reject the flag.
 def srInferenceArgs(meta) {
     def kind = meta.profiler == 'sr_amplicon' ? 'amplicon' : 'shotgun'
-    def flags = []
-    ['infer_presence', 'infer_presence_prior', 'infer_presence_temp'].each { name ->
-        def value = srOpt(meta, kind, name)
-        if (value != null) flags << "--${name} ${value}"
+    def named = ['infer_presence', 'infer_presence_prior', 'infer_presence_temp']
+    if (kind == 'amplicon') named += ['infer_distance_decay', 'infer_decay_sigma']
+    srArgs(meta, kind, named, 'inference_args')
+}
+
+// The named knobs above, plus the free-form escape hatch, as one nested command line.
+// A knob given both ways is refused rather than resolved: the nested `nextflow run` takes
+// the last occurrence of a repeated --param, so the loser would be silently dropped and a
+// sweep would compare a setting against itself.
+def srArgs(meta, kind, named, extraKey) {
+    def flags = named.collect { name -> [name, srOpt(meta, kind, name)] }
+                     .findAll { name, value -> value != null }
+    def extra = srOpt(meta, kind, extraKey)?.toString() ?: ''
+    // Single-quoted, not a slashy string: '$)' would read as an interpolation.
+    def clash = flags*.get(0).findAll { name -> extra =~ ('(^|\\s)--' + name + '(\\s|=|$)') }
+    if (clash) {
+        error "superresolution ${kind}: ${clash.collect { "--${it}" }.join(', ')} set both " +
+              "as a named knob and inside ${extraKey}. Set it in one place."
     }
-    def extra = srOpt(meta, kind, 'inference_args')
-    if (extra) flags << extra.toString()
-    flags.join(' ')
+    (flags.collect { name, value -> "--${name} ${value}" } + [extra]).findAll { it }.join(' ')
 }
 
 // Short digest of the matrix mode, mixed into the nested work dir so two benchmark runs

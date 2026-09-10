@@ -88,8 +88,10 @@ Two runs, back to back:
 
 ## What it costs
 
-The shipped config is 20 samples × 2 depths = 40 benchmark dirs × 6 grid points = **240
-profiles**, off **3** mis-mapping matrices. Three things keep that affordable, and all
+The shipped config is 20 samples × 2 depths = 40 benchmark dirs × 8 grid points = **320
+profiles**, off **3** mis-mapping matrices — `kmer1` and `kmer1_latent` differ only in
+whether the distance decay is fitted per sample (`infer_distance_decay`), so they share
+the matrix and that comparison costs inference runs only. Three things keep that affordable, and all
 three are about the size of the reference set rather than the size of the grid:
 
 - **The reads are mapped once.** mapseq against a GTDB-scale set is by far the most
@@ -98,9 +100,10 @@ three are about the size of the reference set rather than the size of the grid:
   that differ. A dir with no phase-1 mseq is not an error — the nested run maps it
   itself, and the generator warns.
 - **The matrix is shared where it can be.** Grid points agreeing on every matrix knob
-  (`mismapping_method`, `align_backend`, `align_tau`, `matrix_args`) build one matrix
-  between them and split only at the inference run — which is why the presence prior is
-  swept here rather than in a second run.
+  (`mismapping_method`, `align_backend`, `align_tau`, `align_distance_decay`,
+  `matrix_args`) build one matrix between them and split only at the inference run —
+  which is why the presence prior, and whether the decay is fitted, are swept here rather
+  than in separate runs.
 - **`mismapping_method: simulate` is left out of the grid.** It simulates and maps
   `sim_n_per_ref` reads for *every reference in the set*: fine for a 20-genome
   collection, not for GTDB. The grid sweeps the alignment backends instead
