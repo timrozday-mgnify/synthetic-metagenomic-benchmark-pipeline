@@ -81,13 +81,19 @@ def parseProfilers(row, defaultProfilers) {
     list.collect { it?.toString()?.trim() }.findAll { it }.unique()
 }
 
-// Knobs a superresolution `sr_settings:` entry may set. The first four reach the
-// matrix build, the rest the inference run; a key absent from an entry falls back to
-// the matching sr_<amplicon|shotgun>_<key> param. Kept as a method, not a top-level
-// `def`: a script-level variable is local to the run body and invisible in here.
+// Knobs a superresolution `sr_settings:` entry may set. The first six reach the matrix
+// build, the rest the inference run; a key absent from an entry falls back to the
+// matching sr_<amplicon|shotgun>_<key> param. Kept as a method, not a top-level `def`: a
+// script-level variable is local to the run body and invisible in here.
+//
+// Which side a knob sits on is not cosmetic: entries agreeing on every matrix knob share
+// one mis-mapping matrix and split only at the (cheap) inference run, so an inference
+// knob swept alongside a matrix knob costs nothing extra.
 def srSettingKeys() {
-    ['mismapping_method', 'align_backend', 'align_tau', 'matrix_args',
-     'infer_presence', 'infer_presence_prior', 'infer_presence_temp', 'inference_args']
+    ['mismapping_method', 'align_backend', 'align_tau', 'align_distance_decay',
+     'align_decay_model', 'matrix_args',
+     'infer_presence', 'infer_presence_prior', 'infer_presence_temp',
+     'infer_distance_decay', 'infer_decay_sigma', 'inference_args']
 }
 
 // Superresolution parameter fan-out. A row's (or the samplesheet's) `sr_settings:` is

@@ -19,13 +19,17 @@ import yaml
 
 # Knobs an sr_settings entry may carry (mirrors srSettingKeys() in ../../main.nf).
 SETTING_KEYS = {
-    "mismapping_method", "align_backend", "align_tau", "matrix_args",
-    "infer_presence", "infer_presence_prior", "infer_presence_temp", "inference_args",
+    "mismapping_method", "align_backend", "align_tau", "align_distance_decay",
+    "align_decay_model", "matrix_args",
+    "infer_presence", "infer_presence_prior", "infer_presence_temp",
+    "infer_distance_decay", "infer_decay_sigma", "inference_args",
 }
 # The subset that changes the mis-mapping matrix. Settings agreeing on all of these
 # share one matrix and only re-run the (cheap) inference — which is what makes a grid
-# with several inference points affordable.
-MATRIX_KEYS = {"mismapping_method", "align_backend", "align_tau", "matrix_args"}
+# with several inference points affordable. Note which side `infer_distance_decay` is
+# on: fitting the decay per sample costs an inference run, not a matrix.
+MATRIX_KEYS = {"mismapping_method", "align_backend", "align_tau",
+               "align_distance_decay", "align_decay_model", "matrix_args"}
 
 
 def dump_yaml(doc, fh):

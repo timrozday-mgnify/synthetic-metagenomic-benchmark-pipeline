@@ -24,9 +24,18 @@ runs:
   them; phase 2 hands the classification back with the samplesheet's `mseq:` column and
   every grid point skips straight to the parts that differ.
 - **The mis-mapping matrix is shared where it can be.** Grid points agreeing on every
-  matrix knob (`mismapping_method`, `align_backend`, `align_tau`, `matrix_args`) belong
-  to one reference set and build one matrix between them; they split only at the
-  inference run. The shipped 3x2 grid is 6 profiles per benchmark dir off **3** matrices.
+  matrix knob (`mismapping_method`, `align_backend`, `align_tau`, `align_distance_decay`,
+  `matrix_args`) belong to one reference set and build one matrix between them; they split
+  only at the inference run. The shipped 4x2 grid is 8 profiles per benchmark dir off
+  **3** matrices — `kmer1` and `kmer1_latent` are the fourth point pair and cost no
+  matrix at all, because they differ only in `infer_distance_decay`.
+
+`kmer1` vs `kmer1_latent` is the question "does the distance decay have to be right at
+build time?". `kmer1` uses the `0.007` the matrix was built with for every sample;
+`kmer1_latent` fits the decay per sample against that same matrix. Since the abundance
+sweep varies only the community and not the error model, the two should agree here — the
+latent earns its keep on samples whose error rates differ, and this is the control that
+says what it costs when they do not.
 
 ## Fill in before running
 

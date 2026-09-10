@@ -201,14 +201,19 @@ for setting in SETTINGS:
     rows.append({
         "setting": setting,
         **{key: entry.get(key, "") for key in
-           ("mismapping_method", "align_backend", "align_tau", "matrix_args",
-            "infer_presence_prior")},
+           ("mismapping_method", "align_backend", "align_tau", "align_distance_decay",
+            "matrix_args", "infer_presence_prior", "infer_distance_decay")},
         "mean matrix diagonal": diag["mean_diagonal"].mean() if not diag.empty else np.nan,
+        # Only a setting fitting the decay reports one; blank everywhere else, which is
+        # what makes a fixed/latent pair readable side by side.
+        "mean fitted decay": (diag["distance_decay"].mean()
+                              if "distance_decay" in diag.columns else np.nan),
         "samples": diag["sample"].nunique() if not diag.empty else 0,
         "non-ok status": (diag["status"] != "ok").sum() if not diag.empty else 0,
     })
 SETTINGS_TABLE = pd.DataFrame(rows).set_index("setting")
-display(SETTINGS_TABLE.style.format({"mean matrix diagonal": "{:.4f}"}, na_rep="—"))
+display(SETTINGS_TABLE.style.format(
+    {"mean matrix diagonal": "{:.4f}", "mean fitted decay": "{:.4f}"}, na_rep="—"))
 ```
 
 `{python} DEFAULT_SETTING` is the un-suffixed run: the pipeline's default superresolution

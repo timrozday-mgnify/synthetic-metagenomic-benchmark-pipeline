@@ -1,10 +1,15 @@
 # superresolution parameter fan-out + supplied mapseq results.
 #
-# One set of amplicon reads, benchmarked under three named `sr_settings:` knob sets.
+# One set of amplicon reads, benchmarked under five named `sr_settings:` knob sets.
 # `fast` and `fast_strict` differ only in the presence-gate prior, so they share one
 # reference set and therefore ONE mis-mapping matrix, splitting only at the (cheap)
 # inference run. `simulated` changes the matrix mode, so it gets a reference set — and a
 # matrix — of its own.
+#
+# `kmer_fixed` and `kmer_latent` are the same pairing for the distance decay: one takes
+# the decay the matrix was built with, the other fits it per sample
+# (`infer_distance_decay`). Their matrix knobs are identical, so that comparison costs
+# one extra inference run and no extra matrix.
 #
 # `mseq:` hands the nested amplicon pipeline a mapseq classification of these reads
 # against this same reference set (a previous run's mapseq/<id>/<id>.obs.mseq.gz), so no
@@ -37,3 +42,16 @@ samples:
       - name: simulated
         mismapping_method: simulate
         infer_presence_prior: 0.01
+      - name: kmer_fixed
+        mismapping_method: align
+        align_backend: kmer
+        align_tau: 1
+        align_distance_decay: 0.007
+        infer_presence_prior: 0.01
+      - name: kmer_latent
+        mismapping_method: align
+        align_backend: kmer
+        align_tau: 1
+        align_distance_decay: 0.007
+        infer_presence_prior: 0.01
+        infer_distance_decay: true
