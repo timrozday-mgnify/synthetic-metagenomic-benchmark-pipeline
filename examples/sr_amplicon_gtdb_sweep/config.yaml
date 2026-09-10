@@ -59,6 +59,11 @@ generation_modes:
 #   matrix : mismapping_method, align_backend, align_tau, matrix_args
 #   infer  : infer_presence, infer_presence_prior, infer_presence_temp, inference_args
 #
+# Every `align_tau >= 1` point carries `--align_distance_decay 0.007`: without it a
+# reference one edit away shares a row equally with an exact duplicate, which on the
+# two-strain B. uniformis set is 2.5x worse than exact-hash on mean row L1. ~ the
+# per-base error rate is the right order. No-op (and unset) at align_tau 0.
+#
 # The matrix knobs are what cost: one mis-mapping matrix is built per DISTINCT
 # COMBINATION OF THEM, over the WHOLE reference set - GTDB, here, not the 20 genomes in
 # the panel. The inference knobs are free by comparison, which is why the presence prior
@@ -74,9 +79,9 @@ sr_sweep:
       - {name: exact, mismapping_method: align, align_backend: exact-hash, align_tau: 0,
          matrix_args: --align_ambiguity_weight 0.3}
       - {name: kmer1, mismapping_method: align, align_backend: kmer, align_tau: 1,
-         matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096}
+         matrix_args: --align_ambiguity_weight 0.3 --align_distance_decay 0.007 --max_postings 4096}
       - {name: kmer2, mismapping_method: align, align_backend: kmer, align_tau: 2,
-         matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096}
+         matrix_args: --align_ambiguity_weight 0.3 --align_distance_decay 0.007 --max_postings 4096}
       # - {name: simulate, mismapping_method: simulate}   # see the note above
     infer:
       - {name: p01, infer_presence: true, infer_presence_prior: 0.01, infer_presence_temp: 1.0}
