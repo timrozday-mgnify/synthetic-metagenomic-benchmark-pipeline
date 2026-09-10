@@ -522,7 +522,9 @@ What it costs is the point:
   and it carries the read-prep settings it was made with.
 
 `examples/sr_amplicon_param_sweep/` is a worked two-phase version of exactly this: one
-`--step all` run to generate and map, then one `--step profile` run over the whole grid.
+`--step all` run to generate and map, then one `--step profile` run over the whole grid. `examples/sr_amplicon_gtdb_sweep/` is the same two phases against a
+**pre-built** (`path:`) reference set the size of GTDB, over negative-binomial
+communities rather than a sub-species pair.
 
 Neither needs an external database: the only reference input is one combined FASTA
 over the community, which the pipeline builds for you with headers
