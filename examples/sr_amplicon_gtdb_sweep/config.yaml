@@ -1,0 +1,138 @@
+# Config for the GTDB superresolution-amplicon parameter sweep. This one file is the
+# single source of truth for both generator scripts - no paths or metadata are
+# hard-coded in Python. Relative paths resolve against this file's dir.
+#
+# It is the negative-binomial community of examples/abundance_nb_sample profiled with
+# the parameter grid of examples/sr_amplicon_param_sweep, against a PRE-BUILT reference
+# set (`database.path:`) standing in for GTDB. The shipped paths are dummies: fill in
+# the two train FASTQs, the panel's `ssu:` paths and `database.path:`, then `./run.sh`.
+
+train:
+  id: sc2200627
+  # Real reads the sequencing-error model is trained from (once, shared by all samples).
+  fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina        # 2x300 MiSeq amplicon tails may fit 'lq-illumina' better
+
+reads:
+  num_reads: 1000000           # 500k pairs x 2 (pipeline counts paired reads as pairs*2)
+  subsample: [none, 100000]    # one benchmark dir per depth; `none` = full depth
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+
+# Community model, identical to examples/abundance_nb_sample: each panel genome is drawn
+# INDEPENDENTLY per sample - Bernoulli(presence) decides whether it is there at all, and
+# if so NegBinom(mean, dispersion) sets its abundance. Seeded, so a rerun reproduces the
+# same 20 communities. A genome may override `presence:` and/or `nb: {mean?, dispersion?}`
+# inline in `panel`.
+#
+# Why this community and not the sub-species sweep of examples/sr_amplicon_param_sweep:
+# against a reference set the size of GTDB the interesting failure is not "can it split
+# two known strains" but "does it invent genomes that are not there". `presence: 0.6667`
+# leaves a third of the panel genuinely absent in each sample, and every one of GTDB's
+# other references is absent from every sample - so a setting's false-positive behaviour
+# is what this example measures.
+sampling:
+  n_samples: 20
+  seed: 1
+  presence: 0.6667              # Bernoulli p that each genome is present in a sample
+  negative_binomial:
+    mean: 20
+    dispersion: 1.0
+
+# One read-generation mode: V4 amplicons cut out of full-length 16S by in-silico PCR,
+# profiled with superresolution-amplicon. (The sibling NB example also sweeps a `wgs`
+# mode; this sweep is about the amplicon knobs, so there is nothing for it to do here.)
+generation_modes:
+  - name: amplicon_16s
+    source: ssu
+    mode: amplicon
+    profilers: [sr_amplicon]
+    primers:
+      - {pair_id: 515-YF-806BR, forward: GTGYCAGCMGCCGCGGTAA, reverse: GGACTACNVGGGTWTCTAAT}
+
+# The parameter grid, expanded into the samplesheet's `sr_settings:` list. Each axis is
+# a list of named knob maps and the sweep is their cartesian product; a point's name
+# (axis names joined with '.') becomes part of its output filename. Knob names are the
+# pipeline's sr_settings keys:
+#   matrix : mismapping_method, align_backend, align_tau, matrix_args
+#   infer  : infer_presence, infer_presence_prior, infer_presence_temp, inference_args
+#
+# The matrix knobs are what cost: one mis-mapping matrix is built per DISTINCT
+# COMBINATION OF THEM, over the WHOLE reference set - GTDB, here, not the 20 genomes in
+# the panel. The inference knobs are free by comparison, which is why the presence prior
+# is swept in the same run rather than in two.
+#
+# `mismapping_method: simulate` is deliberately absent: it simulates and maps
+# `sim_n_per_ref` reads for every reference in the set, which is fine for a 20-genome
+# collection and not fine for GTDB. Uncomment it only if you know the reference set is
+# small - and expect it to dominate the run.
+sr_sweep:
+  grid:
+    matrix:
+      - {name: exact, mismapping_method: align, align_backend: exact-hash, align_tau: 0,
+         matrix_args: --align_ambiguity_weight 0.3}
+      - {name: kmer1, mismapping_method: align, align_backend: kmer, align_tau: 1,
+         matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096}
+      - {name: kmer2, mismapping_method: align, align_backend: kmer, align_tau: 2,
+         matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096}
+      # - {name: simulate, mismapping_method: simulate}   # see the note above
+    infer:
+      - {name: p01, infer_presence: true, infer_presence_prior: 0.01, infer_presence_temp: 1.0}
+      - {name: p001, infer_presence: true, infer_presence_prior: 0.001, infer_presence_temp: 1.0}
+
+# The reference set under test. `path:` is a PRE-BUILT database directory, laid out the
+# way the pipeline publishes its own (`<outdir>/databases/<name>/`), which for
+# superresolution-amplicon means exactly one file:
+#
+#   <path>/<name>_ssu.sr_refs.fasta      headers `{genome_id}|{copy}|{original header}`
+#
+# Nothing is built during the run - the pipeline resolves that file and hands it to the
+# nested superresolution-amplicon runs. Point it at a GTDB SSU reference set built once,
+# out of band, and reuse it across every run.
+#
+# `genome_id` (the part before the first '|') is what a profile is reported under, and
+# truth.tsv is written per panel `id`. So THE PANEL IDS BELOW MUST BE THE IDS THIS FASTA
+# USES - GTDB accessions, when the FASTA is GTDB. The generator warns when they are not,
+# as long as the directory exists. The species slugs shipped here are placeholders that
+# match this repo's other examples; swap them for the accessions of the genomes the
+# `ssu:` FASTAs came from.
+#
+# To run the same sweep against a small collection the pipeline builds itself (a useful
+# control - a matrix over 20 references costs nothing), delete `path:` and set
+# `sequences_from_panel: true` instead.
+database:
+  name: gtdb_ssu_r220
+  profilers: [sr_amplicon]
+  path: /PATH/TO/gtdb_ssu_r220        # dir holding gtdb_ssu_r220_ssu.sr_refs.fasta
+  # sequences_from_panel: true        # build from `panel:` instead of using `path:`
+
+# One entry per genome in the synthetic community. Only `ssu:` (full-length 16S) is
+# needed: it feeds the in-silico PCR that generates the reads. The references the reads
+# are PROFILED against come from `database.path:`, not from here - which is exactly the
+# thing under test.
+#   id       : must match the reference id in the pre-built FASTA (see above)
+#   species  : used for the derived taxonomy; may repeat across ids
+#   ssu      : full-length 16S FASTA the V4 amplicons are cut from
+panel:
+  - {id: bacteroides_fragilis,        species: bacteroides_fragilis,        ssu: references/16S/bacteroides_fragilis.ssu.fasta}
+  - {id: bacteroides_thetaiotaomicron, species: bacteroides_thetaiotaomicron, ssu: references/16S/bacteroides_thetaiotaomicron.ssu.fasta}
+  - {id: bacteroides_uniformis,       species: bacteroides_uniformis,       ssu: references/16S/bacteroides_uniformis.ssu.fasta}
+  - {id: bacteroides_vulgatus,        species: bacteroides_vulgatus,        ssu: references/16S/bacteroides_vulgatus.ssu.fasta}
+  - {id: clostridium_bolteae,         species: clostridium_bolteae,         ssu: references/16S/clostridium_bolteae.ssu.fasta}
+  - {id: clostridium_perfringens,     species: clostridium_perfringens,     ssu: references/16S/clostridium_perfringens.ssu.fasta}
+  - {id: clostridium_ramosum,         species: clostridium_ramosum,         ssu: references/16S/clostridium_ramosum.ssu.fasta}
+  - {id: clostridium_saccharolyticum, species: clostridium_saccharolyticum, ssu: references/16S/clostridium_saccharolyticum.ssu.fasta}
+  - {id: collinsella_aerofaciens,     species: collinsella_aerofaciens,     ssu: references/16S/collinsella_aerofaciens.ssu.fasta}
+  - {id: coprococcus_comes,           species: coprococcus_comes,           ssu: references/16S/coprococcus_comes.ssu.fasta}
+  - {id: dorea_formicigenerans,       species: dorea_formicigenerans,       ssu: references/16S/dorea_formicigenerans.ssu.fasta}
+  - {id: eggerthella_lenta,           species: eggerthella_lenta,           ssu: references/16S/eggerthella_lenta.ssu.fasta}
+  - {id: eubacterium_rectale,         species: eubacterium_rectale,         ssu: references/16S/eubacterium_rectale.ssu.fasta}
+  - {id: fusobacterium_nucleatum,     species: fusobacterium_nucleatum,     ssu: references/16S/fusobacterium_nucleatum.ssu.fasta}
+  - {id: methanobrevibacter_smithii,  species: methanobrevibacter_smithii,  ssu: references/16S/methanobrevibacter_smithii.ssu.fasta, kingdom: archaea}
+  - {id: parabacteroides_merdae,      species: parabacteroides_merdae,      ssu: references/16S/parabacteroides_merdae.ssu.fasta}
+  - {id: roseburia_intestinalis,      species: roseburia_intestinalis,      ssu: references/16S/roseburia_intestinalis.ssu.fasta}
+  - {id: ruminococcus_gnavus,         species: ruminococcus_gnavus,         ssu: references/16S/ruminococcus_gnavus.ssu.fasta}
+  - {id: streptococcus_parasanguinis, species: streptococcus_parasanguinis, ssu: references/16S/streptococcus_parasanguinis.ssu.fasta}
+  - {id: streptococcus_salivarius,    species: streptococcus_salivarius,    ssu: references/16S/streptococcus_salivarius.ssu.fasta}

@@ -1,0 +1,424 @@
+databases:
+  gtdb_ssu_r220:
+    path: /PATH/TO/gtdb_ssu_r220
+samples:
+- sample: S01.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_gtdb_sweep/genomes/sample_01.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r220
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S02.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_gtdb_sweep/genomes/sample_02.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r220
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S03.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_gtdb_sweep/genomes/sample_03.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r220
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S04.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_gtdb_sweep/genomes/sample_04.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r220
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S05.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_gtdb_sweep/genomes/sample_05.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r220
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S06.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_gtdb_sweep/genomes/sample_06.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r220
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S07.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_gtdb_sweep/genomes/sample_07.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r220
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S08.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_gtdb_sweep/genomes/sample_08.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r220
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S09.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_gtdb_sweep/genomes/sample_09.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r220
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S10.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_gtdb_sweep/genomes/sample_10.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r220
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S11.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_gtdb_sweep/genomes/sample_11.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r220
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S12.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_gtdb_sweep/genomes/sample_12.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r220
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S13.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_gtdb_sweep/genomes/sample_13.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r220
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S14.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_gtdb_sweep/genomes/sample_14.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r220
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S15.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_gtdb_sweep/genomes/sample_15.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r220
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S16.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_gtdb_sweep/genomes/sample_16.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r220
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S17.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_gtdb_sweep/genomes/sample_17.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r220
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S18.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_gtdb_sweep/genomes/sample_18.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r220
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S19.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_gtdb_sweep/genomes/sample_19.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r220
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S20.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_gtdb_sweep/genomes/sample_20.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r220
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT

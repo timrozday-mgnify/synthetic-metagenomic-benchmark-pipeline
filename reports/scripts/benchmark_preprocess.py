@@ -54,6 +54,9 @@ SWEEP_X_RE = re.compile(r"_a([0-9]*\.?[0-9]+)$")
 # point (`S10_a0.42`) is shared across assays; the assay suffix must start with a
 # letter so the sweep fraction's own decimals aren't mistaken for it.
 SAMPLE_ASSAY_RE = re.compile(r"^(?P<sample>.*_a[0-9]*\.?[0-9]+)\.(?P<assay>[A-Za-z].*)$")
+# Runs without an abundance sweep have no `_a<frac>` suffix (`S01.wgs`), so the sweep
+# point is just the dot-free leading field.
+SAMPLE_ASSAY_PLAIN_RE = re.compile(r"^(?P<sample>[^.]+)\.(?P<assay>[A-Za-z].*)$")
 
 # Abundance is compared for up to four independent detection sources.
 SOURCE_ORDER = ["profiler", "reference", "sylph", "sr"]
@@ -76,7 +79,7 @@ def assay_label(raw: str) -> str:
 def split_sample_assay(dirname: str) -> tuple[str, str]:
     """Sample dir name -> (sweep_point, assay_label). Runs without an assay suffix
     (older single-assay layout) fall back to one `reads` assay."""
-    m = SAMPLE_ASSAY_RE.match(dirname)
+    m = SAMPLE_ASSAY_RE.match(dirname) or SAMPLE_ASSAY_PLAIN_RE.match(dirname)
     if m:
         return m.group("sample"), assay_label(m.group("assay"))
     return dirname, "reads"
@@ -226,6 +229,10 @@ def detect_sweep_pair(abundance: pd.DataFrame, override: str | None) -> list[str
     pooling assays would make every genome look like it varies."""
     if override:
         return [g.strip() for g in override.split(",") if g.strip()]
+    # No `_a<frac>` sweep encoding => not a sweep run. Without it every genome's target
+    # abundance varies (e.g. NB-sampled communities) and "varying" means nothing.
+    if "sweep_x" in abundance.columns and not abundance["sweep_x"].notna().any():
+        return []
     full = abundance[abundance["depth"] == "full"].copy()
     if "assay" not in full.columns:
         full["assay"] = "reads"
@@ -461,6 +468,16 @@ def run_demo() -> None:
         ("S10_a0.42", "515-YF-806BR"), split_sample_assay("S10_a0.42.amplicon_515YF-806BR_16s.515-YF-806BR")
     assert split_sample_assay("S10_a0.42.wgs") == ("S10_a0.42", "WGS")
     assert split_sample_assay("S10_a0.42") == ("S10_a0.42", "reads")
+    # Non-sweep runs: no `_a<frac>` suffix, so the leading dot-free field is the sample.
+    assert split_sample_assay("S01.amplicon_515YF-806BR_16s.515-YF-806BR") == \
+        ("S01", "515-YF-806BR"), split_sample_assay("S01.amplicon_515YF-806BR_16s.515-YF-806BR")
+    assert split_sample_assay("S01.wgs") == ("S01", "WGS")
+    assert split_sample_assay("S01") == ("S01", "reads")
+
+    # Non-sweep run: no sweep_x anywhere => no swept pair, however much targets vary.
+    nb = ab.assign(sweep_x=np.nan)
+    assert detect_sweep_pair(nb, None) == [], detect_sweep_pair(nb, None)
+    assert detect_sweep_pair(nb, "P,Q") == ["P", "Q"]
 
     # sylph accession -> genome_id via a samplesheet, incl. a `.fa` (not `.fasta`) genome.
     import tempfile

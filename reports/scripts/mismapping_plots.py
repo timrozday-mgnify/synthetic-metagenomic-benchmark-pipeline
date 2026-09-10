@@ -350,3 +350,80 @@ def _ribbon_path(source_span: tuple[float, float], target_span: tuple[float, flo
     return (f"M{sx0:.1f},{sy0:.1f} A{_RADIUS},{_RADIUS} 0 0 1 {sx1:.1f},{sy1:.1f} "
             f"Q{centre},{centre} {tx0:.1f},{ty0:.1f} A{_RADIUS},{_RADIUS} 0 0 1 {tx1:.1f},{ty1:.1f} "
             f"Q{centre},{centre} {sx0:.1f},{sy0:.1f} Z")
+
+
+def genome_mismapping_matrix(path: Path, max_references: int = 4000
+                             ) -> tuple[pd.DataFrame, float]:
+    """Aggregate a superresolution ``.npz`` matrix to one row/column per genome.
+
+    Reference labels are ``{genome_id}|{copy}|{orig}`` (``bin/build_sr_refs.py``), so the
+    genome-level probability that a read from genome ``a`` is assigned to genome ``b`` is
+    the mean over ``a``'s reference copies of the mass landing on any copy of ``b``. Rows
+    sum to 1, as they do per reference.
+
+    Grouped matrices store one row per *distinct* amplicon, holding the per-reference
+    probability ``S[g, h]`` (rows sum to 1 only after weighting by group size). Expanding
+    it back over members therefore splits a duplicate group's mass evenly across them,
+    which is the only defensible attribution when the amplicons are byte-identical — and
+    exactly the case a sub-species pair hits.
+
+    Returns the genome frame and the mean stored diagonal (the ``mean_diagonal`` the
+    nested pipeline records in ``inference_diagnostics.csv``, so a matrix can be matched
+    to the settings that used it).
+    """
+    with np.load(path, allow_pickle=False) as archive:
+        grouped = "format" in archive and str(archive["format"]) == "grouped"
+        indptr, indices, data = archive["indptr"], archive["indices"], archive["data"]
+        shape = tuple(int(n) for n in archive["shape"])
+        stored = archive["refseqs"]
+        refseqs = (stored.tobytes().decode().split("\n") if stored.dtype == np.uint8
+                   else stored.astype(str).tolist())
+        group = archive["group"] if grouped else None
+
+    rows = np.repeat(np.arange(shape[0]), np.diff(indptr))
+    mean_diagonal = float(_diagonal(indptr, indices, data, shape[0]).mean())
+    if len(refseqs) > max_references:
+        raise ValueError(f"{path} has {len(refseqs)} references; too many to densify")
+
+    genomes = [label.split("|", 1)[0] for label in refseqs]
+    order = sorted(set(genomes))
+    slot = {genome: index for index, genome in enumerate(order)}
+    matrix = np.zeros((len(order), len(order)), dtype=float)
+    counts = np.bincount([slot[g] for g in genomes], minlength=len(order))
+
+    if group is None:
+        for source, column, value in zip(rows, indices, data):
+            matrix[slot[genomes[source]], slot[genomes[column]]] += value
+    else:
+        members = [np.flatnonzero(group == g) for g in range(shape[0])]
+        for source, column, value in zip(rows, indices, data):
+            # Every member of `column` receives S[source, column], and every member of
+            # `source` sees that same row.
+            targets = np.bincount([slot[genomes[j]] for j in members[column]],
+                                  minlength=len(order))
+            for i in members[source]:
+                matrix[slot[genomes[i]]] += value * targets
+
+    return pd.DataFrame(matrix / counts[:, None], index=order, columns=order), mean_diagonal
+
+
+if __name__ == "__main__":
+    # Self-check: a grouped matrix whose two references are byte-identical duplicates
+    # must split its mass evenly between them and still leave rows summing to 1.
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmp:
+        npz = Path(tmp) / "m.npz"
+        # 3 references: a|0 and b|0 share group 0 (identical amplicons), c|0 is group 1.
+        np.savez(npz, format=np.array("grouped"), indptr=np.array([0, 2, 4]),
+                 indices=np.array([0, 1, 0, 1]), data=np.array([0.4, 0.2, 0.05, 0.9]),
+                 shape=np.array([2, 2]), group=np.array([0, 0, 1]),
+                 refseqs=np.frombuffer("a|0|x\nb|0|x\nc|0|x".encode(), dtype=np.uint8))
+        frame, mean_diagonal = genome_mismapping_matrix(npz)
+        assert list(frame.index) == ["a", "b", "c"], frame
+        assert np.allclose(frame.sum(axis=1), 1.0), frame
+        # Group 0 holds 0.8 over two members => 0.4 to itself, 0.4 to its duplicate.
+        assert np.allclose(frame.loc["a"], [0.4, 0.4, 0.2]), frame.loc["a"]
+        assert np.allclose(frame.loc["c"], [0.05, 0.05, 0.9]), frame.loc["c"]
+        assert np.isclose(mean_diagonal, 0.65), mean_diagonal
+    print("mismapping_plots self-check ok")
