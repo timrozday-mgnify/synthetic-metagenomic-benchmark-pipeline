@@ -455,8 +455,8 @@ benchmark question. The mode is fixed per benchmark run — set it, give the run
 |-------|--------|---------|
 | `--sr_amplicon_mismapping_method` | `simulate` \| `align` | Measure `M` by simulating errored reads and mapping them, or read it off reference-to-reference distances. |
 | `--sr_amplicon_align_backend` | `minimap2` \| `exact-hash` \| `kmer` | `align` only. All-vs-all alignment; byte-identical amplicon grouping; or grouping widened to `align_tau` by a pigeonhole filter. |
-| `--sr_amplicon_align_tau` | integer | Cluster radius in edit operations. `0` for `exact-hash`, `>= 1` for `kmer`. |
-| `--sr_amplicon_matrix_args` | free-form flags | Anything without a named param above (`--align_ambiguity_weight`, `--max_ambiguous_bases`, `--max_postings`, `--sim_n_per_ref`, `--sim_error_model` …). |
+| `--sr_amplicon_align_tau` | integer | Cluster radius in edit operations. `0` for `exact-hash`, `>= 1` for `kmer`. A radius above `0` needs `--align_distance_decay` with it (below) — without one, every reference inside the radius is treated as an exact duplicate and near-identical strains come out far more confusable than the mapper actually finds them. |
+| `--sr_amplicon_matrix_args` | free-form flags | Anything without a named param above (`--align_distance_decay`, `--align_ambiguity_weight`, `--max_ambiguous_bases`, `--max_postings`, `--sim_n_per_ref`, `--sim_error_model` …). Set `--align_distance_decay` to about the per-base error rate whenever `align_tau >= 1`: at 0.5% flat error, `--align_distance_decay 0.007` fits the `simulate` measurement on the two-strain *B. uniformis* set better than `exact-hash` does, where the default of `1` misses it by 2.5x on mean row L1. |
 | `--sr_shotgun_matrix_args` | free-form flags | The same escape hatch for the shotgun sibling. |
 
 These reach the **matrix build only**: per-sample inference runs receive the finished
@@ -501,6 +501,9 @@ sr_settings:
                          infer_presence_prior: 0.01}
   - {name: exact.p001,   mismapping_method: align, align_backend: exact-hash, align_tau: 0,
                          infer_presence_prior: 0.001}
+  - {name: kmer1.p01,    mismapping_method: align, align_backend: kmer, align_tau: 1,
+                         matrix_args: '--align_distance_decay 0.007',
+                         infer_presence_prior: 0.01}
 ```
 
 Each `sr_*` profiler on a row runs once per entry, publishing
