@@ -1,0 +1,641 @@
+---
+title: "Superresolution amplicon settings sweep"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-location: left
+    code-fold: true
+    code-tools: true
+    embed-resources: true
+execute:
+  warning: false
+jupyter:
+  kernelspec:
+    display_name: basicpython
+    language: python
+    name: basicpython
+params:
+  run_label: ""
+  run_dir: "."
+  pipeline_dir: "results/sr_amplicon_param_sweep"
+  samplesheet: "sweep_samplesheet.yaml"
+  superresolution_mismapping_dir: "mismapping"
+  report_scripts_dir: ""
+  subspecies: []
+  presence_threshold: 0.5
+  output_dir: ""
+---
+
+```{python}
+#| tags: [parameters]
+#| include: false
+# Default parameter values — overridden by -P flags at render time.
+run_label = ""
+run_dir = "."
+pipeline_dir = "results/sr_amplicon_param_sweep"
+samplesheet = "sweep_samplesheet.yaml"
+superresolution_mismapping_dir = "mismapping"
+report_scripts_dir = ""
+subspecies = []
+presence_threshold = 0.5
+output_dir = ""
+```
+
+```{python}
+#| echo: false
+#| output: false
+import json
+import os
+import re
+import sys
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import yaml
+from IPython.display import Markdown, display
+
+_script_candidates = [
+    Path(report_scripts_dir) if report_scripts_dir else None,
+    Path(os.environ["BENCHMARK_REPORT_SCRIPTS"])
+    if os.environ.get("BENCHMARK_REPORT_SCRIPTS") else None,
+    Path.cwd().parent / "synthetic-metagenomic-benchmark-pipeline" / "reports" / "scripts",
+]
+REPORT_SCRIPTS_DIR = next(
+    (path for path in _script_candidates if path and (path / "mismapping_plots.py").exists()),
+    None,
+)
+if REPORT_SCRIPTS_DIR is None:
+    raise FileNotFoundError("Could not locate reports/scripts/mismapping_plots.py")
+sys.path.insert(0, str(REPORT_SCRIPTS_DIR))
+from mismapping_plots import (genome_mismapping_matrix, load_mismapping_matrix,
+                              mismapping_heatmap, render_mismapping_chord)
+
+# Resolve run_dir whether the template is rendered directly or from a Taskfile elsewhere.
+_candidates = [Path(run_dir), *(p / run_dir for p in [Path.cwd(), *Path.cwd().parents])]
+RUN_DIR = next((p for p in _candidates if (p / pipeline_dir).exists()), Path(run_dir))
+_pipeline = Path(pipeline_dir)
+PIPELINE_DIR = _pipeline if _pipeline.is_absolute() else RUN_DIR / _pipeline
+SR_MISMAPPING_DIR = PIPELINE_DIR / superresolution_mismapping_dir
+_samplesheet = Path(samplesheet)
+SAMPLESHEET = _samplesheet if _samplesheet.is_absolute() else RUN_DIR / _samplesheet
+
+SWEEP_X_RE = re.compile(r"_a([0-9]*\.?[0-9]+)(?:\.|$)")
+DEFAULT_SETTING = "default"          # the un-suffixed run: pipeline-default sr knobs
+PALETTE = px.colors.qualitative.Safe
+
+
+def as_list(value):
+    """Return a Quarto list parameter, accepting a comma-separated CLI value too."""
+    if isinstance(value, str):
+        return [item.strip() for item in value.split(",") if item.strip()]
+    return [str(item).strip() for item in value if str(item).strip()]
+
+
+def sweep_x(sample_dir: str) -> float:
+    match = SWEEP_X_RE.search(sample_dir)
+    return float(match.group(1)) if match else np.nan
+
+
+def setting_of(path: Path, sample_dir: str, suffix: str) -> str:
+    """`<sample>.<setting><suffix>` -> setting; the un-suffixed file is the default run."""
+    stem = path.name[: -len(suffix)]
+    return stem[len(sample_dir) + 1:] if stem != sample_dir else DEFAULT_SETTING
+
+
+SAMPLE_DIRS = sorted(p for p in PIPELINE_DIR.glob("*") if list(p.glob("*.truth.tsv")))
+if not SAMPLE_DIRS:
+    raise FileNotFoundError(f"No sample directories with a *.truth.tsv under {PIPELINE_DIR}")
+
+_truth, _inferred, _diagnostics = [], [], []
+for sample_path in SAMPLE_DIRS:
+    sample = sample_path.name
+    truth = pd.read_csv(next(sample_path.glob("*.truth.tsv")), sep="\t")
+    _truth.append(truth.assign(sample=sample, sweep_x=sweep_x(sample)))
+    for path in sorted(sample_path.glob("profiling/sr/*.inferred_composition.csv")):
+        _inferred.append(pd.read_csv(path).assign(
+            sample=sample, sweep_x=sweep_x(sample),
+            setting=setting_of(path, sample, ".inferred_composition.csv")))
+    for path in sorted(sample_path.glob("profiling/sr/*.inference_diagnostics.csv")):
+        _diagnostics.append(pd.read_csv(path).assign(
+            sample=sample, setting=setting_of(path, sample, ".inference_diagnostics.csv")))
+
+TRUTH = pd.concat(_truth, ignore_index=True)
+INFERRED = pd.concat(_inferred, ignore_index=True)
+DIAGNOSTICS = pd.concat(_diagnostics, ignore_index=True) if _diagnostics else pd.DataFrame()
+
+# A composition file's own `sample` column is `<sample>.<setting>`; the loader overwrote
+# it with the directory name, which is the key the truth table joins on.
+DATA = INFERRED.merge(
+    TRUTH[["sample", "genome_id", "target_rel_abundance", "realized_n_reads",
+           "realized_rel_abundance"]],
+    on=["sample", "genome_id"], how="left")
+
+# Setting order: samplesheet order, default first, anything unexpected last.
+SR_SETTINGS = []
+if SAMPLESHEET.exists():
+    sheet = yaml.safe_load(SAMPLESHEET.read_text()) or {}
+    SR_SETTINGS = sheet.get("sr_settings") or []
+_declared = [entry["name"] for entry in SR_SETTINGS if "name" in entry]
+_found = set(DATA["setting"])
+SETTINGS = ([DEFAULT_SETTING] if DEFAULT_SETTING in _found else []) \
+    + [name for name in _declared if name in _found] \
+    + sorted(_found - set(_declared) - {DEFAULT_SETTING})
+COLOUR = {setting: PALETTE[i % len(PALETTE)] for i, setting in enumerate(SETTINGS)}
+
+# The swept sub-species: genomes whose target abundance varies across the sweep.
+_spread = TRUTH.groupby("genome_id")["target_rel_abundance"].agg(lambda s: s.max() - s.min())
+PAIR = as_list(subspecies) or sorted(_spread[_spread > 1e-9].index)
+MISSING_PAIR = [genome for genome in PAIR if genome not in set(TRUTH["genome_id"])]
+PAIR = [genome for genome in PAIR if genome not in MISSING_PAIR]
+PRESENCE_THRESHOLD = float(presence_threshold)
+```
+
+```{python}
+#| echo: false
+title_label = run_label or RUN_DIR.name
+display(Markdown(f"# {title_label}"))
+```
+
+This report asks one question of a superresolution-amplicon parameter sweep: **how well
+does each parameter set resolve two near-identical sub-species genomes?** The same reads
+are profiled once per setting, so every difference below is the settings' doing.
+
+The community holds `{python} len(set(TRUTH["genome_id"]))` genomes at fixed abundance
+except the swept sub-species pair, whose split varies across
+`{python} len(SAMPLE_DIRS)` samples from all of one member to all of the other. Ground
+truth is the **realized** abundance (the reads actually simulated), not the requested
+target — 16S copy number pulls the two apart.
+
+The second half plots the **mis-mapping matrices** each setting infers with: the
+simulated probability that a read from one reference is assigned to another. That matrix
+is the ceiling on what the inference can recover: the more of one genome's reads a
+setting expects to land on another's references, the less any amount of read data can
+separate them.
+
+```{python}
+#| echo: false
+#| output: asis
+if MISSING_PAIR:
+    display(Markdown(f"_Requested sub-species not in this run: {', '.join(MISSING_PAIR)}._\n"))
+if len(PAIR) != 2:
+    display(Markdown(
+        f"_Expected a sub-species **pair**; found {len(PAIR)}: {', '.join(PAIR) or 'none'}. "
+        "Sub-species sections are reported over whatever varies._\n"))
+```
+
+## Settings under test
+
+```{python}
+#| echo: false
+_knobs = {entry["name"]: entry for entry in SR_SETTINGS if "name" in entry}
+rows = []
+for setting in SETTINGS:
+    entry = dict(_knobs.get(setting, {}))
+    entry.pop("name", None)
+    diag = DIAGNOSTICS[DIAGNOSTICS["setting"] == setting] if not DIAGNOSTICS.empty \
+        else pd.DataFrame()
+    rows.append({
+        "setting": setting,
+        **{key: entry.get(key, "") for key in
+           ("mismapping_method", "align_backend", "align_tau", "matrix_args",
+            "infer_presence_prior")},
+        "mean matrix diagonal": diag["mean_diagonal"].mean() if not diag.empty else np.nan,
+        "samples": diag["sample"].nunique() if not diag.empty else 0,
+        "non-ok status": (diag["status"] != "ok").sum() if not diag.empty else 0,
+    })
+SETTINGS_TABLE = pd.DataFrame(rows).set_index("setting")
+display(SETTINGS_TABLE.style.format({"mean matrix diagonal": "{:.4f}"}, na_rep="—"))
+```
+
+`{python} DEFAULT_SETTING` is the un-suffixed run: the pipeline's default superresolution
+knobs, kept as the baseline the named settings are measured against. Blank knob cells
+mean the setting did not override that knob.
+
+## Sweep design
+
+```{python}
+#| echo: false
+def truth_figure():
+    fig = go.Figure()
+    for index, genome in enumerate(PAIR):
+        sub = TRUTH[TRUTH["genome_id"] == genome].sort_values("sweep_x")
+        colour = PALETTE[index % len(PALETTE)]
+        fig.add_trace(go.Scatter(
+            x=sub["sweep_x"], y=sub["realized_rel_abundance"], mode="lines+markers",
+            name=f"{genome} (realized)", line=dict(color=colour),
+            hovertemplate=f"{genome}<br>sweep x: %{{x:.2f}}<br>realized: %{{y:.4f}}<extra></extra>"))
+        fig.add_trace(go.Scatter(
+            x=sub["sweep_x"], y=sub["target_rel_abundance"], mode="lines",
+            name=f"{genome} (target)", line=dict(color=colour, dash="dot"),
+            hovertemplate=f"{genome}<br>sweep x: %{{x:.2f}}<br>target: %{{y:.4f}}<extra></extra>"))
+    fig.update_layout(
+        template="simple_white", height=420, width=820,
+        xaxis=dict(title="sweep point (x)"), yaxis=dict(title="relative abundance"),
+        legend=dict(orientation="h", y=-0.25), margin=dict(l=10, r=10, t=10, b=10))
+    return fig
+
+
+display(truth_figure())
+```
+
+## Sub-species discrimination
+
+Everything in this section is about the pair only. The **pair share** is one member's
+fraction of the two genomes' combined abundance — the quantity a whole-community metric
+would drown out, since the pair together is a few percent of the sample.
+
+```{python}
+#| echo: false
+MINOR = PAIR[-1] if PAIR else None
+
+
+def pair_shares():
+    """Per sample × setting: the true and inferred share of the pair held by MINOR."""
+    if len(PAIR) != 2:
+        return pd.DataFrame()
+    sub = DATA[DATA["genome_id"].isin(PAIR)]
+    wide = sub.pivot_table(index=["setting", "sample", "sweep_x"], columns="genome_id",
+                           values=["realized_rel_abundance", "inferred_mean",
+                                   "observed_rel_abundance"]).reset_index()
+    truth_total = wide[("realized_rel_abundance", PAIR[0])] + wide[("realized_rel_abundance", PAIR[1])]
+    inferred_total = wide[("inferred_mean", PAIR[0])] + wide[("inferred_mean", PAIR[1])]
+    observed_total = wide[("observed_rel_abundance", PAIR[0])] + wide[("observed_rel_abundance", PAIR[1])]
+    return pd.DataFrame({
+        "setting": wide[("setting", "")],
+        "sample": wide[("sample", "")],
+        "sweep_x": wide[("sweep_x", "")],
+        "true_share": wide[("realized_rel_abundance", MINOR)] / truth_total.replace(0, np.nan),
+        "inferred_share": wide[("inferred_mean", MINOR)] / inferred_total.replace(0, np.nan),
+        "observed_share": wide[("observed_rel_abundance", MINOR)] / observed_total.replace(0, np.nan),
+        "true_total": truth_total,
+        "inferred_total": inferred_total,
+    })
+
+
+SHARES = pair_shares()
+```
+
+### Inferred vs true pair share
+
+A setting that resolves the pair tracks the identity line. A setting that cannot tell the
+two apart returns a flat line: it splits the pair's mass by its prior, whatever the truth.
+
+```{python}
+#| echo: false
+def share_figure():
+    if SHARES.empty:
+        return None
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=[0, 1], y=[0, 1], mode="lines", name="identity",
+                             line=dict(color="#999999", dash="dash"), hoverinfo="skip"))
+    for setting in SETTINGS:
+        sub = SHARES[SHARES["setting"] == setting].sort_values("true_share")
+        fig.add_trace(go.Scatter(
+            x=sub["true_share"], y=sub["inferred_share"], mode="lines+markers",
+            name=setting, line=dict(color=COLOUR[setting]), customdata=sub[["sample"]],
+            hovertemplate=(f"{setting}<br>%{{customdata[0]}}<br>true: %{{x:.3f}}<br>"
+                           "inferred: %{y:.3f}<extra></extra>")))
+    fig.update_layout(
+        template="simple_white", height=520, width=760,
+        xaxis=dict(title=f"true {MINOR} share of the pair", range=[-0.02, 1.02]),
+        yaxis=dict(title="inferred share", range=[-0.02, 1.02]),
+        legend=dict(orientation="h", y=-0.2), margin=dict(l=10, r=10, t=10, b=10))
+    return fig
+
+
+fig = share_figure()
+display(fig if fig is not None else Markdown("_No sub-species pair to score._"))
+```
+
+### Per-genome abundance across the sweep
+
+Absolute inferred abundance with its credible interval, against the realized truth
+(black dashed). This is the same information without the ratio, so a setting that gets
+the split right but the level wrong shows up here.
+
+::: {.panel-tabset}
+
+```{python}
+#| echo: false
+#| output: asis
+for genome in PAIR:
+    print(f"#### {genome}\n")
+    truth = TRUTH[TRUTH["genome_id"] == genome].sort_values("sweep_x")
+    fig = go.Figure()
+    for setting in SETTINGS:
+        sub = DATA[(DATA["setting"] == setting) & (DATA["genome_id"] == genome)] \
+            .sort_values("sweep_x")
+        if sub.empty:
+            continue
+        fig.add_trace(go.Scatter(
+            x=sub["sweep_x"], y=sub["inferred_mean"], mode="lines+markers", name=setting,
+            line=dict(color=COLOUR[setting]),
+            error_y=dict(type="data", symmetric=False,
+                         array=(sub["inferred_hi"] - sub["inferred_mean"]).clip(lower=0),
+                         arrayminus=(sub["inferred_mean"] - sub["inferred_lo"]).clip(lower=0),
+                         thickness=1, width=0),
+            hovertemplate=(f"{setting}<br>sweep x: %{{x:.2f}}<br>"
+                           "inferred: %{y:.4f}<extra></extra>")))
+    fig.add_trace(go.Scatter(
+        x=truth["sweep_x"], y=truth["realized_rel_abundance"], mode="lines",
+        name="realized truth", line=dict(color="#000000", dash="dash"),
+        hovertemplate="truth<br>sweep x: %{x:.2f}<br>realized: %{y:.4f}<extra></extra>"))
+    fig.update_layout(
+        template="simple_white", height=460, width=820,
+        xaxis=dict(title="sweep point (x)"), yaxis=dict(title="relative abundance"),
+        legend=dict(orientation="h", y=-0.25), margin=dict(l=10, r=10, t=10, b=10))
+    display(fig)
+    print("\n")
+```
+
+:::
+
+### Scores
+
+| Metric | Meaning |
+|--------|---------|
+| `pair share MAE` | mean absolute error of the inferred pair share — 0 is perfect, ~0.25 is the score of always answering "half each" over a uniform sweep |
+| `pair share r` | Pearson correlation of inferred against true share; a setting that cannot resolve the pair has no correlation |
+| `pair share slope` | regression slope of inferred on true share; 1 is a faithful response, 0 is a flat line |
+| `pair L1` | mean absolute error on the two genomes' absolute abundances |
+| `community L1` | mean total absolute error over every genome — the whole-sample view, in which the pair is a rounding error |
+| `presence errors` | pair genome-calls at the presence threshold below disagreeing with a non-zero realized abundance |
+
+```{python}
+#| echo: false
+display(Markdown(f"Presence threshold: **{PRESENCE_THRESHOLD}**.\n"))
+
+
+def scores():
+    rows = []
+    for setting in SETTINGS:
+        share = SHARES[SHARES["setting"] == setting].dropna(subset=["true_share", "inferred_share"]) \
+            if not SHARES.empty else pd.DataFrame()
+        sub = DATA[DATA["setting"] == setting]
+        pair_rows = sub[sub["genome_id"].isin(PAIR)]
+        per_sample_l1 = sub.assign(
+            err=(sub["inferred_mean"] - sub["realized_rel_abundance"]).abs()) \
+            .groupby("sample")["err"].sum()
+        called = pair_rows["presence_prob"] >= PRESENCE_THRESHOLD
+        truly_present = pair_rows["realized_rel_abundance"] > 0
+        slope = np.polyfit(share["true_share"], share["inferred_share"], 1)[0] \
+            if len(share) > 1 and share["true_share"].std() > 0 else np.nan
+        rows.append({
+            "setting": setting,
+            "pair share MAE": (share["inferred_share"] - share["true_share"]).abs().mean()
+            if not share.empty else np.nan,
+            "pair share r": share["inferred_share"].corr(share["true_share"])
+            if len(share) > 1 else np.nan,
+            "pair share slope": slope,
+            "pair L1": (pair_rows["inferred_mean"] - pair_rows["realized_rel_abundance"]).abs()
+            .groupby(pair_rows["sample"]).sum().mean(),
+            "community L1": per_sample_l1.mean(),
+            "presence errors": int((called != truly_present).sum()),
+        })
+    return pd.DataFrame(rows).set_index("setting")
+
+
+SCORES = scores()
+display(SCORES.style.format({
+    "pair share MAE": "{:.3f}", "pair share r": "{:.3f}", "pair share slope": "{:.3f}",
+    "pair L1": "{:.4f}", "community L1": "{:.4f}"}, na_rep="—")
+    .background_gradient(cmap="RdYlGn_r", subset=["pair share MAE", "pair L1", "community L1"]))
+```
+
+```{python}
+#| echo: false
+fig = go.Figure()
+for metric, axis in (("pair share MAE", "y"), ("pair share r", "y2")):
+    fig.add_trace(go.Bar(
+        x=SCORES.index, y=SCORES[metric], name=metric, yaxis=axis,
+        marker_color=("#CC6677" if axis == "y" else "#44AA99"),
+        hovertemplate=f"{metric}: %{{y:.3f}}<extra></extra>"))
+fig.update_layout(
+    template="simple_white", height=420, width=820, barmode="group",
+    xaxis=dict(title="setting"),
+    yaxis=dict(title="pair share MAE (lower better)", rangemode="tozero"),
+    yaxis2=dict(title="pair share r (higher better)", overlaying="y", side="right",
+                range=[-1, 1]),
+    legend=dict(orientation="h", y=-0.3), margin=dict(l=10, r=10, t=10, b=10))
+display(fig)
+```
+
+### Presence probability
+
+The presence gate is a separate decision from abundance: `presence_prob` is the
+probability the genome is in the sample at all. Where a pair member's true abundance goes
+to zero (the ends of the sweep), a setting that resolves the pair should follow it down.
+
+::: {.panel-tabset}
+
+```{python}
+#| echo: false
+#| output: asis
+for genome in PAIR:
+    print(f"#### {genome}\n")
+    fig = go.Figure()
+    for setting in SETTINGS:
+        sub = DATA[(DATA["setting"] == setting) & (DATA["genome_id"] == genome)] \
+            .sort_values("sweep_x")
+        if sub.empty:
+            continue
+        fig.add_trace(go.Scatter(
+            x=sub["sweep_x"], y=sub["presence_prob"], mode="lines+markers", name=setting,
+            line=dict(color=COLOUR[setting]),
+            hovertemplate=(f"{setting}<br>sweep x: %{{x:.2f}}<br>"
+                           "presence: %{y:.3f}<extra></extra>")))
+    truth = TRUTH[TRUTH["genome_id"] == genome].sort_values("sweep_x")
+    fig.add_trace(go.Scatter(
+        x=truth["sweep_x"], y=(truth["realized_rel_abundance"] > 0).astype(float),
+        mode="lines", name="truly present", line=dict(color="#000000", dash="dash"),
+        hovertemplate="truth<br>sweep x: %{x:.2f}<br>present: %{y:.0f}<extra></extra>"))
+    fig.add_hline(y=PRESENCE_THRESHOLD, line=dict(color="#999999", dash="dot"))
+    fig.update_layout(
+        template="simple_white", height=420, width=820,
+        xaxis=dict(title="sweep point (x)"),
+        yaxis=dict(title="presence probability", range=[-0.03, 1.03]),
+        legend=dict(orientation="h", y=-0.25), margin=dict(l=10, r=10, t=10, b=10))
+    display(fig)
+    print("\n")
+```
+
+:::
+
+## Mis-mapping matrices
+
+Each setting's `mismapping_method` / `align_backend` combination produces its own matrix,
+published once per reference set and reused by every sample and every setting that shares
+it. Settings that differ only in their presence prior share a matrix.
+
+Matrices are shown **aggregated to genomes**: cell `(a, b)` is the probability that a read
+from genome `a` is assigned to genome `b`, averaged over `a`'s 16S copies. Where copies
+are byte-identical across genomes the matrix stores them as one group, and the group's
+mass is split evenly over its members — the honest reading when the amplicons are the
+same sequence.
+
+The pair's **identifiability** is the total-variation distance between the two genomes'
+aggregated rows: `0` means the two genomes' *averaged* assignment distributions coincide,
+`1` means they never land on the same reference.
+
+It is a coarse read, not a proof: inference runs over individual 16S copies, so two
+genomes with identical genome-level rows can still be separated when their copies are
+distributed differently over the reference set (one genome holding four copies of an
+otherwise shared amplicon shifts mass the average hides). Read a `0` as "the genome-level
+matrix carries no signal — whatever the setting recovers comes from copy structure".
+
+```{python}
+#| echo: false
+#| output: false
+MATRICES = sorted(SR_MISMAPPING_DIR.glob("*/mismapping_matrix.npz")) \
+    if SR_MISMAPPING_DIR.exists() else []
+
+
+def matrix_records():
+    """One record per *distinct* matrix, with the settings that inferred against it.
+
+    Matrices are matched to settings by the `mean_diagonal` the nested pipeline recorded
+    in `inference_diagnostics.csv`; the published directory names are reference-set keys,
+    which do not carry the settings.
+    """
+    by_diagonal = {}
+    for path in MATRICES:
+        genome_matrix, mean_diagonal = genome_mismapping_matrix(path)
+        key = round(mean_diagonal, 9)
+        provenance_path = path.parent / "mismapping_provenance.json"
+        provenance = json.loads(provenance_path.read_text()) if provenance_path.exists() else {}
+        record = by_diagonal.setdefault(key, {
+            "paths": [], "matrix": genome_matrix, "mean_diagonal": mean_diagonal,
+            "provenance": provenance, "settings": [],
+        })
+        record["paths"].append(path)
+    if not DIAGNOSTICS.empty:
+        for setting in SETTINGS:
+            diagonals = DIAGNOSTICS.loc[DIAGNOSTICS["setting"] == setting, "mean_diagonal"]
+            for key in {round(float(value), 9) for value in diagonals.dropna()}:
+                if key in by_diagonal:
+                    by_diagonal[key]["settings"].append(setting)
+    order = {setting: index for index, setting in enumerate(SETTINGS)}
+    return sorted(by_diagonal.values(),
+                  key=lambda record: min((order.get(s, 99) for s in record["settings"]), default=99))
+
+
+RECORDS = matrix_records()
+
+
+def identifiability(matrix):
+    """Total-variation distance between the pair's rows; 0 = indistinguishable."""
+    if len(PAIR) != 2 or not set(PAIR).issubset(matrix.index):
+        return np.nan
+    return 0.5 * float((matrix.loc[PAIR[0]] - matrix.loc[PAIR[1]]).abs().sum())
+
+
+def genome_heatmap(matrix, title):
+    values = matrix.to_numpy()
+    fig = go.Figure(go.Heatmap(
+        z=values, x=matrix.columns, y=matrix.index, colorscale="Viridis", zmin=0, zmax=1,
+        colorbar=dict(title="P(assigned)"),
+        hovertemplate="from %{y}<br>to %{x}<br>P = %{z:.4f}<extra></extra>"))
+    fig.update_layout(
+        template="simple_white", title=title, height=760, width=880,
+        xaxis=dict(title="assigned genome", tickangle=45),
+        yaxis=dict(title="true genome", autorange="reversed"),
+        margin=dict(l=10, r=10, t=60, b=10))
+    return fig
+```
+
+```{python}
+#| echo: false
+if RECORDS:
+    summary = pd.DataFrame([{
+        "settings": ", ".join(record["settings"]) or "—",
+        "method": record["provenance"].get("mismapping_method", "—"),
+        "backend": record["provenance"].get("align_backend", "—"),
+        "tau": record["provenance"].get("align_tau", "—"),
+        "mean diagonal": record["mean_diagonal"],
+        "pair identifiability": identifiability(record["matrix"]),
+        "reference set": record["paths"][0].parent.name,
+    } for record in RECORDS]).set_index("settings")
+    display(summary.style.format({"mean diagonal": "{:.4f}",
+                                  "pair identifiability": "{:.4f}"}, na_rep="—"))
+else:
+    display(Markdown(f"_No matrices found under `{SR_MISMAPPING_DIR}`._"))
+```
+
+::: {.panel-tabset}
+
+```{python}
+#| echo: false
+#| output: asis
+for record in RECORDS:
+    label = ", ".join(record["settings"]) or record["paths"][0].parent.name
+    print(f"### {label}\n")
+    provenance = record["provenance"]
+    display(Markdown(
+        f"`{provenance.get('mismapping_method', '?')}` / "
+        f"`{provenance.get('align_backend', '?')}`, tau "
+        f"`{provenance.get('align_tau', '?')}` — mean diagonal "
+        f"{record['mean_diagonal']:.4f}, pair identifiability "
+        f"{identifiability(record['matrix']):.4f}.\n"))
+    if len(record["paths"]) > 1:
+        display(Markdown(
+            "_Published under "
+            + ", ".join(f"`{path.parent.name}`" for path in record["paths"]) + "._\n"))
+    display(genome_heatmap(record["matrix"], f"{label} — genome-level mis-mapping"))
+    if len(PAIR) == 2:
+        block = record["matrix"].loc[PAIR, PAIR]
+        display(Markdown("**Sub-species block** (rows: true genome, columns: assigned)\n"))
+        display(block.style.format("{:.4f}"))
+    print("\n")
+```
+
+:::
+
+### Reference-level detail
+
+The same matrices at their published resolution — one row per 16S copy, before any
+genome-level aggregation. Ribbons show the largest off-diagonal assignments; the heatmap
+shows all retained off-diagonal values on a log scale.
+
+::: {.panel-tabset}
+
+```{python}
+#| echo: false
+#| output: asis
+for record in RECORDS:
+    label = ", ".join(record["settings"]) or record["paths"][0].parent.name
+    print(f"#### {label}\n")
+    path = record["paths"][0]
+    matrix, flavour, total_references = load_mismapping_matrix(path)
+    display(Markdown(
+        f"**{flavour.capitalize()}** matrix: displaying {len(matrix)} of "
+        f"{total_references} reference{'s' if total_references != 1 else ''}.\n"))
+    chord = render_mismapping_chord(matrix, title=f"{label} — reference mis-mapping")
+    if chord is None:
+        display(Markdown("_No off-diagonal assignments at or above 0.5%._\n"))
+    else:
+        display(chord)
+    heatmap = mismapping_heatmap(matrix, title=f"{label} — reference mis-mapping")
+    if heatmap is not None:
+        display(heatmap)
+    print("\n")
+```
+
+:::
+
+## Run details
+
+```{python}
+#| echo: false
+display(Markdown(
+    f"- Run directory: `{RUN_DIR}`\n"
+    f"- Pipeline directory: `{PIPELINE_DIR}`\n"
+    f"- Samples: {len(SAMPLE_DIRS)}; settings: {len(SETTINGS)}; "
+    f"genomes: {len(set(TRUTH['genome_id']))}\n"
+    f"- Reads per sample: "
+    f"{int(DIAGNOSTICS['n_reads'].median()) if not DIAGNOSTICS.empty else 'unknown'} (median)\n"
+    f"- Sub-species pair: {', '.join(PAIR) or 'none detected'}\n"))
+```

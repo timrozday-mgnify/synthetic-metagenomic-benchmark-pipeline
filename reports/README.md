@@ -116,6 +116,33 @@ truth-versus-call presence/absence matrix for each one; `presence_confusion_thre
 sets their calling cutoff (default `0.5`). With the Taskfile, pass the equivalents as
 `PRESENCE_THRESHOLDS`, `SUBSPECIES`, and `PRESENCE_CONFUSION_THRESHOLD`.
 
+## Superresolution settings sweep (`sr_settings_report.qmd`)
+
+A second, narrower report for runs that fan a sample out across `sr_settings`: how well
+each parameter set resolves a near-identical **sub-species pair**, and what mis-mapping
+matrix each one infers against.
+
+```bash
+task sr-settings RUN_DIR=<run> PIPELINE_DIR=results/<sweep> RUN_LABEL="..."
+```
+
+It reads the run tree directly (per-sample `*.truth.tsv`, `profiling/sr/*.inferred_composition.csv`
+and `*.inference_diagnostics.csv`, plus the published `mismapping/*/mismapping_matrix.npz`)
+— there is no preprocessing step, because a settings sweep is a few hundred rows.
+
+Settings are the `<sample>.<setting>` suffix on the profile files; the un-suffixed run is
+reported as `default`. Matrices are matched to the settings that used them by the
+`mean_diagonal` recorded in `inference_diagnostics.csv`, and shown aggregated to genomes
+(`genome_mismapping_matrix` in `scripts/mismapping_plots.py`) as well as at their
+published per-16S-copy resolution.
+
+Parameters: `run_label`, `run_dir`, `pipeline_dir`, `samplesheet` (for the settings table),
+`superresolution_mismapping_dir`, `subspecies` (comma-separated; defaults to whichever
+genomes' target abundance varies across the sweep), `presence_threshold`. Via the
+Taskfile: `SAMPLESHEET`, `SUBSPECIES`, `PRESENCE_THRESHOLD`.
+
+Output: `<run>/sr_settings_report.html`.
+
 ## Environments
 
 Two conda/mamba envs, matching the `fermentor-run-reports` convention:

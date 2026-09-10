@@ -11,6 +11,7 @@ vars:
   PREPROCESS: '{{.ROOT_DIR}}/scripts/benchmark_preprocess.py'
   SUBSPECIES_INFER: '{{.ROOT_DIR}}/scripts/subspecies_infer.py'
   SUBSPECIES_TEMPLATE: '{{.ROOT_DIR}}/templates/subspecies_inference_report.qmd'
+  SR_SETTINGS_TEMPLATE: '{{.ROOT_DIR}}/templates/sr_settings_report.qmd'
 
 tasks:
   default:
@@ -18,7 +19,7 @@ tasks:
     cmds:
       - task: report
         vars:
-          RUN_DIR: subspecies_Buniformis_amplicon_v4
+          RUN_DIR: subspecies_Buniformis_amplicon_v4/export
           PIPELINE_DIR: results/subspecies_v4_sweep
           RUN_LABEL: "Sub-species B. uniformis V4 amplicon abundance sweep"
 
@@ -145,6 +146,32 @@ tasks:
                 SCORE_HIST: '{{.SCORE_HIST}}', MODEL_PT: '{{.MODEL_PT}}'}
       - task: _render_infer
         vars: {RUN_DIR: '{{.RUN_DIR}}', MODE: '{{.MODE}}', RUN_LABEL: '{{.RUN_LABEL}}'}
+
+  # --- superresolution settings sweep -----------------------------------------
+
+  sr-settings:
+    desc: Render the superresolution settings-sweep report (RUN_DIR, PIPELINE_DIR required;
+          optional RUN_LABEL, SAMPLESHEET, SUBSPECIES (comma-separated genome IDs),
+          PRESENCE_THRESHOLD). Reads the run tree directly — no preprocessing step.
+    dir: '{{.DIR}}'
+    requires:
+      vars: [RUN_DIR, PIPELINE_DIR]
+    vars:
+      RUN_DIR_ABS: '{{.DIR}}/{{.RUN_DIR}}'
+    cmds:
+      - |
+        mamba run -p {{.QUARTO_ENV}} \
+          quarto render "{{.SR_SETTINGS_TEMPLATE}}" \
+          -P run_label:"{{.RUN_LABEL}}" \
+          -P run_dir:"{{.RUN_DIR_ABS}}" \
+          -P pipeline_dir:"{{.PIPELINE_DIR}}" \
+          -P samplesheet:"{{.SAMPLESHEET | default "sweep_samplesheet.yaml"}}" \
+          -P superresolution_mismapping_dir:mismapping \
+          -P report_scripts_dir:"{{.ROOT_DIR}}/scripts" \
+          -P subspecies:"{{.SUBSPECIES | default ""}}" \
+          -P presence_threshold:"{{.PRESENCE_THRESHOLD | default "0.5"}}" \
+          -P output_dir:"" \
+          --output-dir "{{.RUN_DIR_ABS}}"
 
   # --- per-run tasks ----------------------------------------------------------
 
