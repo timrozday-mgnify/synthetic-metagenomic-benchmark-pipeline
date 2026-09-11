@@ -198,6 +198,15 @@ nextflow_pipeline {
                 { assert provenance.any { it.contains("--mismapping_method simulate") } },
                 { assert provenance.any { it.contains("--align_distance_decay 0.007") } },
 
+                // The nested pipeline refuses --infer_distance_decay unless its own
+                // --mismapping_method/--align_tau say align at tau >= 1, even with a
+                // supplied matrix, so the latent inference run repeats the matrix mode.
+                // The fixed one doesn't need it and keeps its old command line.
+                { assert path("${params.outdir}/S2/profiling/sr/S2.kmer_latent.nested_args.txt").text
+                      .contains("--mismapping_method align --align_backend kmer --align_tau 1") },
+                { assert !path("${params.outdir}/S2/profiling/sr/S2.kmer_fixed.nested_args.txt").text
+                      .contains("--mismapping_method") },
+
                 // The supplied classification is in the nested samplesheet, so the nested
                 // run skips its own mapping — and therefore publishes none of its own.
                 { assert sheet.contains("mseq: ") && sheet.contains("S2.obs.mseq.gz") },

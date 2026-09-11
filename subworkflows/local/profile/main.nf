@@ -71,7 +71,16 @@ def srInferenceArgs(meta) {
     def kind = meta.profiler == 'sr_amplicon' ? 'amplicon' : 'shotgun'
     def named = ['infer_presence', 'infer_presence_prior', 'infer_presence_temp']
     if (kind == 'amplicon') named += ['infer_distance_decay', 'infer_decay_sigma']
-    srArgs(meta, kind, named, 'inference_args')
+    def args = srArgs(meta, kind, named, 'inference_args')
+    // superresolution-amplicon refuses --infer_distance_decay unless its own
+    // --mismapping_method/--align_tau say align at tau >= 1, and it checks those params
+    // even when handed a finished --mismapping_matrix. Repeat the matrix's mode flags
+    // (all of them, so align_backend stays consistent with align_tau) or the inference
+    // run sees the nested defaults (simulate, tau 0) and errors.
+    def decay = srOpt(meta, kind, 'infer_distance_decay')
+    (kind == 'amplicon' && decay != null && decay.toString() != 'false')
+        ? [srMatrixArgs(meta), args].findAll { it }.join(' ')
+        : args
 }
 
 // The named knobs above, plus the free-form escape hatch, as one nested command line.
