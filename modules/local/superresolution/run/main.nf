@@ -397,6 +397,7 @@ process RUN_SUPERRESOLUTION {
         """mkdir -p sr_out/composition/${id}
     printf 'sample,genome_id,observed_rel_abundance,inferred_mean,inferred_lo,inferred_hi\\n' > sr_out/composition/${id}/${id}.inferred_composition.csv
     cp sr_samplesheet.yml sr_out/composition/${id}/${id}.nested_samplesheet.yml
+    printf '%s\\n' '${srNestedArgs(metas[0], 'inference_args')}' > sr_out/composition/${id}/${id}.nested_args.txt
     printf 'genome_id\\tpredicted_rel_abundance\\tpredicted_tax_rel_abundance\\n' > ${id}.sr_profile.tsv""" +
         // Only the amplicon sibling maps reads, and only when it wasn't handed a
         // classification already — same condition the live nested run applies.
