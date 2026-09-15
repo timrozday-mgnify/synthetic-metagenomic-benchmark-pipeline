@@ -1,0 +1,14 @@
+genome_id,fasta_path,abundance
+bacteroides_fragilis,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CR626927.1_SSU.fasta,9
+bacteroides_thetaiotaomicron,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP040530.1_SSU.fasta,31
+bacteroides_uniformis_strain2,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/BU_JCM13286_NT5170.1_SSU.fasta,14
+bacteroides_vulgatus,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP000139.1_SSU.fasta,60
+clostridium_perfringens,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/DACTBY01_SSU.fasta,2
+clostridium_saccharolyticum,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP002109.1_SSU.fasta,9
+collinsella_aerofaciens,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP048433.1_SSU.fasta,15
+coprococcus_comes,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP070062.1_SSU.fasta,10
+dorea_formicigenerans,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/GCA_000169235.1_SSU.fasta,9
+eggerthella_lenta,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP001726.1_SSU.fasta,16
+eubacterium_rectale,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/GCA_000209935.1_SSU.fasta,1
+salinibacter_ruber,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP000159.1_SSU.fasta,39
+streptococcus_parasanguinis,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/GCA_000164675.2_SSU.fasta,41

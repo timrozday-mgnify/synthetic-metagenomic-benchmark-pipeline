@@ -52,21 +52,24 @@ def srNestedArgs(meta, key) {
 }
 
 // Shell lines that write the nested multi-sample YAML samplesheet, one row per batched
-// sample. layout row: [ id, platform, [read paths], mseq ]. A non-empty mseq is a
+// sample. layout row: [ id, platform, [read paths], mseq, error_model ]. A non-empty mseq is a
 // precomputed mapseq classification of those reads against this reference set — the
 // nested amplicon pipeline then skips its own read mapping, which is the expensive stage
-// and the whole point of a settings sweep over the cheap ones. `references` must be
+// and the whole point of a settings sweep over the cheap ones. A non-empty error_model is
+// a pre-trained skiver model.pt that the nested run simulates with instead of training
+// its own (read only under --sim_error_model trained). `references` must be
 // absolute (the nested pipeline resolves relative paths against its own projectDir) and
 // is shared by the whole reference set, so it comes from the \$refs_abs the caller sets.
 // At file scope because the stub writes the same sheet as the real script, and the two
 // blocks share no locals.
 def srSheetCmds(layout) {
-    layout.collect { id, platform, reads, mseq ->
+    layout.collect { id, platform, reads, mseq, errorModel ->
         ([ "printf -- '- id: %s\\n' '${id}' >> sr_samplesheet.yml",
            "printf '  reads:\\n' >> sr_samplesheet.yml" ] +
          reads.collect { "printf '    - %s\\n' '${it}' >> sr_samplesheet.yml" } +
          (platform ? [ "printf '  platform: %s\\n' '${platform}' >> sr_samplesheet.yml" ] : []) +
          (mseq ? [ "printf '  mseq: %s\\n' '${mseq}' >> sr_samplesheet.yml" ] : []) +
+         (errorModel ? [ "printf '  error_model: %s\\n' '${errorModel}' >> sr_samplesheet.yml" ] : []) +
          [ "printf '  references: %s\\n' \"\$refs_abs\" >> sr_samplesheet.yml" ]).join('\n    ')
     }.join('\n    ')
 }
@@ -342,7 +345,9 @@ process RUN_SUPERRESOLUTION {
     def set_dir    = (meta.reference_set ?: meta.id).replaceAll(/[^A-Za-z0-9._-]+/, '_')
     def nestedDir  = "${workflow.workDir}/nested/sr/${set_dir}-${batch_id}"
     def nestedArgs = [prof_arg, '--input sr_samplesheet.yml', '--outdir sr_out', extra_cfg,
-                      "--mismapping_matrix ${mismapping_matrix}", presenceArg, srPrimerArgs(meta),
+                      // [] for a panel batch, which measures its own kernel.
+                      mismapping_matrix ? "--mismapping_matrix ${mismapping_matrix}" : '',
+                      presenceArg, srPrimerArgs(meta),
                       "-w '${nestedDir}/work'", '-resume']
         .findAll { it }
         .join(' ')

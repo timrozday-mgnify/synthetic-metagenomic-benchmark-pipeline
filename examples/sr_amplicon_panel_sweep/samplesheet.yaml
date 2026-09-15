@@ -1,0 +1,592 @@
+databases:
+  community_20hm:
+    sequences:
+    - id: bacteroides_fragilis
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CR626927.1_SSU.fasta
+    - id: bacteroides_thetaiotaomicron
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP040530.1_SSU.fasta
+    - id: bacteroides_uniformis
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/FNPN01_SSU.fasta
+    - id: bacteroides_uniformis_strain2
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/BU_JCM13286_NT5170.1_SSU.fasta
+    - id: bacteroides_vulgatus
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP000139.1_SSU.fasta
+    - id: clostridium_bolteae
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/ABCC02_SSU.fasta
+    - id: clostridium_perfringens
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/DACTBY01_SSU.fasta
+    - id: clostridium_ramosum
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/ABFX02_SSU.fasta
+    - id: clostridium_saccharolyticum
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP002109.1_SSU.fasta
+    - id: collinsella_aerofaciens
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP048433.1_SSU.fasta
+    - id: coprococcus_comes
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP070062.1_SSU.fasta
+    - id: dorea_formicigenerans
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/GCA_000169235.1_SSU.fasta
+    - id: eggerthella_lenta
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP001726.1_SSU.fasta
+    - id: eubacterium_rectale
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/GCA_000209935.1_SSU.fasta
+    - id: fusobacterium_nucleatum
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/GCA_000007325.1_SSU.fasta
+    - id: methanobrevibacter_smithii
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/GCA_000151225.1_SSU.fasta
+    - id: parabacteroides_merdae
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/AAXE02_SSU.fasta
+    - id: roseburia_intestinalis
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/ABYJ02_SSU.fasta
+    - id: ruminococcus_gnavus
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP027002.1_SSU.fasta
+    - id: salinibacter_ruber
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP000159.1_SSU.fasta
+    - id: streptococcus_parasanguinis
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/GCA_000164675.2_SSU.fasta
+    - id: streptococcus_salivarius
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP009913.1_SSU.fasta
+    - id: veillonella_parvula
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/HM007566.1.fasta
+  gtdb_ssu_r232:
+    path: /PATH/TO/gtdb_ssu_r232
+samples:
+- sample: S01.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/genomes/sample_01.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_backend: exact-hash
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S02.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/genomes/sample_02.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_backend: exact-hash
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S03.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/genomes/sample_03.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_backend: exact-hash
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S04.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/genomes/sample_04.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_backend: exact-hash
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S05.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/genomes/sample_05.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_backend: exact-hash
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S06.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/genomes/sample_06.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_backend: exact-hash
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S07.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/genomes/sample_07.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_backend: exact-hash
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S08.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/genomes/sample_08.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_backend: exact-hash
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S09.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/genomes/sample_09.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_backend: exact-hash
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S10.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/genomes/sample_10.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_backend: exact-hash
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S11.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/genomes/sample_11.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_backend: exact-hash
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S12.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/genomes/sample_12.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_backend: exact-hash
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S13.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/genomes/sample_13.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_backend: exact-hash
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S14.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/genomes/sample_14.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_backend: exact-hash
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S15.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/genomes/sample_15.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_backend: exact-hash
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S16.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/genomes/sample_16.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_backend: exact-hash
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S17.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/genomes/sample_17.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_backend: exact-hash
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S18.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/genomes/sample_18.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_backend: exact-hash
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S19.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/genomes/sample_19.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_backend: exact-hash
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+- sample: S20.amplicon_16s
+  train_id: sc2200627
+  train_fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  train_fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/genomes/sample_20.amplicon_16s.csv
+  num_reads: 1000000
+  mode: amplicon
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+  profilers:
+  - sr_amplicon
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_backend: exact-hash
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+  subsample:
+  - none
+  - 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT

@@ -1,0 +1,15 @@
+genome_id,fasta_path,abundance
+bacteroides_fragilis,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CR626927.1_SSU.fasta,73
+bacteroides_uniformis,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/FNPN01_SSU.fasta,42
+bacteroides_uniformis_strain2,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/BU_JCM13286_NT5170.1_SSU.fasta,16
+clostridium_bolteae,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/ABCC02_SSU.fasta,39
+collinsella_aerofaciens,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP048433.1_SSU.fasta,19
+coprococcus_comes,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP070062.1_SSU.fasta,53
+eggerthella_lenta,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP001726.1_SSU.fasta,51
+eubacterium_rectale,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/GCA_000209935.1_SSU.fasta,49
+fusobacterium_nucleatum,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/GCA_000007325.1_SSU.fasta,31
+methanobrevibacter_smithii,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/GCA_000151225.1_SSU.fasta,3
+salinibacter_ruber,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP000159.1_SSU.fasta,47
+streptococcus_parasanguinis,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/GCA_000164675.2_SSU.fasta,18
+streptococcus_salivarius,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP009913.1_SSU.fasta,27
+veillonella_parvula,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/HM007566.1.fasta,17

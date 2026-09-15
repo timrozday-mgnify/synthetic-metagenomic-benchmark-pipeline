@@ -81,17 +81,21 @@ def parseProfilers(row, defaultProfilers) {
     list.collect { it?.toString()?.trim() }.findAll { it }.unique()
 }
 
-// Knobs a superresolution `sr_settings:` entry may set. The first six reach the matrix
+// Knobs a superresolution `sr_settings:` entry may set. The first seven reach the matrix
 // build, the rest the inference run; a key absent from an entry falls back to the
-// matching sr_<amplicon|shotgun>_<key> param. Kept as a method, not a top-level `def`: a
-// script-level variable is local to the run body and invisible in here.
+// matching sr_<amplicon|shotgun>_<key> param (`panel` has none). Kept as a method, not a
+// top-level `def`: a script-level variable is local to the run body and invisible in here.
 //
 // Which side a knob sits on is not cosmetic: entries agreeing on every matrix knob share
 // one mis-mapping matrix and split only at the (cheap) inference run, so an inference
 // knob swept alongside a matrix knob costs nothing extra.
+//
+// `panel` (sr_amplicon only) names a `databases:` collection to reinterpret the row's own
+// database labels with: superresolution-amplicon's panel_references. The nested run
+// measures that kernel itself, inside the inference run, so a panel entry shares no matrix.
 def srSettingKeys() {
     ['mismapping_method', 'align_backend', 'align_tau', 'align_distance_decay',
-     'align_decay_model', 'matrix_args',
+     'align_decay_model', 'matrix_args', 'panel',
      'infer_presence', 'infer_presence_prior', 'infer_presence_temp',
      'infer_distance_decay', 'infer_decay_sigma', 'inference_args']
 }
@@ -117,6 +121,9 @@ def parseSrSettings(row, defaultSettings) {
         }
         def unknown = e.keySet().findAll { !(it in known) && !(it in ['name', 'id']) }
         if (unknown) error "sr_settings '${name}': unknown key(s) ${unknown} (expected ${known})"
+        if (e.panel && e.infer_distance_decay?.toString() == 'true') {
+            error "sr_settings '${name}': a panel kernel records no distances; drop infer_distance_decay"
+        }
         [ name: name, opts: known.collectEntries { k -> [ (k): e[k] ] }.findAll { k, val -> val != null } ]
     }
     if (out*.name.unique().size() != out.size()) {
@@ -212,6 +219,11 @@ workflow {
                 dbProfilers.computeIfAbsent(name) { [] as Set } << prof
             }
         }
+        // A collection a `panel:` setting names is reinterpreted through, not profiled
+        // against, so no row's `database` references it: build it for sr_amplicon anyway.
+        parseSrSettings(row, defaultSrSettings)*.opts*.panel.findAll { it }.each { panel ->
+            dbProfilers.computeIfAbsent(panel.toString()) { [] as Set } << 'sr_amplicon'
+        }
     }
     def dbSpecs = []
     dbProfilers.each { name, profs ->
@@ -303,6 +315,9 @@ workflow {
                 // file: RUN_SUPERRESOLUTION is executor 'local' and the nested run reads
                 // it directly, exactly as it does the reads.
                 mseq: (row.mseq ? resolveFile(row.mseq).toString() : null),
+                // A pre-trained skiver model.pt the nested sr_amplicon run simulates with
+                // (--sim_error_model trained) instead of training its own. Path string, as mseq.
+                sr_error_model: (row.sr_error_model ? resolveFile(row.sr_error_model).toString() : null),
             ]
             def genomesCsv = resolveFile(row.genomes_csv)
             // Resolve the FASTA files referenced by the genomes CSV so Nextflow stages them.
@@ -388,6 +403,9 @@ workflow {
                 sr_profile:  effSrProfile,
                 sr_settings: parseSrSettings(row, defaultSrSettings),
                 mseq: (row.mseq ? resolveFile(row.mseq).toString() : null),
+                // A pre-trained skiver model.pt the nested sr_amplicon run simulates with
+                // (--sim_error_model trained) instead of training its own. Path string, as mseq.
+                sr_error_model: (row.sr_error_model ? resolveFile(row.sr_error_model).toString() : null),
             ]
             [ meta, reads ]
         }

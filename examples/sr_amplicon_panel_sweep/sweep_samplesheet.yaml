@@ -1,0 +1,3532 @@
+databases:
+  community_20hm:
+    sequences:
+    - id: bacteroides_fragilis
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CR626927.1_SSU.fasta
+    - id: bacteroides_thetaiotaomicron
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP040530.1_SSU.fasta
+    - id: bacteroides_uniformis
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/FNPN01_SSU.fasta
+    - id: bacteroides_uniformis_strain2
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/BU_JCM13286_NT5170.1_SSU.fasta
+    - id: bacteroides_vulgatus
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP000139.1_SSU.fasta
+    - id: clostridium_bolteae
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/ABCC02_SSU.fasta
+    - id: clostridium_perfringens
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/DACTBY01_SSU.fasta
+    - id: clostridium_ramosum
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/ABFX02_SSU.fasta
+    - id: clostridium_saccharolyticum
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP002109.1_SSU.fasta
+    - id: collinsella_aerofaciens
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP048433.1_SSU.fasta
+    - id: coprococcus_comes
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP070062.1_SSU.fasta
+    - id: dorea_formicigenerans
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/GCA_000169235.1_SSU.fasta
+    - id: eggerthella_lenta
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP001726.1_SSU.fasta
+    - id: eubacterium_rectale
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/GCA_000209935.1_SSU.fasta
+    - id: fusobacterium_nucleatum
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/GCA_000007325.1_SSU.fasta
+    - id: methanobrevibacter_smithii
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/GCA_000151225.1_SSU.fasta
+    - id: parabacteroides_merdae
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/AAXE02_SSU.fasta
+    - id: roseburia_intestinalis
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/ABYJ02_SSU.fasta
+    - id: ruminococcus_gnavus
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP027002.1_SSU.fasta
+    - id: salinibacter_ruber
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP000159.1_SSU.fasta
+    - id: streptococcus_parasanguinis
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/GCA_000164675.2_SSU.fasta
+    - id: streptococcus_salivarius
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP009913.1_SSU.fasta
+    - id: veillonella_parvula
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/HM007566.1.fasta
+  gtdb_ssu_r232:
+    path: /PATH/TO/gtdb_ssu_r232
+samples:
+- sample: S01.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S01.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S01.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S01.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S01.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S01.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S01.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S01.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S02.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S02.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S02.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S02.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S02.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S02.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S02.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S02.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S03.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S03.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S03.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S03.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S03.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S03.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S03.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S03.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S04.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S04.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S04.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S04.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S04.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S04.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S04.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S04.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S05.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S05.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S05.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S05.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S05.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S05.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S05.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S05.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S06.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S06.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S06.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S06.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S06.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S06.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S06.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S06.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S07.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S07.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S07.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S07.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S07.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S07.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S07.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S07.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S08.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S08.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S08.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S08.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S08.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S08.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S08.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S08.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S09.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S09.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S09.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S09.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S09.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S09.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S09.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S09.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S10.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S10.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S10.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S10.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S10.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S10.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S10.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S10.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S11.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S11.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S11.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S11.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S11.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S11.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S11.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S11.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S12.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S12.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S12.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S12.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S12.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S12.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S12.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S12.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S13.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S13.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S13.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S13.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S13.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S13.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S13.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S13.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S14.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S14.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S14.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S14.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S14.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S14.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S14.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S14.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S15.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S15.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S15.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S15.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S15.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S15.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S15.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S15.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S16.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S16.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S16.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S16.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S16.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S16.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S16.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S16.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S17.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S17.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S17.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S17.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S17.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S17.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S17.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S17.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S18.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S18.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S18.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S18.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S18.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S18.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S18.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S18.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S19.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S19.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S19.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S19.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S19.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S19.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S19.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S19.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S20.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S20.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S20.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S20.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+- sample: S20.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S20.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: community_20hm
+  sr_settings:
+  - name: custom.simulate.gate
+    mismapping_method: simulate
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.simulate.nogate
+    mismapping_method: simulate
+    infer_presence: false
+  - name: custom.kmer1_latent.gate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+  - name: custom.kmer1_latent.nogate
+    mismapping_method: align
+    align_backend: kmer
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+- sample: S20.amplicon_16s.515-YF-806BR
+  profilers:
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S20.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: gtdb_ssu_r232
+  sr_settings:
+  - name: gtdb_panel.trained.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.trained.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.gate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.nogate.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: gtdb_panel.flat.horseshoe.s3k
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
