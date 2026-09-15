@@ -1,0 +1,31 @@
+# Panel reinterpretation through `sr_settings:` (stub-only).
+#
+# `database: self` stands in for the generic database (GTDB) the reads are mapped against.
+# `panel: panelA` reinterprets those labels through the panelA collection. No row profiles
+# against panelA directly; it is built because a setting names it. Panel entries build no
+# shared matrix (the nested run measures their kernel itself), so this is 1 matrix and 3
+# inference runs. `sr_error_model` reaches the nested samplesheet for the trained kernel.
+databases:
+  panelA:
+    sequences:
+      - {id: genomeA, ssu: tests/data/ssuA.fasta}
+      - {id: genomeB, ssu: tests/data/ssuB.fasta}
+
+samples:
+  - sample: S2
+    train_id: natA
+    train_fastq_1: tests/data/natural_R1.fastq.gz
+    train_fastq_2: tests/data/natural_R2.fastq.gz
+    platform: hq-illumina
+    genomes_csv: tests/data/genomes_S2_ssu.csv
+    num_reads: 2000
+    mode: amplicon
+    read_length_mean: 200
+    profilers: [sr_amplicon]
+    database: self
+    sr_error_model: tests/data/pretrained_natA/natA.model.pt
+    sr_settings:
+      - {name: square, mismapping_method: align, align_backend: exact-hash, align_tau: 0}
+      - {name: panel_trained, mismapping_method: simulate, matrix_args: --sim_error_model trained,
+         panel: panelA, infer_presence: false}
+      - {name: panel_flat, mismapping_method: simulate, panel: panelA, infer_presence: false}

@@ -215,6 +215,41 @@ nextflow_pipeline {
         }
     }
 
+    test("sr_settings panel reinterpretation - stub") {
+        tag "stub"
+        options "-stub"
+        when {
+            params {
+                input  = "${projectDir}/tests/samplesheets/sr_panel.yaml"
+                outdir = "$outputDir"
+            }
+        }
+        then {
+            def sr = "${params.outdir}/S2/profiling/sr"
+            def trained = path("${sr}/S2.panel_trained.nested_args.txt").text
+            assertAll(
+                { assert workflow.success },
+                { assert path("${params.outdir}/S2/S2.square.sr_profile.tsv").exists() },
+                { assert path("${params.outdir}/S2/S2.panel_trained.sr_profile.tsv").exists() },
+                { assert path("${params.outdir}/S2/S2.panel_flat.sr_profile.tsv").exists() },
+
+                // Only the square entry builds a shared matrix; a panel run measures its
+                // own kernel, so it is handed the matrix flags instead of a matrix.
+                { assert workflow.trace.succeeded().findAll { it.name.contains("BUILD_SUPERRESOLUTION_MISMAPPING") }.size() == 1 },
+                { assert workflow.trace.succeeded().findAll { it.name.contains("RUN_SUPERRESOLUTION") }.size() == 3 },
+                { assert trained.contains("--mismapping_method simulate --sim_error_model trained") },
+
+                // panelA is named only by `panel:`, and is built all the same.
+                { assert trained.contains("--panel_references ") && trained.contains("panelA") },
+                { assert !path("${sr}/S2.square.nested_args.txt").text.contains("--panel_references") },
+
+                // The row's pre-trained model reaches the nested samplesheet.
+                { assert path("${sr}/S2.panel_trained.nested_samplesheet.yml").text.contains("error_model: ") },
+                { assert path("${sr}/S2.panel_trained.nested_samplesheet.yml").text.contains("natA.model.pt") }
+            )
+        }
+    }
+
     test("sr_settings fan-out - stub") {
         tag "stub"
         options "-stub"

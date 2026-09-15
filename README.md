@@ -138,6 +138,7 @@ databases (see [Named sequence collections](#named-sequence-collections-database
 | `subsample` | Optional list of read depths to sweep (absolute read/pair counts). The full draw is generated once, then subsampled to each depth — each gets its own `subsample_<N>/` output dir with its own reads + ground truth + profile. `none`/`null`/empty/omitted → a single full-depth run in `<sample>/`. |
 | `sr_settings` | Optional list of named superresolution knob sets. Each `sr_*` profiler on the row runs **once per entry** — its own mis-mapping matrix and nested run — writing `<id>.<name>.sr_profile.tsv`. See [Sweeping superresolution settings](#sweeping-superresolution-settings). Blank → the samplesheet's top-level `sr_settings:`, else the run-global `sr_*` params. |
 | `mseq` | Optional (`sr_amplicon` only). A mapseq classification of this sample's reads against this same reference set — a previous run's `profiling/sr/<id>.obs.mseq.gz`. Supplying it makes the nested run skip its own read mapping, which is what makes an `sr_settings` sweep affordable. |
+| `sr_error_model` | Optional (`sr_amplicon` only). A pre-trained skiver `model.pt`, e.g. a previous run's `error_models/<train_id>/<train_id>.model.pt`. The nested run simulates with it under `--sim_error_model trained` instead of training its own. It is written to the nested samplesheet as `error_model:`. |
 | `chunks` | Optional. Split generation of `num_reads` across N parallel `generate-reads` calls (merged back into one reads-set + BAM before subsampling/ground truth), useful for large `num_reads`. Blank → `params.chunks` (default `1`, no chunking). |
 
 Relative `genomes_csv` / FASTA / FASTQ paths resolve against the pipeline
@@ -533,6 +534,16 @@ What it costs is the point:
 `--step all` run to generate and map, then one `--step profile` run over the whole grid. `examples/sr_amplicon_gtdb_sweep/` is the same two phases against a
 **pre-built** (`path:`) reference set the size of GTDB, over negative-binomial
 communities rather than a sub-species pair.
+
+A `panel:` entry (`sr_amplicon` only) reinterprets the row's database labels through a
+genome panel: superresolution-amplicon's `panel_references`, for reads already mapped
+against something like GTDB. It names a `databases:` collection, which is built even if no
+row profiles against it, and inference runs over that collection's genomes plus
+`background` instead of over the database's own references. The nested run measures the
+panel kernel itself, inside the inference run, so a panel entry shares no matrix and every
+panel entry is one kernel build. The row's `sr_error_model:` hands that run a pre-trained
+model for `--sim_error_model trained`. `examples/sr_amplicon_panel_sweep/` compares this
+against mapping to the panel directly, each under its own grid.
 
 Neither needs an external database: the only reference input is one combined FASTA
 over the community, which the pipeline builds for you with headers

@@ -41,9 +41,12 @@ def srOpt(meta, kind, name) {
 // so it stays out of the key and an ordinary run's published mismapping/<set>/ paths are
 // unchanged. Settings differing only in the inference knobs keep the same key on purpose
 // — they share the expensive matrix and split later, at the inference batch.
+// A `panel:` entry is a set of its own: its kernel runs from that panel's amplicons to the
+// row's database labels, and is not the row's square matrix.
 def srSetKey(meta, base) {
     def mode = meta.sr_setting ? srMatrixKey(meta) : ''
-    "${base}:${meta.profiler}${meta.primer ? ':' + meta.primer : ''}${mode}".toString()
+    def panel = meta.sr_opts?.panel ? ":panel=${meta.sr_opts.panel}" : ''
+    "${base}:${meta.profiler}${meta.primer ? ':' + meta.primer : ''}${mode}${panel}".toString()
 }
 
 // Nested superresolution command-line flags, composed here and stamped onto `meta` so
@@ -81,6 +84,15 @@ def srInferenceArgs(meta) {
     (kind == 'amplicon' && decay != null && decay.toString() != 'false')
         ? [srMatrixArgs(meta), args].findAll { it }.join(' ')
         : args
+}
+
+// Panel reinterpretation (a `panel:` entry). superresolution-amplicon measures the panel
+// kernel inside the inference run and refuses a supplied --mismapping_matrix, so that run
+// takes the matrix flags too, plus the panel's reference FASTA (meta.panel_refs, resolved
+// from the named collection below).
+def srPanelArgs(meta) {
+    [srMatrixArgs(meta), srInferenceArgs(meta), "--panel_references ${meta.panel_refs}"]
+        .findAll { it }.join(' ')
 }
 
 // The named knobs above, plus the free-form escape hatch, as one nested command line.
@@ -307,7 +319,28 @@ workflow PROFILE {
         // Named collections are reference sets shared by every matching sample.
         .map { key, meta, reads, refs -> [ srSetKey(meta, meta.database), meta, reads, refs ] }
 
-    ch_sr_runs = ch_sr_self_in.mix(ch_sr_built_in)
+    ch_sr_all = ch_sr_self_in.mix(ch_sr_built_in)
+
+    // A `panel:` entry names a collection whose reference FASTA becomes the nested run's
+    // --panel_references; the row still maps against its own `database`. Carried as an
+    // absolute path string, like the reads: RUN_SUPERRESOLUTION is executor 'local'.
+    ch_sr_panel = ch_sr_all
+        .filter { referenceSet, meta, reads, refs -> meta.sr_opts?.panel }
+        .map { referenceSet, meta, reads, refs ->
+            def panel = meta.sr_opts.panel.toString()
+            if (meta.profiler != 'sr_amplicon' || !(panel in builtNames.sr_amplicon)) {
+                error "sr_settings '${meta.sr_setting}' (sample ${meta.id}): panel '${panel}' " +
+                      "must name a databases: collection, and only sr_amplicon takes a panel"
+            }
+            [ "${panel}:ssu".toString(), referenceSet, meta, reads, refs ]
+        }
+        .combine(ch_sr_dbs, by: 0)
+        .map { key, referenceSet, meta, reads, refs, panelRefs ->
+            [ referenceSet, meta + [ panel_refs: panelRefs.toString() ], reads, refs ]
+        }
+    ch_sr_runs = ch_sr_all
+        .filter { referenceSet, meta, reads, refs -> !meta.sr_opts?.panel }
+        .mix(ch_sr_panel)
 
     // One pull per nested pipeline for the whole run, shared by every SR task.
     SR_PULL_REPO(ch_sr_runs.map { referenceSet, meta, reads, refs -> meta.profiler }.unique())
@@ -328,13 +361,16 @@ workflow PROFILE {
     // without it two flavours of the same single sample would collide there.
     ch_sr_rows = ch_sr_runs.map { referenceSet, meta, reads, refs ->
         [ referenceSet, meta + [ reference_set: referenceSet,
-                                 inference_args: srInferenceArgs(meta) ], reads, refs ]
+                                 inference_args: meta.panel_refs ? srPanelArgs(meta) : srInferenceArgs(meta) ],
+          reads, refs ]
     }
 
     // Materialise exactly one matrix per reference set. The nested pipelines need a
     // sample-shaped input to build the simulation matrix, so select one representative
     // run; all subsequent sample runs reuse its matrix through --mismapping_matrix.
+    // Panel sets have none to build: their inference run measures the kernel.
     ch_sr_mismapping_in = ch_sr_rows
+        .filter { referenceSet, meta, reads, refs -> !meta.panel_refs }
         .groupTuple(by: 0)
         .map { referenceSet, metas, readsList, refsList ->
             def rows = [metas, readsList, refsList].transpose().sort { a, b -> a[0].id <=> b[0].id }
@@ -374,19 +410,28 @@ workflow PROFILE {
             [ key[0], rows ]
         }
 
-    RUN_SUPERRESOLUTION(
-        ch_sr_infer_grouped
-            .map { referenceSet, rows ->
-                def layout = rows.collect { meta, reads, refs ->
-                    // A precomputed mapseq classification (sr_amplicon only — the shotgun
-                    // sibling has no mapseq stage), '' when the nested run should map for
-                    // itself.
-                    def mseq = (meta.profiler == 'sr_amplicon' ? meta.mseq : null) ?: ''
-                    [ meta.id, meta.platform ?: '', (reads instanceof List ? reads : [reads])*.toString(), mseq ]
-                }
-                [ referenceSet, rows*.getAt(0), layout, rows[0][2] ]
+    ch_sr_batches = ch_sr_infer_grouped
+        .map { referenceSet, rows ->
+            def layout = rows.collect { meta, reads, refs ->
+                // A precomputed mapseq classification and a pre-trained error model
+                // (sr_amplicon only — the shotgun sibling has neither stage), '' when the
+                // nested run should map, or train, for itself.
+                def amplicon = meta.profiler == 'sr_amplicon'
+                [ meta.id, meta.platform ?: '', (reads instanceof List ? reads : [reads])*.toString(),
+                  (amplicon ? meta.mseq : null) ?: '', (amplicon ? meta.sr_error_model : null) ?: '' ]
             }
-            .combine(BUILD_SUPERRESOLUTION_MISMAPPING.out.mismapping.map { meta, matrix -> [ meta.reference_set, matrix ] }, by: 0)
+            [ referenceSet, rows*.getAt(0), layout, rows[0][2] ]
+        }
+    // A panel batch measures its own kernel, so it takes no matrix ([] = no file).
+    ch_sr_batches_matrix = ch_sr_batches
+        .filter { referenceSet, metas, layout, refs -> !metas[0].panel_refs }
+        .combine(BUILD_SUPERRESOLUTION_MISMAPPING.out.mismapping.map { meta, matrix -> [ meta.reference_set, matrix ] }, by: 0)
+        .mix(ch_sr_batches
+            .filter { referenceSet, metas, layout, refs -> metas[0].panel_refs }
+            .map { referenceSet, metas, layout, refs -> [ referenceSet, metas, layout, refs, [] ] })
+
+    RUN_SUPERRESOLUTION(
+        ch_sr_batches_matrix
             .map { referenceSet, metas, layout, refs, matrix -> [ metas[0].profiler, metas, layout, refs, matrix ] }
             .combine(SR_PULL_REPO.out.assets, by: 0)
             .map { profiler, metas, layout, refs, matrix, assets -> [ metas, layout, refs, matrix, assets ] }

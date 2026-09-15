@@ -1,0 +1,164 @@
+# Config for the GTDB panel-reinterpretation vs custom-database sweep. This one file is
+# the single source of truth for every script here; no paths or metadata are hard-coded
+# in Python. Relative paths resolve against this file's dir.
+#
+# The question: the reads were mapped against GTDB, and the community is known to come
+# from a panel (the 20HM mock plus a second B. uniformis strain). How close does
+# reinterpreting the GTDB labels through that panel get to mapping against a custom
+# database of the panel itself, and under which kernel and prior?
+#
+# Fill in the two train FASTQs, the panel's `ssu:` paths and `gtdb.path:`. Also set
+# `sr_amplicon_repo` in benchmark.config. Then run ./run.sh.
+
+train:
+  id: sc2200627
+  # Real reads the sequencing-error model is trained from (once, shared by all samples).
+  fastq_1: /PATH/TO/SC2200627_R1.fastq.gz
+  fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
+  platform: hq-illumina        # 2x300 MiSeq amplicon tails may fit 'lq-illumina' better
+
+reads:
+  num_reads: 1000000           # 500k pairs x 2 (pipeline counts paired reads as pairs*2)
+  subsample: [none, 100000]    # one benchmark dir per depth; `none` = full depth
+  paired_end: true
+  read_length_mean: 300
+  read_length_variance: 0
+
+# Community model, identical to examples/abundance_nb_sample: each panel genome is drawn
+# INDEPENDENTLY per sample. Bernoulli(presence) decides whether it is there at all, and if
+# so NegBinom(mean, dispersion) sets its abundance. Seeded, so a rerun reproduces the same
+# 20 communities. A genome may override `presence:` and/or `nb: {mean?, dispersion?}` inline.
+#
+# About a third of the panel is absent from each sample. A reinterpretation that invents
+# them, or pushes their mass into `background`, shows up as `mass_absent` in the scores.
+# The B. uniformis pair is present together in only some samples, and those samples give
+# `strain_split_error`.
+sampling:
+  n_samples: 20
+  seed: 1
+  presence: 0.6667
+  negative_binomial:
+    mean: 20
+    dispersion: 1.0
+
+# One read-generation mode: V4 amplicons cut out of full-length 16S by in-silico PCR.
+# superresolution-amplicon cuts both reference sets' amplicons, and the panel's, with the
+# same pair.
+generation_modes:
+  - name: amplicon_16s
+    source: ssu
+    mode: amplicon
+    profilers: [sr_amplicon]
+    primers:
+      - {pair_id: 515-YF-806BR, forward: GTGYCAGCMGCCGCGGTAA, reverse: GGACTACNVGGGTWTCTAAT}
+
+# The CUSTOM database, built in-pipeline from `panel:` below. It has two jobs:
+#   - the `custom` arm maps the reads against it;
+#   - the `gtdb_panel` arm reinterprets the GTDB labels through it (every gtdb_panel
+#     setting gets `panel: <this name>`).
+# Since both arms see the same panel ids, their profiles and truth.tsv line up with no
+# id translation.
+database:
+  name: community_20hm
+  profilers: [sr_amplicon]
+
+# The GENERIC database the gtdb_panel arm maps against: a PRE-BUILT directory holding
+# `<name>_ssu.sr_refs.fasta` (headers `{genome_id}|{copy}|{orig}`), laid out the way
+# the pipeline publishes its own databases. See examples/sr_amplicon_gtdb_sweep.
+# Unlike that example, the panel ids do NOT have to be GTDB accessions here, because
+# inference runs over the panel, not over GTDB's genomes.
+gtdb:
+  name: gtdb_ssu_r232
+  path: /PATH/TO/gtdb_ssu_r232          # dir holding gtdb_ssu_r232_ssu.sr_refs.fasta
+  # Phase 1 maps every benchmark dir against GTDB once, under this one setting, so that
+  # phase 2 can hand the classification back as `mseq:`. Its composition is a by-product
+  # and is not scored. exact-hash is the matrix mode that is cheap at GTDB scale.
+  map_setting: {name: map, mismapping_method: align, align_backend: exact-hash, align_tau: 0,
+                matrix_args: --align_ambiguity_weight 0.3}
+
+# The two parameter grids, one per arm. Each is the same shape as
+# examples/sr_amplicon_param_sweep's `sr_sweep.grid`: every axis is a list of named knob
+# maps, and the grid is their cartesian product. A point is named `<arm>.<axis names
+# joined by '.'>`, and that name becomes part of its output filename. Knobs are the
+# pipeline's sr_settings keys:
+#   matrix : mismapping_method, align_backend, align_tau, align_distance_decay,
+#            align_decay_model, matrix_args, panel
+#   infer  : infer_presence, infer_presence_prior, infer_presence_temp,
+#            infer_distance_decay, infer_decay_sigma, inference_args
+# Any other superresolution-amplicon param goes through `matrix_args` or
+# `inference_args`, e.g. `--sim_error_model trained`, `--infer_horseshoe true` or
+# `--infer_steps 10000`. When two axes of one point both set `matrix_args` or
+# `inference_args`, the flags are joined, not overwritten.
+sr_sweep:
+  # Mapping against the panel itself. Grid points agreeing on every matrix knob share one
+  # matrix: this 2x2 grid is 4 profiles per dir off 2 matrices.
+  custom:
+    grid:
+      matrix:
+        # Flat error is enough for a 23-reference set (superresolution-amplicon dev/error_rate_sensitivity.md).
+        - {name: simulate, mismapping_method: simulate}
+        - {name: kmer1_latent, mismapping_method: align, align_backend: kmer, align_tau: 1,
+           align_distance_decay: 0.007, infer_distance_decay: true,
+           matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096}
+      prior:
+        - {name: gate, infer_presence: true, infer_presence_prior: 0.01, infer_presence_temp: 1.0}
+        - {name: nogate, infer_presence: false}
+
+  # GTDB labels, reinterpreted through the panel. The kernel is measured by simulating
+  # reads from the panel's V4 amplicons and mapping them against GTDB. The nested run does
+  # that INSIDE each inference run, so unlike the custom arm, every point here pays for
+  # its own kernel: panel_sim_n_per_ref (default 5,000) reads per distinct amplicon
+  # (about 30 here), each mapped against GTDB. The reads themselves are not re-mapped.
+  #
+  # `panel:` is added to every point by the generator. infer_distance_decay is refused
+  # here, because a panel kernel records no distances.
+  gtdb_panel:
+    grid:
+      kernel:
+        # `trained` simulates with the skiver model phase 1 generated the reads with
+        # (handed over as `sr_error_model:`). That is an oracle, so it is optimistic.
+        - {name: trained, mismapping_method: simulate, matrix_args: --sim_error_model trained}
+        # `flat` uses no trained model, so it is the honest number when there is none.
+        - {name: flat, mismapping_method: simulate, matrix_args: --sim_error_model flat}
+      prior:
+        - {name: gate, infer_presence: true, infer_presence_prior: 0.01, infer_presence_temp: 1.0}
+        - {name: nogate, infer_presence: false}
+        - {name: horseshoe, infer_presence: false, inference_args: --infer_horseshoe true}
+      steps:
+        - {name: s3k, inference_args: --infer_steps 3000}
+        # The gate collapses at 10k steps on this panel (superresolution-amplicon dev/panel_reinterpretation.md);
+        # uncomment to see it. Doubles the gtdb_panel cost.
+        # - {name: s10k, inference_args: --infer_steps 10000}
+
+# Scoring (scripts/score_sweep.py): the strain pair whose split `strain_split_error`
+# reports, as [major, minor].
+score:
+  strain_pair: [bacteroides_uniformis, bacteroides_uniformis_strain2]
+
+# One entry per genome: the 20HM mock community plus a second B. uniformis strain. `ssu:`
+# (full-length 16S) feeds read generation, the custom database and the reinterpretation
+# panel alike. The file names are the ones the sr_amp_param_sweep run used.
+panel:
+  - {id: bacteroides_fragilis,          ssu: references/16S/CR626927.1_SSU.fasta}
+  - {id: bacteroides_thetaiotaomicron,  ssu: references/16S/CP040530.1_SSU.fasta}
+  - {id: bacteroides_uniformis,         ssu: references/16S/FNPN01_SSU.fasta}
+  - {id: bacteroides_uniformis_strain2, ssu: references/16S/BU_JCM13286_NT5170.1_SSU.fasta}
+  - {id: bacteroides_vulgatus,          ssu: references/16S/CP000139.1_SSU.fasta}
+  - {id: clostridium_bolteae,           ssu: references/16S/ABCC02_SSU.fasta}
+  - {id: clostridium_perfringens,       ssu: references/16S/DACTBY01_SSU.fasta}
+  - {id: clostridium_ramosum,           ssu: references/16S/ABFX02_SSU.fasta}
+  - {id: clostridium_saccharolyticum,   ssu: references/16S/CP002109.1_SSU.fasta}
+  - {id: collinsella_aerofaciens,       ssu: references/16S/CP048433.1_SSU.fasta}
+  - {id: coprococcus_comes,             ssu: references/16S/CP070062.1_SSU.fasta}
+  - {id: dorea_formicigenerans,         ssu: references/16S/GCA_000169235.1_SSU.fasta}
+  - {id: eggerthella_lenta,             ssu: references/16S/CP001726.1_SSU.fasta}
+  - {id: eubacterium_rectale,           ssu: references/16S/GCA_000209935.1_SSU.fasta}
+  - {id: fusobacterium_nucleatum,       ssu: references/16S/GCA_000007325.1_SSU.fasta}
+  - {id: methanobrevibacter_smithii,    ssu: references/16S/GCA_000151225.1_SSU.fasta}
+  - {id: parabacteroides_merdae,        ssu: references/16S/AAXE02_SSU.fasta}
+  - {id: roseburia_intestinalis,        ssu: references/16S/ABYJ02_SSU.fasta}
+  - {id: ruminococcus_gnavus,           ssu: references/16S/CP027002.1_SSU.fasta}
+  - {id: salinibacter_ruber,            ssu: references/16S/CP000159.1_SSU.fasta}
+  - {id: streptococcus_parasanguinis,   ssu: references/16S/GCA_000164675.2_SSU.fasta}
+  - {id: streptococcus_salivarius,      ssu: references/16S/CP009913.1_SSU.fasta}
+  - {id: veillonella_parvula,           ssu: references/16S/HM007566.1.fasta}

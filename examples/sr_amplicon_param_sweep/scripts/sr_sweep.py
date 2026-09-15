@@ -20,7 +20,7 @@ import yaml
 # Knobs an sr_settings entry may carry (mirrors srSettingKeys() in ../../main.nf).
 SETTING_KEYS = {
     "mismapping_method", "align_backend", "align_tau", "align_distance_decay",
-    "align_decay_model", "matrix_args",
+    "align_decay_model", "matrix_args", "panel",
     "infer_presence", "infer_presence_prior", "infer_presence_temp",
     "infer_distance_decay", "infer_decay_sigma", "inference_args",
 }
@@ -29,7 +29,10 @@ SETTING_KEYS = {
 # with several inference points affordable. Note which side `infer_distance_decay` is
 # on: fitting the decay per sample costs an inference run, not a matrix.
 MATRIX_KEYS = {"mismapping_method", "align_backend", "align_tau",
-               "align_distance_decay", "align_decay_model", "matrix_args"}
+               "align_distance_decay", "align_decay_model", "matrix_args", "panel"}
+# Free-form flag strings. Two axes of one grid point both setting one of these add up,
+# rather than the later axis silently dropping the earlier axis's flags.
+ARG_KEYS = {"matrix_args", "inference_args"}
 
 
 def dump_yaml(doc, fh):
@@ -109,7 +112,11 @@ def settings(cfg):
     for combo in itertools.product(*axes):
         merged = {"name": ".".join(e["name"] for e in combo)}
         for e in combo:
-            merged.update({k: v for k, v in e.items() if k != "name"})
+            for k, v in e.items():
+                if k in ARG_KEYS and merged.get(k):
+                    merged[k] = f"{merged[k]} {v}"
+                elif k != "name":
+                    merged[k] = v
         out.append(merged)
     names = [s["name"] for s in out]
     if len(set(names)) != len(names):
