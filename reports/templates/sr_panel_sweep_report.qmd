@@ -1,0 +1,978 @@
+---
+title: "GTDB panel reinterpretation vs a custom database"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-location: left
+    code-fold: true
+    code-tools: true
+    embed-resources: true
+execute:
+  warning: false
+jupyter:
+  kernelspec:
+    display_name: basicpython
+    language: python
+    name: basicpython
+params:
+  run_label: ""
+  run_dir: "."
+  pipeline_dir: "results/sr_amplicon_panel_sweep"
+  samplesheet: "sweep_samplesheet.yaml"
+  superresolution_mismapping_dir: "mismapping"
+  report_scripts_dir: ""
+  example_scripts_dir: ""
+  strain_pair: []
+  reference_method: ""
+  presence_threshold: 0.5
+  output_dir: ""
+---
+
+```{python}
+#| tags: [parameters]
+#| include: false
+# Default parameter values — overridden by -P flags at render time.
+run_label = ""
+run_dir = "."
+pipeline_dir = "results/sr_amplicon_panel_sweep"
+samplesheet = "sweep_samplesheet.yaml"
+superresolution_mismapping_dir = "mismapping"
+report_scripts_dir = ""
+example_scripts_dir = ""
+strain_pair = []
+reference_method = ""
+presence_threshold = 0.5
+output_dir = ""
+```
+
+```{python}
+#| echo: false
+#| output: false
+import json
+import os
+import sys
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import plotly.io as pio
+import yaml
+from IPython.display import HTML, Markdown, display
+from plotly.offline import get_plotlyjs
+
+
+# ponytail: plotly's notebook renderer re-embeds plotly.js (~5 MB) with every figure under
+# Quarto; figures here skip it and the title cell embeds the library once.
+class _PlotlyOnce(pio.base_renderers.MimetypeRenderer):
+    def to_mimebundle(self, fig_dict):
+        return {"text/html": pio.to_html(fig_dict, include_plotlyjs=False, full_html=False)}
+
+
+pio.renderers["plotly_once"] = _PlotlyOnce()
+pio.renderers.default = "plotly_once"
+
+_script_candidates = [
+    Path(report_scripts_dir) if report_scripts_dir else None,
+    Path(os.environ["BENCHMARK_REPORT_SCRIPTS"])
+    if os.environ.get("BENCHMARK_REPORT_SCRIPTS") else None,
+    Path.cwd().parent / "synthetic-metagenomic-benchmark-pipeline" / "reports" / "scripts",
+    Path.cwd().parent / "scripts",
+]
+REPORT_SCRIPTS_DIR = next(
+    (path for path in _script_candidates if path and (path / "mismapping_plots.py").exists()),
+    None,
+)
+if REPORT_SCRIPTS_DIR is None:
+    raise FileNotFoundError("Could not locate reports/scripts/mismapping_plots.py")
+sys.path.insert(0, str(REPORT_SCRIPTS_DIR))
+from mismapping_plots import genome_mismapping_matrix
+
+# The example's own scorer, so every number here matches `panel_sweep_scores.csv`.
+EXAMPLE_SCRIPTS_DIR = (Path(example_scripts_dir) if example_scripts_dir else
+                       REPORT_SCRIPTS_DIR.parent.parent / "examples" / "sr_amplicon_panel_sweep"
+                       / "scripts")
+sys.path.insert(0, str(EXAMPLE_SCRIPTS_DIR))
+from score_sweep import scores as score_profile
+
+# Resolve run_dir whether the template is rendered directly or from a Taskfile elsewhere.
+_candidates = [Path(run_dir), *(p / run_dir for p in [Path.cwd(), *Path.cwd().parents])]
+RUN_DIR = next((p for p in _candidates if (p / pipeline_dir).exists()), Path(run_dir))
+_pipeline = Path(pipeline_dir)
+PIPELINE_DIR = _pipeline if _pipeline.is_absolute() else RUN_DIR / _pipeline
+SR_MISMAPPING_DIR = PIPELINE_DIR / superresolution_mismapping_dir
+_samplesheet = Path(samplesheet)
+SAMPLESHEET = _samplesheet if _samplesheet.is_absolute() else RUN_DIR / _samplesheet
+PRESENCE_THRESHOLD = float(presence_threshold)
+ARMS = ("custom", "gtdb_panel")
+MAPSEQ_ONLY = "custom.mapseq_only"
+
+
+def as_list(value):
+    """Return a Quarto list parameter, accepting a comma-separated CLI value too."""
+    if isinstance(value, str):
+        return [item.strip() for item in value.split(",") if item.strip()]
+    return [str(item).strip() for item in value if str(item).strip()]
+
+
+# --- the sweep as declared ------------------------------------------------------------
+if not SAMPLESHEET.exists():
+    raise FileNotFoundError(f"Sweep samplesheet not found: {SAMPLESHEET}")
+SHEET = yaml.safe_load(SAMPLESHEET.read_text())
+KNOBS, ROW_DB = {}, {}
+for row in SHEET["samples"]:
+    for entry in row.get("sr_settings") or []:
+        KNOBS.setdefault(entry["name"], {k: v for k, v in entry.items() if k != "name"})
+        ROW_DB.setdefault(entry["name"], row["database"])
+SETTINGS = list(KNOBS)
+ARM_OF = {name: name.split(".", 1)[0] for name in SETTINGS}
+CUSTOM_DB = next((name for name, db in SHEET.get("databases", {}).items() if "sequences" in db),
+                 None)
+PANEL = [seq["id"] for seq in SHEET["databases"][CUSTOM_DB]["sequences"]] if CUSTOM_DB else []
+
+# --- benchmark dirs: every dir holding a truth table (one per community x depth) --------
+DIRS = []
+for truth_path in sorted(PIPELINE_DIR.glob("S*/**/*.truth.tsv")):
+    run_id = truth_path.name[: -len(".truth.tsv")]
+    parent = truth_path.parent
+    depth = parent.name.removeprefix("subsample_") if parent.name.startswith("subsample_") \
+        else "full"
+    sample = parent.name if depth == "full" else parent.parent.name
+    DIRS.append({"run_id": run_id, "sample": sample, "depth": depth, "dir": parent,
+                 "truth": truth_path})
+if not DIRS:
+    raise FileNotFoundError(f"No *.truth.tsv under {PIPELINE_DIR}")
+DEPTHS = ["full"] + sorted({d["depth"] for d in DIRS} - {"full"}, key=int)
+
+_truth, _comp, _diag, _fit = [], [], [], []
+for d in DIRS:
+    truth = pd.read_csv(d["truth"], sep="\t")
+    _truth.append(truth.assign(run_id=d["run_id"], sample=d["sample"], depth=d["depth"]))
+    for setting in SETTINGS:
+        stem = d["dir"] / "profiling" / "sr" / f"{d['run_id']}.{setting}"
+        tag = dict(run_id=d["run_id"], sample=d["sample"], depth=d["depth"], setting=setting)
+        comp = Path(f"{stem}.inferred_composition.csv")
+        if comp.exists():
+            _comp.append(pd.read_csv(comp).assign(**tag))
+        diag = Path(f"{stem}.inference_diagnostics.csv")
+        if diag.exists():
+            _diag.append(pd.read_csv(diag).assign(**tag))
+        fit = Path(f"{stem}.fit_diagnostics.json")
+        if fit.exists():
+            fit_doc = json.loads(fit.read_text())
+            gate = fit_doc.get(fit_doc.get("gate", ""), {}) or fit_doc.get("raw_reference", {})
+            _fit.append({**tag, "ppc_percentile": gate.get("posterior_predictive_percentile"),
+                         "observed_expected_tv": gate.get("observed_expected_tv")})
+
+TRUTH = pd.concat(_truth, ignore_index=True)
+COMP = pd.concat(_comp, ignore_index=True)
+DIAG = pd.concat(_diag, ignore_index=True) if _diag else pd.DataFrame()
+FIT = pd.DataFrame(_fit)
+SETTINGS = [s for s in SETTINGS if s in set(COMP["setting"])]
+if not PANEL:
+    PANEL = sorted(set(COMP["genome_id"]) - {"background"})
+INFERRED_GENOMES = set(COMP["genome_id"]) - {"background"}
+DROPPED = [g for g in PANEL if g not in INFERRED_GENOMES]
+
+PAIR = as_list(strain_pair)
+if not PAIR:
+    # The pair is whichever two panel ids share a prefix up to "_strain": the sweep's
+    # second strain of an existing member.
+    PAIR = next(([g.split("_strain")[0], g] for g in PANEL
+                 if "_strain" in g and g.split("_strain")[0] in PANEL), [])
+```
+
+```{python}
+#| echo: false
+#| output: false
+# --- methods: every grid point, plus the observed (no-inference) baselines -------------
+# `custom.mapseq_only` is MAPseq against the panel (identical under every custom point, as
+# in score_sweep.py). Each gtdb_panel kernel has its own home-label baseline: a GTDB label's
+# reads split over the panel genomes whose kernel names it their home label, the rest to
+# `background` — the observed composition the rectangular inference starts from.
+def kernel_of(setting):
+    return setting.split(".")[1] if setting.count(".") >= 1 else setting
+
+
+BASELINES = {}
+_first_custom = next((s for s in SETTINGS if ARM_OF[s] == "custom"), None)
+if _first_custom:
+    BASELINES[MAPSEQ_ONLY] = _first_custom
+for setting in SETTINGS:
+    if ARM_OF[setting] == "gtdb_panel":
+        BASELINES.setdefault(f"gtdb_panel.{kernel_of(setting)}.home_labels", setting)
+
+METHODS = SETTINGS + list(BASELINES)
+BASELINE_NAMES = set(BASELINES)
+
+
+def family(method):
+    """Colour group: arm + matrix/kernel point; baselines share one grey."""
+    return "observed baseline" if method in BASELINE_NAMES else ".".join(method.split(".")[:2])
+
+
+FAMILIES = list(dict.fromkeys(family(m) for m in METHODS))
+_family_palette = ["#4477AA", "#66CCEE", "#228833", "#CCBB44", "#EE6677", "#AA3377",
+                   "#332288", "#44AA99"]
+FAMILY_COLOUR = {f: ("#999999" if f == "observed baseline"
+                     else _family_palette[i % len(_family_palette)])
+                 for i, f in enumerate(f for f in FAMILIES)}
+COLOUR = {m: FAMILY_COLOUR[family(m)] for m in METHODS}
+
+# Long per-genome table: every method x dir x panel genome (+ background), truth zero-filled.
+_truth_full = (TRUTH.set_index(["run_id", "genome_id"])["realized_rel_abundance"])
+_rows = []
+for (run_id, setting), group in COMP.groupby(["run_id", "setting"], sort=False):
+    meta = group.iloc[0]
+    by_genome = group.set_index("genome_id")
+    sources = [(setting, "inferred_mean")]
+    sources += [(name, "observed_rel_abundance") for name, src in BASELINES.items()
+                if src == setting]
+    for method, column in sources:
+        for genome in PANEL + ["background"]:
+            present = genome in by_genome.index
+            _rows.append({
+                "run_id": run_id, "sample": meta["sample"], "depth": meta["depth"],
+                "method": method, "genome_id": genome,
+                "pred": float(by_genome.at[genome, column]) if present else 0.0,
+                "lo": float(by_genome.at[genome, "inferred_lo"])
+                if present and column == "inferred_mean" else np.nan,
+                "hi": float(by_genome.at[genome, "inferred_hi"])
+                if present and column == "inferred_mean" else np.nan,
+                "presence_prob": float(by_genome.at[genome, "presence_prob"])
+                if present and column == "inferred_mean" else np.nan,
+                "truth": float(_truth_full.get((run_id, genome), 0.0))
+                if genome != "background" else 0.0,
+            })
+LONG = pd.DataFrame(_rows)
+
+# A home-label baseline does not depend on the kernel's error model when every kernel
+# picks the same home labels; keep one copy, named for the arm.
+_home = [b for b in BASELINES if b.endswith(".home_labels")]
+_home_wide = LONG[LONG["method"].isin(_home)].pivot_table(
+    index=["run_id", "genome_id"], columns="method", values="pred")
+if len(_home) > 1 and all(np.allclose(_home_wide[_home[0]], _home_wide[b]) for b in _home[1:]):
+    LONG = LONG[~LONG["method"].isin(_home[1:])]
+    LONG.loc[LONG["method"] == _home[0], "method"] = "gtdb_panel.home_labels"
+    BASELINES = {("gtdb_panel.home_labels" if b == _home[0] else b): src
+                 for b, src in BASELINES.items() if b not in _home[1:]}
+    METHODS = SETTINGS + list(BASELINES)
+    BASELINE_NAMES = set(BASELINES)
+    COLOUR = {m: FAMILY_COLOUR.get(family(m), "#999999") for m in METHODS}
+
+# Scores per dir x method, from the example's scorer.
+_score_rows = []
+for (run_id, method), group in LONG.groupby(["run_id", "method"], sort=False):
+    pred = dict(zip(group["genome_id"], group["pred"]))
+    truth = {g: v for g, v in zip(group["genome_id"], group["truth"]) if v > 0}
+    score = score_profile(pred, truth, PAIR if len(PAIR) == 2 else ["", ""])
+    _score_rows.append({"run_id": run_id, "sample": group["sample"].iat[0],
+                        "depth": group["depth"].iat[0], "method": method, **score})
+SCORES = pd.DataFrame(_score_rows)
+SCORES["strain_split_error"] = pd.to_numeric(SCORES["strain_split_error"], errors="coerce")
+
+# Renormalised per-genome error, as the TV sees it (panel genomes only, background dropped).
+_panel = LONG[LONG["genome_id"] != "background"].copy()
+_panel["p"] = _panel["pred"] / _panel.groupby(["run_id", "method"])["pred"].transform("sum")
+_panel["t"] = _panel["truth"] / _panel.groupby(["run_id", "method"])["truth"].transform("sum")
+_panel["signed_error"] = _panel["p"] - _panel["t"]
+PANEL_LONG = _panel
+
+# Methods whose output is identical in every benchmark dir — a grid point that did not
+# change what it was meant to change.
+_wide = (LONG[LONG["method"].isin(SETTINGS)]
+         .pivot_table(index=["run_id", "genome_id"], columns="method", values="pred"))
+DUPLICATES = []
+for i, a in enumerate(SETTINGS):
+    for b in SETTINGS[i + 1:]:
+        if a in _wide and b in _wide and np.allclose(_wide[a], _wide[b], atol=1e-12,
+                                                     equal_nan=True):
+            DUPLICATES.append((a, b))
+
+if reference_method and reference_method in METHODS:
+    REFERENCE = reference_method
+else:
+    _custom_medians = (SCORES[SCORES["method"].isin([s for s in SETTINGS
+                                                     if ARM_OF[s] == "custom"])]
+                       .groupby("method")["tv"].median())
+    REFERENCE = _custom_medians.idxmin() if not _custom_medians.empty else None
+
+
+def method_axis(fig, **kwargs):
+    fig.update_xaxes(categoryorder="array", categoryarray=METHODS, tickangle=40, **kwargs)
+    return fig
+```
+
+```{python}
+#| echo: false
+title_label = run_label or RUN_DIR.name
+display(HTML(f"<script>{get_plotlyjs()}</script>"))
+display(Markdown(f"# {title_label}"))
+```
+
+This report asks how much is lost when amplicon reads **cannot be re-mapped against the
+community**. The same reads are profiled two ways, each under its own parameter grid:
+
+- **`custom`** maps the reads against a database built from the panel itself and infers
+  through a square mis-mapping matrix over the panel's references;
+- **`gtdb_panel`** keeps the reads' GTDB classification and reinterprets it through the
+  panel: a rectangular kernel (panel amplicons × GTDB labels) is measured by simulating
+  reads from the panel and mapping them to GTDB, and inference runs over the panel
+  genomes plus a `background` bucket for labels the panel cannot explain.
+
+Everything is scored against one ground truth: the **realized** abundance of the reads
+actually simulated. Communities are negative-binomial draws over the panel with each
+genome independently presence-gated, so every sample is a different mixture with some of
+the panel absent.
+
+```{python}
+#| echo: false
+#| output: asis
+n_samples = TRUTH["sample"].nunique()
+display(Markdown(
+    f"**{n_samples}** communities × **{len(DEPTHS)}** depth(s) "
+    f"({', '.join(DEPTHS)}) = **{len(DIRS)}** benchmark dirs; **{len(SETTINGS)}** grid "
+    f"points ({sum(ARM_OF[s] == 'custom' for s in SETTINGS)} `custom`, "
+    f"{sum(ARM_OF[s] == 'gtdb_panel' for s in SETTINGS)} `gtdb_panel`) plus "
+    f"{len(BASELINES)} observed baseline(s), over a panel of **{len(PANEL)}** genomes.\n"))
+if DROPPED:
+    display(Markdown(
+        f"_Panel genome(s) absent from every composition (not inferred at all, so scored as "
+        f"0): {', '.join(f'`{g}`' for g in DROPPED)}. superresolution-amplicon drops a panel "
+        "genome whose 16S does not amplify with the primer pair._\n"))
+if DUPLICATES:
+    pairs = "; ".join(f"`{a}` = `{b}`" for a, b in DUPLICATES)
+    display(Markdown(
+        "::: {.callout-warning}\n## Grid points with identical output\n\n"
+        f"These settings produced **byte-identical compositions in every benchmark dir**: "
+        f"{pairs}. The knob that was meant to separate them did not reach the nested run — "
+        "check its `inference_args` / `matrix_args` in the settings table below. Scores "
+        "for the later name are a copy of the earlier one, not an independent "
+        "measurement.\n:::\n"))
+```
+
+## Settings under test
+
+```{python}
+#| echo: false
+_knob_columns = ["mismapping_method", "align_backend", "align_tau", "matrix_args",
+                 "infer_presence", "infer_presence_prior", "infer_distance_decay",
+                 "inference_args", "panel"]
+rows = []
+for setting in SETTINGS:
+    knobs = KNOBS[setting]
+    diag = DIAG[DIAG["setting"] == setting] if not DIAG.empty else pd.DataFrame()
+
+    def diag_mean(column):
+        return diag[column].mean() if column in diag.columns and not diag.empty else np.nan
+
+    rows.append({
+        "setting": setting, "database": ROW_DB[setting],
+        **{column: knobs.get(column, "") for column in _knob_columns},
+        "horseshoe (as run)": (", ".join(sorted(diag["horseshoe"].astype(str).unique()))
+                               if "horseshoe" in diag.columns else ""),
+        "kernel": (", ".join(sorted(diag["kernel_format"].dropna().unique()))
+                   if "kernel_format" in diag.columns and diag["kernel_format"].notna().any()
+                   else "square"),
+        "mean kernel diagonal": diag_mean("mean_kernel_diagonal"),
+        "mean fitted decay": diag_mean("distance_decay"),
+        "reads inferred": diag["n_reads"].median() if "n_reads" in diag.columns else np.nan,
+        "dirs": diag["run_id"].nunique() if not diag.empty else 0,
+        "non-ok status": int((diag["status"] != "ok").sum()) if "status" in diag.columns else 0,
+    })
+SETTINGS_TABLE = pd.DataFrame(rows).set_index("setting")
+display(SETTINGS_TABLE.style.format(
+    {"mean kernel diagonal": "{:.4f}", "mean fitted decay": "{:.4f}",
+     "reads inferred": "{:,.0f}"}, na_rep="—"))
+```
+
+Blank knob cells mean the setting left that knob at the pipeline default. The
+`horseshoe (as run)` and diagnostic columns come from each run's
+`inference_diagnostics.csv`, i.e. what the nested pipeline actually did rather than what
+the samplesheet asked for. `gtdb_panel` kernels are measured inside each nested inference
+run and not published, so they have no diagonal here.
+
+## The communities
+
+```{python}
+#| echo: false
+_full = TRUTH[TRUTH["depth"] == "full"]
+heat = (_full.pivot_table(index="genome_id", columns="sample", values="realized_rel_abundance")
+        .reindex(PANEL))
+fig = go.Figure(go.Heatmap(
+    z=heat.to_numpy(), x=heat.columns, y=heat.index, colorscale="Viridis",
+    colorbar=dict(title="realized"),
+    hovertemplate="%{x}<br>%{y}<br>realized: %{z:.4f}<extra></extra>"))
+fig.update_layout(template="simple_white", height=640, width=900,
+                  xaxis=dict(title="community", tickangle=45),
+                  yaxis=dict(title="", autorange="reversed"),
+                  margin=dict(l=10, r=10, t=10, b=10))
+display(fig)
+```
+
+Blank cells are genomes absent from that community. Any mass a method puts there is
+`mass_absent` below.
+
+```{python}
+#| echo: false
+#| output: asis
+if len(PAIR) == 2:
+    pair_truth = _full.pivot_table(index="sample", columns="genome_id",
+                                   values="realized_rel_abundance").reindex(columns=PAIR)
+    both = pair_truth.fillna(0).sum(axis=1)
+    display(Markdown(
+        f"Strain pair `{PAIR[0]}` / `{PAIR[1]}`: both present in "
+        f"**{int((pair_truth.fillna(0) > 0).all(axis=1).sum())}** of {n_samples} communities; "
+        f"the pair holds >1% of the community (so `strain_split_error` is scored) in "
+        f"**{int((both > 0.01).sum())}**.\n"))
+```
+
+## Headline accuracy
+
+| Metric | Meaning |
+|--------|---------|
+| `tv` | total variation over panel genomes, both sides renormalised without `background` — 0 is perfect, 1 is disjoint |
+| `max_abs_error` | the largest single-genome error |
+| `mass_absent` | predicted share on genomes absent from that community |
+| `background` | `gtdb_panel`'s out-of-panel share. The community has no out-of-panel genome, so this is lost panel mass |
+| `strain_split_error` | error in the second strain's share *within* the strain pair; only where the pair is >1% of the truth |
+
+Scores are computed with the example's own `scripts/score_sweep.py`, so they match
+`panel_sweep_scores.csv`. The table pools both depths: the median of each metric, then
+its mean.
+
+```{python}
+#| echo: false
+METRICS = ["tv", "max_abs_error", "mass_absent", "background", "strain_split_error"]
+summary = (SCORES.groupby("method")[METRICS].agg(["median", "mean"]).reindex(METHODS))
+table = pd.DataFrame(index=summary.index)
+for metric in METRICS:
+    table[metric] = summary[(metric, "median")]
+    table[f"{metric} (mean)"] = summary[(metric, "mean")]
+table.insert(0, "arm", [("baseline" if m in BASELINE_NAMES else ARM_OF[m]) for m in table.index])
+table["n"] = SCORES.groupby("method").size().reindex(METHODS)
+HEADLINE = table
+display(table.style.format({c: "{:.4f}" for c in table.columns if c not in ("arm", "n")},
+                           na_rep="—")
+        .background_gradient(cmap="RdYlGn_r", subset=["tv", "max_abs_error", "mass_absent",
+                                                      "strain_split_error"]))
+```
+
+```{python}
+#| echo: false
+#| output: asis
+if REFERENCE:
+    _med = SCORES.groupby("method")["tv"].median()
+    best_panel = _med[[s for s in SETTINGS if ARM_OF[s] == "gtdb_panel"]].idxmin() \
+        if any(ARM_OF[s] == "gtdb_panel" for s in SETTINGS) else None
+    lines = [f"- Best `custom` point by median TV: **`{REFERENCE}`** ({_med[REFERENCE]:.4f})."]
+    if best_panel:
+        lines.append(f"- Best `gtdb_panel` point: **`{best_panel}`** ({_med[best_panel]:.4f}).")
+    for base in BASELINES:
+        lines.append(f"- `{base}` (no inference): {_med[base]:.4f}.")
+    display(Markdown("\n".join(lines) + "\n"))
+```
+
+### TV per benchmark dir
+
+One point per benchmark dir, both depths pooled (see [Read depth](#read-depth)); hover
+for the community and depth.
+
+```{python}
+#| echo: false
+fig = px.box(SCORES, x="method", y="tv", color="method", points="all",
+             hover_data=["sample", "depth"], color_discrete_map=COLOUR,
+             category_orders={"method": METHODS})
+fig.update_traces(boxmean=True, marker=dict(size=4), showlegend=False)
+fig.update_layout(template="simple_white", height=520, 
+                  yaxis_title="total variation (lower better)",
+                  margin=dict(l=10, r=10, t=30, b=10))
+method_axis(fig, title="")
+display(fig)
+```
+
+### The other metrics
+
+::: {.panel-tabset}
+
+```{python}
+#| echo: false
+#| output: asis
+for metric in METRICS[1:]:
+    sub = SCORES.dropna(subset=[metric])
+    if metric == "background":
+        sub = sub[sub["method"].map(lambda m: m.startswith("gtdb_panel"))]
+    print(f"#### {metric}\n")
+    fig = px.box(sub, x="method", y=metric, color="method", points="all",
+                 hover_data=["sample", "depth"], color_discrete_map=COLOUR,
+                 category_orders={"method": METHODS})
+    fig.update_traces(boxmean=True, marker=dict(size=4), showlegend=False)
+    fig.update_layout(template="simple_white", height=480, 
+                      margin=dict(l=10, r=10, t=30, b=10))
+    fig.update_xaxes(categoryorder="array",
+                     categoryarray=[m for m in METHODS if m in set(sub["method"])],
+                     tickangle=40, title="")
+    display(fig)
+    print("\n")
+```
+
+:::
+
+## What reinterpretation costs
+
+Each method's TV **minus the reference `custom` point's TV on the same benchmark dir**
+(the reference is the best `custom` point by median TV unless `reference_method` is set).
+Pairing on the dir removes the community-to-community spread, which is most of the spread
+in the boxes above. Below zero, the method beat the reference on that community.
+
+```{python}
+#| echo: false
+#| output: asis
+if REFERENCE:
+    display(Markdown(f"Reference: **`{REFERENCE}`**.\n"))
+    ref = SCORES[SCORES["method"] == REFERENCE].set_index("run_id")["tv"]
+    PAIRED = SCORES[SCORES["method"] != REFERENCE].assign(
+        reference_tv=lambda df: df["run_id"].map(ref),
+        delta_tv=lambda df: df["tv"] - df["run_id"].map(ref))
+    paired_order = [m for m in METHODS if m != REFERENCE]
+    fig = px.strip(PAIRED, x="method", y="delta_tv", color="method", hover_data=["sample", "depth"],
+                   color_discrete_map=COLOUR, category_orders={"method": paired_order})
+    fig.add_hline(y=0, line=dict(color="#000000", dash="dash"))
+    fig.update_traces(marker=dict(size=5), showlegend=False)
+    fig.update_layout(template="simple_white", height=480, 
+                      yaxis_title=f"TV − TV({REFERENCE})",
+                      margin=dict(l=10, r=10, t=10, b=10))
+    fig.update_xaxes(categoryorder="array", categoryarray=paired_order, tickangle=40, title="")
+    display(fig)
+
+    delta = PAIRED.groupby("method").agg(
+        median_delta_tv=("delta_tv", "median"), mean_delta_tv=("delta_tv", "mean"),
+        worst_delta_tv=("delta_tv", "max"),
+        beats_reference=("delta_tv", lambda s: (s < 0).mean())).reindex(paired_order)
+    display(delta.style.format({"median_delta_tv": "{:+.4f}", "mean_delta_tv": "{:+.4f}",
+                                "worst_delta_tv": "{:+.4f}", "beats_reference": "{:.0%}"})
+            .background_gradient(cmap="RdYlGn_r", subset=["median_delta_tv"]))
+```
+
+### Community by community
+
+TV of each `gtdb_panel` point against the reference on the same dir. Points below the
+identity line are communities where reinterpretation did better.
+
+```{python}
+#| echo: false
+if REFERENCE:
+    fig = go.Figure()
+    top = float(PAIRED["tv"].max()) * 1.05
+    fig.add_trace(go.Scatter(x=[0, top], y=[0, top], mode="lines", name="identity",
+                             line=dict(color="#999999", dash="dash"), hoverinfo="skip"))
+    for method in [m for m in paired_order if m.startswith("gtdb_panel")]:
+        sub = PAIRED[PAIRED["method"] == method]
+        symbol = "circle" if method in SETTINGS else "x"
+        fig.add_trace(go.Scatter(
+            x=sub["reference_tv"], y=sub["tv"], mode="markers", name=method,
+            marker=dict(color=COLOUR[method], symbol=symbol, size=7, opacity=0.8),
+            customdata=sub[["sample", "depth"]],
+            hovertemplate=(f"{method}<br>%{{customdata[0]}} (%{{customdata[1]}})<br>"
+                           f"{REFERENCE}: %{{x:.4f}}<br>this: %{{y:.4f}}<extra></extra>")))
+    fig.update_layout(template="simple_white", height=560, width=820,
+                      xaxis=dict(title=f"TV, {REFERENCE}", range=[0, top]),
+                      yaxis=dict(title="TV, gtdb_panel", range=[0, top]),
+                      legend=dict(orientation="h", y=-0.2), margin=dict(l=10, r=10, t=10, b=10))
+    display(fig)
+```
+
+## Where the error lands
+
+Mean **signed** error per genome (predicted − true share, both renormalised over the
+panel as the TV sees them), averaged over every benchmark dir. Red is over-called, blue
+under-called. A systematic bias on one genome — the same colour down a column — is a
+kernel or matrix problem rather than noise, since it survives averaging over
+20 different communities.
+
+```{python}
+#| echo: false
+bias = (PANEL_LONG.groupby(["method", "genome_id"])["signed_error"].mean()
+        .unstack().reindex(index=METHODS, columns=PANEL))
+limit = float(np.nanmax(np.abs(bias.to_numpy()))) or 1e-6
+mean_truth = PANEL_LONG[PANEL_LONG["method"] == METHODS[0]].groupby("genome_id")["t"].mean()
+fig = go.Figure(go.Heatmap(
+    z=bias.to_numpy(), x=bias.columns, y=bias.index, colorscale="RdBu_r",
+    zmin=-limit, zmax=limit, colorbar=dict(title="mean error"),
+    customdata=np.tile(mean_truth.reindex(PANEL).to_numpy(), (len(METHODS), 1)),
+    hovertemplate=("%{y}<br>%{x}<br>mean error: %{z:+.4f}<br>"
+                   "mean true share: %{customdata:.4f}<extra></extra>")))
+fig.update_layout(template="simple_white", height=620, 
+                  xaxis=dict(tickangle=45), yaxis=dict(autorange="reversed"),
+                  margin=dict(l=10, r=10, t=10, b=10))
+display(fig)
+```
+
+### Predicted vs true, per method
+
+Every genome in every benchmark dir. Axes are log-scaled with a floor at `1e-5`, so a
+genome absent from the community (true share 0) sits on the left edge as an `×`.
+
+::: {.panel-tabset}
+
+```{python}
+#| echo: false
+#| output: asis
+FLOOR = 1e-5
+for method in METHODS:
+    print(f"#### {method}\n")
+    sub = PANEL_LONG[PANEL_LONG["method"] == method]
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=[FLOOR, 1], y=[FLOOR, 1], mode="lines", name="identity",
+                             line=dict(color="#999999", dash="dash"), hoverinfo="skip"))
+    for label, part, symbol in (("present", sub[sub["t"] > 0], "circle"),
+                                ("absent", sub[sub["t"] == 0], "x")):
+        fig.add_trace(go.Scatter(
+            x=part["t"].clip(lower=FLOOR), y=part["p"].clip(lower=FLOOR), mode="markers",
+            name=f"truly {label}", marker=dict(color=COLOUR[method], symbol=symbol, size=6,
+                                               opacity=0.7),
+            customdata=part[["sample", "depth", "genome_id", "t", "p"]],
+            hovertemplate=("%{customdata[2]}<br>%{customdata[0]} (%{customdata[1]})<br>"
+                           "true: %{customdata[3]:.5f}<br>predicted: %{customdata[4]:.5f}"
+                           "<extra></extra>")))
+    fig.update_layout(template="simple_white", height=520, width=620,
+                      xaxis=dict(title="true share", type="log"),
+                      yaxis=dict(title="predicted share", type="log"),
+                      legend=dict(orientation="h", y=-0.2), margin=dict(l=10, r=10, t=10, b=10))
+    display(fig)
+    print("\n")
+```
+
+:::
+
+## Absent genomes and the presence gate
+
+A `gate` setting also reports `presence_prob`: the posterior probability that a genome is
+in the sample at all. Calls below use a threshold of
+`{python} PRESENCE_THRESHOLD`, against truth = realized share > 0. Settings without the
+gate report no presence probability.
+
+```{python}
+#| echo: false
+gated = PANEL_LONG[PANEL_LONG["method"].isin(SETTINGS) & PANEL_LONG["presence_prob"].notna()
+                   & PANEL_LONG["genome_id"].isin(INFERRED_GENOMES)]
+gate_settings = [s for s in SETTINGS if KNOBS[s].get("infer_presence")]
+gated = gated[gated["method"].isin(gate_settings)]
+rows = []
+for method in gate_settings:
+    sub = gated[gated["method"] == method]
+    called, present = sub["presence_prob"] >= PRESENCE_THRESHOLD, sub["t"] > 0
+    missed = sub[present & ~called]
+    rows.append({"setting": method,
+                 "true positive": int((called & present).sum()),
+                 "false positive": int((called & ~present).sum()),
+                 "false negative": int((~called & present).sum()),
+                 "true negative": int((~called & ~present).sum()),
+                 "largest missed share": missed["t"].max() if not missed.empty else np.nan,
+                 "precision": (called & present).sum() / max(called.sum(), 1),
+                 "recall": (called & present).sum() / max(present.sum(), 1)})
+if rows:
+    display(pd.DataFrame(rows).set_index("setting").style.format(
+        {"largest missed share": "{:.4f}", "precision": "{:.3f}", "recall": "{:.3f}"},
+        na_rep="—"))
+else:
+    display(Markdown("_No gated settings in this sweep._"))
+```
+
+```{python}
+#| echo: false
+if not gated.empty:
+    fig = go.Figure()
+    for method in gate_settings:
+        sub = gated[gated["method"] == method]
+        fig.add_trace(go.Scatter(
+            x=sub["t"].clip(lower=FLOOR), y=sub["presence_prob"], mode="markers", name=method,
+            marker=dict(color=COLOUR[method], size=6, opacity=0.7,
+                        symbol=np.where(sub["t"] > 0, "circle", "x")),
+            customdata=sub[["sample", "depth", "genome_id"]],
+            hovertemplate=(f"{method}<br>%{{customdata[2]}}<br>%{{customdata[0]}} "
+                           "(%{customdata[1]})<br>true: %{x:.5f}<br>presence: %{y:.3f}"
+                           "<extra></extra>")))
+    fig.add_hline(y=PRESENCE_THRESHOLD, line=dict(color="#999999", dash="dot"))
+    fig.update_layout(template="simple_white", height=520, width=880,
+                      xaxis=dict(title="true share (absent at the floor, ×)", type="log"),
+                      yaxis=dict(title="presence probability", range=[-0.03, 1.03]),
+                      legend=dict(orientation="h", y=-0.2), margin=dict(l=10, r=10, t=10, b=10))
+    display(fig)
+```
+
+## The strain pair
+
+```{python}
+#| echo: false
+#| output: asis
+SHARE = pd.DataFrame()
+if len(PAIR) == 2:
+    display(Markdown(
+        f"`{PAIR[1]}`'s share **within** the pair, inferred against true, on the benchmark "
+        f"dirs where the pair holds >1% of the community. The two strains' V4 amplicons are "
+        "near-identical, so a method that cannot separate them returns a flat line.\n"))
+    pair_rows = PANEL_LONG[PANEL_LONG["genome_id"].isin(PAIR)]
+    wide = pair_rows.pivot_table(index=["method", "run_id", "sample", "depth"],
+                                 columns="genome_id", values=["p", "t"]).reset_index()
+    t_both = wide[("t", PAIR[0])] + wide[("t", PAIR[1])]
+    p_both = wide[("p", PAIR[0])] + wide[("p", PAIR[1])]
+    SHARE = pd.DataFrame({
+        "method": wide[("method", "")], "sample": wide[("sample", "")],
+        "depth": wide[("depth", "")],
+        "true_share": wide[("t", PAIR[1])] / t_both.replace(0, np.nan),
+        "inferred_share": wide[("p", PAIR[1])] / p_both.replace(0, np.nan),
+        "pair_total": t_both})
+    SHARE = SHARE[SHARE["pair_total"] > 0.01].dropna(subset=["inferred_share"])
+else:
+    display(Markdown("_No strain pair configured or detected._"))
+```
+
+::: {.panel-tabset}
+
+```{python}
+#| echo: false
+#| output: asis
+for arm in (ARMS if not SHARE.empty else []):
+    print(f"#### {arm}\n")
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=[0, 1], y=[0, 1], mode="lines", name="identity",
+                             line=dict(color="#999999", dash="dash"), hoverinfo="skip"))
+    for method in [m for m in METHODS if m.startswith(arm)]:
+        sub = SHARE[SHARE["method"] == method]
+        fig.add_trace(go.Scatter(
+            x=sub["true_share"], y=sub["inferred_share"], mode="markers", name=method,
+            marker=dict(color=COLOUR[method], size=7, opacity=0.8,
+                        symbol="circle" if method in SETTINGS else "x"),
+            customdata=sub[["sample", "depth"]],
+            hovertemplate=(f"{method}<br>%{{customdata[0]}} (%{{customdata[1]}})<br>"
+                           "true: %{x:.3f}<br>inferred: %{y:.3f}<extra></extra>")))
+    fig.update_layout(template="simple_white", height=540, width=760,
+                      xaxis=dict(title=f"true {PAIR[1]} share of the pair", range=[-0.02, 1.02]),
+                      yaxis=dict(title="inferred share", range=[-0.02, 1.02]),
+                      legend=dict(orientation="h", y=-0.2), margin=dict(l=10, r=10, t=10, b=10))
+    display(fig)
+    print("\n")
+```
+
+:::
+
+## Read depth
+
+```{python}
+#| echo: false
+#| output: asis
+if len(DEPTHS) > 1 and not DIAG.empty and "n_reads" in DIAG.columns:
+    reads = DIAG.groupby("depth")["n_reads"].median().reindex(DEPTHS)
+    display(Markdown(
+        "Median reads each inference actually ran on, per depth: "
+        + ", ".join(f"`{depth}` {int(n):,}" for depth, n in reads.items()) + ".\n"))
+    if reads.nunique() == 1:
+        display(Markdown(
+            "::: {.callout-note}\nBoth depths were inferred from the **same number of "
+            "reads**, so the depth axis compares two different draws of reads rather than "
+            "two depths. That is why the rest of the report pools them.\n:::\n"))
+```
+
+```{python}
+#| echo: false
+if len(DEPTHS) > 1:
+    other = DEPTHS[1]
+    depth_wide = SCORES.pivot_table(index=["sample", "method"], columns="depth",
+                                    values="tv").reset_index().dropna(subset=["full", other])
+    top = float(depth_wide[["full", other]].to_numpy().max()) * 1.05
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=[0, top], y=[0, top], mode="lines", name="identity",
+                             line=dict(color="#999999", dash="dash"), hoverinfo="skip"))
+    for method in METHODS:
+        sub = depth_wide[depth_wide["method"] == method]
+        fig.add_trace(go.Scatter(
+            x=sub["full"], y=sub[other], mode="markers", name=method,
+            marker=dict(color=COLOUR[method], size=6, opacity=0.8,
+                        symbol="circle" if method in SETTINGS else "x"),
+            customdata=sub[["sample"]],
+            hovertemplate=(f"{method}<br>%{{customdata[0]}}<br>full: %{{x:.4f}}<br>"
+                           f"{other}: %{{y:.4f}}<extra></extra>")))
+    fig.update_layout(template="simple_white", height=560, width=820,
+                      xaxis=dict(title="TV, full depth", range=[0, top]),
+                      yaxis=dict(title=f"TV, subsample {other}", range=[0, top]),
+                      legend=dict(orientation="h", y=-0.2), margin=dict(l=10, r=10, t=10, b=10))
+    display(fig)
+```
+
+## Fit diagnostics
+
+The **posterior predictive percentile** is where the observed label-level discrepancy
+falls among replicates drawn from the fitted posterior: values piling up near 1 mean the
+model cannot reproduce the observed labels (a mis-specified matrix or kernel), values
+spread over (0, 1) mean the fit is consistent with the data.
+
+```{python}
+#| echo: false
+if not FIT.empty and FIT["ppc_percentile"].notna().any():
+    fig = px.box(FIT, x="setting", y="ppc_percentile", color="setting", points="all",
+                 hover_data=["sample", "depth"], color_discrete_map=COLOUR,
+                 category_orders={"setting": SETTINGS})
+    fig.update_traces(marker=dict(size=4), showlegend=False)
+    fig.update_layout(template="simple_white", height=460, 
+                      yaxis=dict(title="posterior predictive percentile", range=[-0.03, 1.03]),
+                      margin=dict(l=10, r=10, t=10, b=10))
+    fig.update_xaxes(tickangle=40, title="")
+    display(fig)
+else:
+    display(Markdown("_No fit diagnostics found._"))
+```
+
+```{python}
+#| echo: false
+#| output: asis
+if not DIAG.empty and "distance_decay" in DIAG.columns and DIAG["distance_decay"].notna().any():
+    display(Markdown(
+        "**Fitted distance decay.** Settings with `infer_distance_decay` fit the decay per "
+        "sample instead of fixing it at the matrix's `align_distance_decay`:\n"))
+    decay = DIAG.dropna(subset=["distance_decay"])
+    fig = px.box(decay, x="setting", y="distance_decay", color="setting", points="all",
+                 hover_data=["sample", "depth"], color_discrete_map=COLOUR)
+    for built in decay["built_distance_decay"].dropna().unique():
+        fig.add_hline(y=float(built), line=dict(color="#999999", dash="dot"),
+                      annotation_text=f"built at {built}")
+    fig.update_traces(marker=dict(size=4), showlegend=False)
+    fig.update_layout(template="simple_white", height=400, width=700,
+                      margin=dict(l=10, r=10, t=10, b=10))
+    display(fig)
+```
+
+## Custom mis-mapping matrices
+
+The `custom` arm's matrices, published once per matrix setting and shared by the `gate`
+and `nogate` points on top of them. Shown aggregated to genomes: cell `(a, b)` is the
+probability that a read from genome `a` is assigned to genome `b`, averaged over `a`'s 16S
+copies. Pair identifiability is the total-variation distance between the strain pair's
+rows (`0` = the genome-level matrix cannot tell them apart). The `gtdb_panel` kernels are
+built inside each nested inference run and are not published, so they cannot be shown.
+
+```{python}
+#| echo: false
+#| output: false
+def provenance_matches(provenance, knobs):
+    """A published matrix belongs to a custom setting when method, backend and tau agree."""
+    method = knobs.get("mismapping_method")
+    if provenance.get("mismapping_method") != method:
+        return False
+    if method == "simulate":
+        return True
+    return (provenance.get("align_backend") == knobs.get("align_backend")
+            and float(provenance.get("align_tau", 0)) == float(knobs.get("align_tau", 0)))
+
+
+RECORDS = []
+if CUSTOM_DB and SR_MISMAPPING_DIR.exists():
+    for path in sorted(SR_MISMAPPING_DIR.glob(f"{CUSTOM_DB}_*/mismapping_matrix.npz")):
+        provenance_path = path.parent / "mismapping_provenance.json"
+        provenance = json.loads(provenance_path.read_text()) if provenance_path.exists() else {}
+        matrix, mean_diagonal = genome_mismapping_matrix(path)
+        RECORDS.append({
+            "path": path, "provenance": provenance, "matrix": matrix,
+            "mean_diagonal": mean_diagonal,
+            "settings": [s for s in SETTINGS if ARM_OF[s] == "custom"
+                         and provenance_matches(provenance, KNOBS[s])]})
+
+
+def identifiability(matrix):
+    if len(PAIR) != 2 or not set(PAIR).issubset(matrix.index):
+        return np.nan
+    return 0.5 * float((matrix.loc[PAIR[0]] - matrix.loc[PAIR[1]]).abs().sum())
+```
+
+```{python}
+#| echo: false
+if RECORDS:
+    display(pd.DataFrame([{
+        "settings": ", ".join(r["settings"]) or "—",
+        "method": r["provenance"].get("mismapping_method", "—"),
+        "backend": r["provenance"].get("align_backend", "—")
+        if r["provenance"].get("mismapping_method") != "simulate" else "—",
+        "tau": r["provenance"].get("align_tau", "—"),
+        "decay": r["provenance"].get("align_distance_decay", "—"),
+        "mean diagonal": r["mean_diagonal"],
+        "pair identifiability": identifiability(r["matrix"]),
+        "published as": r["path"].parent.name,
+    } for r in RECORDS]).set_index("settings").style.format(
+        {"mean diagonal": "{:.4f}", "pair identifiability": "{:.4f}"}, na_rep="—"))
+else:
+    display(Markdown(f"_No `{CUSTOM_DB}` matrices under `{SR_MISMAPPING_DIR}`._"))
+```
+
+::: {.panel-tabset}
+
+```{python}
+#| echo: false
+#| output: asis
+for record in RECORDS:
+    label = ", ".join(record["settings"]) or record["path"].parent.name
+    print(f"#### {label}\n")
+    matrix = record["matrix"]
+    fig = go.Figure(go.Heatmap(
+        z=matrix.to_numpy(), x=matrix.columns, y=matrix.index, colorscale="Viridis",
+        zmin=0, zmax=1, colorbar=dict(title="P(assigned)"),
+        hovertemplate="from %{y}<br>to %{x}<br>P = %{z:.4f}<extra></extra>"))
+    fig.update_layout(template="simple_white", height=760, width=880,
+                      xaxis=dict(title="assigned genome", tickangle=45),
+                      yaxis=dict(title="true genome", autorange="reversed"),
+                      margin=dict(l=10, r=10, t=10, b=10))
+    display(fig)
+    if len(PAIR) == 2 and set(PAIR).issubset(matrix.index):
+        display(Markdown("**Strain-pair block** (rows: true genome, columns: assigned)\n"))
+        display(matrix.loc[PAIR, PAIR].style.format("{:.4f}"))
+    print("\n")
+```
+
+:::
+
+## Compute cost
+
+Wall time of the superresolution tasks, from the run's Nextflow execution traces. Each
+`RUN_SUPERRESOLUTION` task is one nested pipeline over a batch of benchmark dirs (the
+count after the profiler in the tag is the batch size); a `gtdb_panel` task
+(`panel=...`) includes building its kernel. `run` is the Nextflow launch the task
+completed in, so resumed launches and phase 1's GTDB mapping appear here too.
+
+```{python}
+#| echo: false
+traces = sorted((PIPELINE_DIR / "pipeline_info").glob("execution_trace_*.txt"))
+_tasks = []
+for trace in traces:
+    frame = pd.read_csv(trace, sep="\t")
+    frame = frame[frame["name"].str.contains("SUPERRESOLUTION", na=False)
+                  & (frame["status"] == "COMPLETED")]
+    _tasks.append(frame.assign(trace=trace.name))
+if _tasks and not pd.concat(_tasks).empty:
+    TASKS = (pd.concat(_tasks).drop_duplicates("hash", keep="last")
+             .sort_values("submit"))
+    # `WORKFLOW:SUBWORKFLOW:PROCESS (tag)`; the tag itself contains colons.
+    parts = TASKS["name"].str.split(" (", n=1, regex=False)
+    TASKS["process"] = parts.str[0].str.split(":").str[-1]
+    TASKS["tag"] = parts.str[1].str.removesuffix(")")
+    TASKS["run"] = TASKS["trace"].str.removeprefix("execution_trace_").str.removesuffix(".txt")
+    display(TASKS[["run", "process", "tag", "duration", "peak_rss"]]
+            .reset_index(drop=True).style.hide(axis="index"))
+else:
+    display(Markdown("_No completed superresolution tasks in the execution traces._"))
+```
+
+## Run details
+
+```{python}
+#| echo: false
+display(Markdown(
+    f"- Run directory: `{RUN_DIR}`\n"
+    f"- Pipeline directory: `{PIPELINE_DIR}`\n"
+    f"- Samplesheet: `{SAMPLESHEET}`\n"
+    f"- Communities: {n_samples}; depths: {', '.join(DEPTHS)}; benchmark dirs: {len(DIRS)}\n"
+    f"- Grid points: {len(SETTINGS)}; baselines: {', '.join(BASELINES)}\n"
+    f"- Panel ({CUSTOM_DB}): {len(PANEL)} genomes\n"
+    f"- Strain pair: {', '.join(PAIR) or 'none'}\n"
+    f"- TV reference: {REFERENCE}\n"))
+```
