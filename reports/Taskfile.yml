@@ -12,6 +12,7 @@ vars:
   SUBSPECIES_INFER: '{{.ROOT_DIR}}/scripts/subspecies_infer.py'
   SUBSPECIES_TEMPLATE: '{{.ROOT_DIR}}/templates/subspecies_inference_report.qmd'
   SR_SETTINGS_TEMPLATE: '{{.ROOT_DIR}}/templates/sr_settings_report.qmd'
+  SR_PANEL_SWEEP_TEMPLATE: '{{.ROOT_DIR}}/templates/sr_panel_sweep_report.qmd'
 
 tasks:
   default:
@@ -169,6 +170,34 @@ tasks:
           -P superresolution_mismapping_dir:mismapping \
           -P report_scripts_dir:"{{.ROOT_DIR}}/scripts" \
           -P subspecies:"{{.SUBSPECIES | default ""}}" \
+          -P presence_threshold:"{{.PRESENCE_THRESHOLD | default "0.5"}}" \
+          -P output_dir:"" \
+          --output-dir "{{.RUN_DIR_ABS}}"
+
+  # --- GTDB panel reinterpretation vs custom database ---------------------------
+
+  sr-panel-sweep:
+    desc: Render the GTDB panel-reinterpretation vs custom-database report (defaults to the
+          sr_amp_panel_sweep run; override RUN_DIR, PIPELINE_DIR, SAMPLESHEET, RUN_LABEL,
+          STRAIN_PAIR (comma-separated), REFERENCE_METHOD, PRESENCE_THRESHOLD). Reads the
+          run tree directly — no preprocessing step.
+    dir: '{{.DIR}}'
+    vars:
+      RUN_DIR: '{{.RUN_DIR | default "sr_amp_panel_sweep"}}'
+      RUN_DIR_ABS: '{{.DIR}}/{{.RUN_DIR}}'
+    cmds:
+      - |
+        mamba run -p {{.QUARTO_ENV}} \
+          quarto render "{{.SR_PANEL_SWEEP_TEMPLATE}}" \
+          -P run_label:"{{.RUN_LABEL | default "GTDB panel reinterpretation vs custom 20HM database"}}" \
+          -P run_dir:"{{.RUN_DIR_ABS}}" \
+          -P pipeline_dir:"{{.PIPELINE_DIR | default "export/results/sr_amplicon_panel_sweep"}}" \
+          -P samplesheet:"{{.SAMPLESHEET | default "export/sweep_samplesheet.yaml"}}" \
+          -P superresolution_mismapping_dir:mismapping \
+          -P report_scripts_dir:"{{.ROOT_DIR}}/scripts" \
+          -P example_scripts_dir:"{{.ROOT_DIR}}/../examples/sr_amplicon_panel_sweep/scripts" \
+          -P strain_pair:"{{.STRAIN_PAIR | default ""}}" \
+          -P reference_method:"{{.REFERENCE_METHOD | default ""}}" \
           -P presence_threshold:"{{.PRESENCE_THRESHOLD | default "0.5"}}" \
           -P output_dir:"" \
           --output-dir "{{.RUN_DIR_ABS}}"
