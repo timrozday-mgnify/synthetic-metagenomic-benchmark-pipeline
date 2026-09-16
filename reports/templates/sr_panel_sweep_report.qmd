@@ -486,7 +486,7 @@ fig = px.box(SCORES, x="method", y="tv", color="method", points="all",
              hover_data=["sample", "depth"], color_discrete_map=COLOUR,
              category_orders={"method": METHODS})
 fig.update_traces(boxmean=True, marker=dict(size=4), showlegend=False)
-fig.update_layout(template="simple_white", height=520, 
+fig.update_layout(template="simple_white", height=520,
                   yaxis_title="total variation (lower better)",
                   margin=dict(l=10, r=10, t=30, b=10))
 method_axis(fig, title="")
@@ -509,7 +509,7 @@ for metric in METRICS[1:]:
                  hover_data=["sample", "depth"], color_discrete_map=COLOUR,
                  category_orders={"method": METHODS})
     fig.update_traces(boxmean=True, marker=dict(size=4), showlegend=False)
-    fig.update_layout(template="simple_white", height=480, 
+    fig.update_layout(template="simple_white", height=480,
                       margin=dict(l=10, r=10, t=30, b=10))
     fig.update_xaxes(categoryorder="array",
                      categoryarray=[m for m in METHODS if m in set(sub["method"])],
@@ -541,7 +541,7 @@ if REFERENCE:
                    color_discrete_map=COLOUR, category_orders={"method": paired_order})
     fig.add_hline(y=0, line=dict(color="#000000", dash="dash"))
     fig.update_traces(marker=dict(size=5), showlegend=False)
-    fig.update_layout(template="simple_white", height=480, 
+    fig.update_layout(template="simple_white", height=480,
                       yaxis_title=f"TV − TV({REFERENCE})",
                       margin=dict(l=10, r=10, t=10, b=10))
     fig.update_xaxes(categoryorder="array", categoryarray=paired_order, tickangle=40, title="")
@@ -604,7 +604,7 @@ fig = go.Figure(go.Heatmap(
     customdata=np.tile(mean_truth.reindex(PANEL).to_numpy(), (len(METHODS), 1)),
     hovertemplate=("%{y}<br>%{x}<br>mean error: %{z:+.4f}<br>"
                    "mean true share: %{customdata:.4f}<extra></extra>")))
-fig.update_layout(template="simple_white", height=620, 
+fig.update_layout(template="simple_white", height=620,
                   xaxis=dict(tickangle=45), yaxis=dict(autorange="reversed"),
                   margin=dict(l=10, r=10, t=10, b=10))
 display(fig)
@@ -816,7 +816,7 @@ if not FIT.empty and FIT["ppc_percentile"].notna().any():
                  hover_data=["sample", "depth"], color_discrete_map=COLOUR,
                  category_orders={"setting": SETTINGS})
     fig.update_traces(marker=dict(size=4), showlegend=False)
-    fig.update_layout(template="simple_white", height=460, 
+    fig.update_layout(template="simple_white", height=460,
                       yaxis=dict(title="posterior predictive percentile", range=[-0.03, 1.03]),
                       margin=dict(l=10, r=10, t=10, b=10))
     fig.update_xaxes(tickangle=40, title="")
