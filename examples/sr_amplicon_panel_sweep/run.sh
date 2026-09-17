@@ -4,11 +4,11 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/../.." && pwd)"
 OUTDIR="$REPO/results/sr_amplicon_panel_sweep"
 
-# --- Phase 1: draw the communities, generate the reads, map them against GTDB once ----
+# --- Phase 1: draw the communities, generate the reads, map them against SILVA once ----
 # `--step all` trains the error model, draws the negative-binomial communities, generates
 # their V4 amplicon reads at every subsample depth, and runs superresolution-amplicon once
-# per depth against GTDB under config.yaml's `gtdb.map_setting` (align/exact-hash: cheap
-# at GTDB scale). That publishes each depth's GTDB classification to
+# per depth against SILVA under config.yaml's `generic.map_setting` (align/exact-hash: cheap
+# at SILVA scale). That publishes each depth's SILVA classification to
 # <benchmark_dir>/profiling/sr/<id>.map.obs.mseq.gz, and the trained model to
 # $OUTDIR/error_models/<train_id>/.
 python "$HERE/generate_samplesheet.py"
@@ -23,7 +23,7 @@ nextflow run "$REPO/main.nf" \
 
 # --- Phase 2: both arms, every grid point --------------------------------------------
 # `--step profile` re-profiles those reads twice per benchmark dir: against the custom
-# 20HM collection (its own grid), and against GTDB reusing phase 1's mapping, with every
+# 20HM collection (its own grid), and against SILVA reusing phase 1's mapping, with every
 # setting reinterpreting the labels through the 20HM panel (the other grid).
 python "$HERE/generate_sweep_samplesheet.py" "$OUTDIR"
 

@@ -143,11 +143,11 @@ Taskfile: `SAMPLESHEET`, `SUBSPECIES`, `PRESENCE_THRESHOLD`.
 
 Output: `<run>/sr_settings_report.html`.
 
-## GTDB panel reinterpretation vs a custom database (`sr_panel_sweep_report.qmd`)
+## SILVA panel reinterpretation vs a custom database (`sr_panel_sweep_report.qmd`)
 
 The report for `examples/sr_amplicon_panel_sweep`: the same reads profiled against a
-custom database of the panel (`custom.*` grid points) and through GTDB labels
-reinterpreted via the panel (`gtdb_panel.*`), all scored against one ground truth.
+custom database of the panel (`custom.*` grid points) and through SILVA labels
+reinterpreted via the panel (`generic_panel.*`), all scored against one ground truth.
 
 ```bash
 task sr-panel-sweep                       # the sr_amp_panel_sweep run, default layout
@@ -158,13 +158,13 @@ Like the settings-sweep report it reads the run tree directly: per-dir `*.truth.
 `profiling/sr/<id>.<setting>.{inferred_composition,inference_diagnostics}.csv` and
 `fit_diagnostics.json`, the published `community` matrices under `mismapping/`, and
 `pipeline_info/execution_trace_*.txt`. It never opens the reads, BAMs, `*.mseq.gz`,
-`posterior_draws.npz` or phase 1's GTDB-scale `*.map.*` outputs, so from a results
+`posterior_draws.npz` or phase 1's SILVA-scale `*.map.*` outputs, so from a results
 tarball extract only those tables. Settings and the panel come from the sweep
 samplesheet's row-level `sr_settings:` and `databases:` block.
 
 Scores come from the example's own `scripts/score_sweep.py` (`example_scripts_dir`), so
 they match `panel_sweep_scores.csv`. The observed baselines are `custom.mapseq_only` and
-`gtdb_panel.home_labels`: the `observed_rel_abundance` of each arm, i.e. no inference. It
+`generic_panel.home_labels`: the `observed_rel_abundance` of each arm, i.e. no inference. It
 also flags grid points whose compositions are identical in every dir, meaning a knob never
 reached the nested run.
 

@@ -1,13 +1,13 @@
-# Config for the GTDB panel-reinterpretation vs custom-database sweep. This one file is
+# Config for the SILVA panel-reinterpretation vs custom-database sweep. This one file is
 # the single source of truth for every script here; no paths or metadata are hard-coded
 # in Python. Relative paths resolve against this file's dir.
 #
-# The question: the reads were mapped against GTDB, and the community is known to come
+# The question: the reads were mapped against SILVA, and the community is known to come
 # from a panel (the 20HM mock plus a second B. uniformis strain). How close does
-# reinterpreting the GTDB labels through that panel get to mapping against a custom
+# reinterpreting the SILVA labels through that panel get to mapping against a custom
 # database of the panel itself, and under which kernel and prior?
 #
-# Fill in the two train FASTQs, the panel's `ssu:` paths and `gtdb.path:`. Also set
+# Fill in the two train FASTQs, the panel's `ssu:` paths and `generic.path:`. Also set
 # `sr_amplicon_repo` in benchmark.config. Then run ./run.sh.
 
 train:
@@ -54,7 +54,7 @@ generation_modes:
 
 # The CUSTOM database, built in-pipeline from `panel:` below. It has two jobs:
 #   - the `custom` arm maps the reads against it;
-#   - the `gtdb_panel` arm reinterprets the GTDB labels through it (every gtdb_panel
+#   - the `generic_panel` arm reinterprets the SILVA labels through it (every generic_panel
 #     setting gets `panel: <this name>`).
 # Since both arms see the same panel ids, their profiles and truth.tsv line up with no
 # id translation.
@@ -62,17 +62,18 @@ database:
   name: community_20hm
   profilers: [sr_amplicon]
 
-# The GENERIC database the gtdb_panel arm maps against: a PRE-BUILT directory holding
-# `<name>_ssu.sr_refs.fasta` (headers `{genome_id}|{copy}|{orig}`), laid out the way
-# the pipeline publishes its own databases. See examples/sr_amplicon_gtdb_sweep.
-# Unlike that example, the panel ids do NOT have to be GTDB accessions here, because
-# inference runs over the panel, not over GTDB's genomes.
-gtdb:
-  name: gtdb_ssu_r232
-  path: /PATH/TO/gtdb_ssu_r232          # dir holding gtdb_ssu_r232_ssu.sr_refs.fasta
-  # Phase 1 maps every benchmark dir against GTDB once, under this one setting, so that
+# The GENERIC database the generic_panel arm maps against: a PRE-BUILT directory holding
+# `<name>_ssu.sr_refs.fasta` (headers `{accession}|0|{accession}`) and, optionally, its
+# `<name>_ssu.sr_refs.tax`, laid out the way the pipeline publishes its own databases.
+# Build both with superresolution-amplicon's `build_mapseq_database.py --silva-fasta`
+# (SILVA Ref NR99) and rename them. The panel ids are free, because inference runs over
+# the panel: SILVA is only the label space the reads are mapped into.
+generic:
+  name: silva_138_2_ssu_nr99
+  path: /PATH/TO/silva_138_2_ssu_nr99          # dir holding silva_138_2_ssu_nr99_ssu.sr_refs.{fasta,tax}
+  # Phase 1 maps every benchmark dir against SILVA once, under this one setting, so that
   # phase 2 can hand the classification back as `mseq:`. Its composition is a by-product
-  # and is not scored. exact-hash is the matrix mode that is cheap at GTDB scale.
+  # and is not scored. exact-hash is the matrix mode that is cheap at SILVA scale.
   map_setting: {name: map, mismapping_method: align, align_backend: exact-hash, align_tau: 0,
                 matrix_args: --align_ambiguity_weight 0.3}
 
@@ -104,15 +105,15 @@ sr_sweep:
         - {name: gate, infer_presence: true, infer_presence_prior: 0.01, infer_presence_temp: 1.0}
         - {name: nogate, infer_presence: false}
 
-  # GTDB labels, reinterpreted through the panel. The kernel is measured by simulating
-  # reads from the panel's V4 amplicons and mapping them against GTDB. The nested run does
+  # SILVA labels, reinterpreted through the panel. The kernel is measured by simulating
+  # reads from the panel's V4 amplicons and mapping them against SILVA. The nested run does
   # that INSIDE each inference run, so unlike the custom arm, every point here pays for
   # its own kernel: panel_sim_n_per_ref (default 5,000) reads per distinct amplicon
-  # (about 30 here), each mapped against GTDB. The reads themselves are not re-mapped.
+  # (about 30 here), each mapped against SILVA. The reads themselves are not re-mapped.
   #
   # `panel:` is added to every point by the generator. infer_distance_decay is refused
   # here, because a panel kernel records no distances.
-  gtdb_panel:
+  generic_panel:
     grid:
       kernel:
         # `trained` simulates with the skiver model phase 1 generated the reads with
@@ -127,7 +128,7 @@ sr_sweep:
       steps:
         - {name: s3k, inference_args: --infer_steps 3000}
         # The gate collapses at 10k steps on this panel (superresolution-amplicon dev/panel_reinterpretation.md);
-        # uncomment to see it. Doubles the gtdb_panel cost.
+        # uncomment to see it. Doubles the generic_panel cost.
         # - {name: s10k, inference_args: --infer_steps 10000}
 
 # Scoring (scripts/score_sweep.py): the strain pair whose split `strain_split_error`

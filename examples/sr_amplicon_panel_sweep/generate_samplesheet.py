@@ -3,10 +3,10 @@
 
 One `--step all` run off this samplesheet trains the error model, draws the
 negative-binomial communities, generates their V4 amplicon reads at every subsample
-depth, and profiles each depth ONCE against GTDB under `gtdb.map_setting`. It exists to
+depth, and profiles each depth ONCE against SILVA under `generic.map_setting`. It exists to
 publish the two things phase 2 reuses:
 
-  <benchmark_dir>/profiling/sr/<id>.<map>.obs.mseq.gz   the reads mapped against GTDB
+  <benchmark_dir>/profiling/sr/<id>.<map>.obs.mseq.gz   the reads mapped against SILVA
   error_models/<train_id>/*.model.pt                    the model the reads were made with
 
 The mapping setting is a row-level `sr_settings:` entry, not a benchmark.config pin, so
@@ -26,7 +26,7 @@ HERE = Path(__file__).resolve().parent
 
 def main():
     cfg = ps.load_config(sys.argv[1] if len(sys.argv) > 1 else HERE / "config.yaml")
-    panel, train, gtdb = cfg["panel"], cfg["train"], cfg["gtdb"]
+    panel, train, generic = cfg["panel"], cfg["train"], cfg["generic"]
     abundances = ps.sample_abundances(cfg)          # (n_samples, n_genomes) integers
 
     (HERE / "genomes").mkdir(exist_ok=True)
@@ -56,8 +56,8 @@ def main():
                 "read_length_mean": reads["read_length_mean"],
                 "read_length_variance": reads["read_length_variance"],
                 "profilers": ["sr_amplicon"],
-                "database": gtdb["name"],
-                "sr_settings": [gtdb["map_setting"]],
+                "database": generic["name"],
+                "sr_settings": [generic["map_setting"]],
                 **({"subsample": reads["subsample"]} if reads.get("subsample") is not None else {}),
                 **({"primers": gm["primers"]} if gm.get("primers") else {}),
             })
@@ -67,7 +67,7 @@ def main():
         ps.dump_yaml(doc, fh)
 
     print(f"Wrote samplesheet.yaml: {len(rows)} communit(ies) x {len(ps.depths(cfg))} "
-          f"depth(s), mapped once against '{gtdb['name']}'; mean genomes present/sample: "
+          f"depth(s), mapped once against '{generic['name']}'; mean genomes present/sample: "
           f"{(abundances > 0).sum(axis=1).mean():.1f}/{len(panel)}")
 
 

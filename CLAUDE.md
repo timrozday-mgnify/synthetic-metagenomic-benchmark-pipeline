@@ -113,6 +113,12 @@ null => bundled set. It's global (not per-sample) and passed as an absolute host
   inference groups by `[reference set, inference_args]` on top of it, so settings that
   differ only in the presence gate share the expensive matrix. `examples/sr_amplicon_param_sweep`
   is the worked case.
+- **The generic database (SILVA SSU) is a label space.** Reads are labelled with its V4
+  groups; abundances are reported over a `panel:` (rectangular kernel) or over taxa
+  (`v4_group` + `lca`), never over its own references. Its `.sr_refs.tax` (built from
+  `taxonomy:` on every entry, or found beside a `path:` FASTA) rides to inference runs
+  as `--taxonomy` via `meta.taxonomy` / `srTaxonomyArg`, and `ch_sr_dbs` is
+  `[ key, refs, tax|[] ]`.
 - **`mseq:` skips the nested amplicon pipeline's read mapping.** RUN_SUPERRESOLUTION
   emits it as a per-row `mseq:` in the nested samplesheet (a val path, like the reads),
   and superresolution-amplicon branches READS_TO_FASTA + MAPSEQ_OBS around it. The

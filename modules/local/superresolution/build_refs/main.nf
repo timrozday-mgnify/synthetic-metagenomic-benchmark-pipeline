@@ -5,6 +5,8 @@
 // Driven by a genomes CSV (genome_id,fasta_path,...) whose FASTAs are staged
 // alongside; used both for `database: self` (the sample's own genomes CSV) and for
 // a named `databases:` collection (BUILD_DATABASES writes an equivalent CSV).
+// A `taxonomy` column on every row also yields `<prefix>.sr_refs.tax`, the MAPseq
+// taxonomy the nested run takes as --taxonomy.
 process SR_BUILD_REFS {
     tag "$meta.id"
     label 'process_single'
@@ -14,12 +16,13 @@ process SR_BUILD_REFS {
 
     input:
     // Either a real genomes CSV (`database: self`) or, when it's the NO_FILE
-    // placeholder, a `genome_id,fasta_path` manifest string written here (a named
+    // placeholder, a manifest string written here, header line included (a named
     // `databases:` collection has no CSV of its own) — same trick as MAPSEQ_PREP.
     tuple val(meta), path(genomes_csv), path(fastas), val(manifest)
 
     output:
     tuple val(meta), path("${task.ext.prefix ?: meta.id}.sr_refs.fasta"), emit: refs
+    tuple val(meta), path("${task.ext.prefix ?: meta.id}.sr_refs.tax"), emit: tax, optional: true
     path "versions.yml",                                                  emit: versions
 
     when:
@@ -29,13 +32,14 @@ process SR_BUILD_REFS {
     def prefix   = task.ext.prefix ?: "${meta.id}"
     def csv_cmd  = genomes_csv.name != 'NO_FILE'
         ? "cp ${genomes_csv} sr_genomes.csv"
-        : "printf 'genome_id,fasta_path\\n${manifest}\\n' > sr_genomes.csv"
+        : "printf '${manifest}\\n' > sr_genomes.csv"
     """
     ${csv_cmd}
 
     python "\$(command -v build_sr_refs.py)" \\
         --genomes-csv sr_genomes.csv \\
-        --output ${prefix}.sr_refs.fasta
+        --output ${prefix}.sr_refs.fasta \\
+        --tax-output ${prefix}.sr_refs.tax
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -47,6 +51,7 @@ process SR_BUILD_REFS {
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     printf '>stub|0|stub\\nACGT\\n' > ${prefix}.sr_refs.fasta
+    ${manifest.startsWith('genome_id,fasta_path,taxonomy') ? "printf 'stub|0|stub\\tstub\\n' > ${prefix}.sr_refs.tax" : ''}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

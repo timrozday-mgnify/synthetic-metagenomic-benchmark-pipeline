@@ -47,8 +47,8 @@ databases:
       ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP009913.1_SSU.fasta
     - id: veillonella_parvula
       ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/HM007566.1.fasta
-  gtdb_ssu_r232:
-    path: /PATH/TO/gtdb_ssu_r232
+  silva_138_2_ssu_nr99:
+    path: /PATH/TO/silva_138_2_ssu_nr99
 samples:
 - sample: S01.amplicon_16s.515-YF-806BR
   profilers:
@@ -94,9 +94,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -104,19 +104,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -124,13 +124,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -182,9 +182,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -192,19 +192,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -212,13 +212,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -268,9 +268,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -278,19 +278,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -298,13 +298,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -356,9 +356,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -366,19 +366,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -386,13 +386,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -442,9 +442,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -452,19 +452,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -472,13 +472,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -530,9 +530,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -540,19 +540,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -560,13 +560,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -616,9 +616,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -626,19 +626,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -646,13 +646,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -704,9 +704,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -714,19 +714,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -734,13 +734,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -790,9 +790,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -800,19 +800,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -820,13 +820,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -878,9 +878,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -888,19 +888,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -908,13 +908,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -964,9 +964,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -974,19 +974,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -994,13 +994,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -1052,9 +1052,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -1062,19 +1062,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -1082,13 +1082,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -1138,9 +1138,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -1148,19 +1148,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -1168,13 +1168,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -1226,9 +1226,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -1236,19 +1236,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -1256,13 +1256,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -1312,9 +1312,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -1322,19 +1322,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -1342,13 +1342,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -1400,9 +1400,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -1410,19 +1410,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -1430,13 +1430,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -1486,9 +1486,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -1496,19 +1496,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -1516,13 +1516,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -1574,9 +1574,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -1584,19 +1584,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -1604,13 +1604,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -1660,9 +1660,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -1670,19 +1670,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -1690,13 +1690,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -1748,9 +1748,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -1758,19 +1758,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -1778,13 +1778,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -1834,9 +1834,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -1844,19 +1844,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -1864,13 +1864,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -1922,9 +1922,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -1932,19 +1932,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -1952,13 +1952,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -2008,9 +2008,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -2018,19 +2018,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -2038,13 +2038,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -2096,9 +2096,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -2106,19 +2106,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -2126,13 +2126,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -2182,9 +2182,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -2192,19 +2192,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -2212,13 +2212,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -2270,9 +2270,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -2280,19 +2280,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -2300,13 +2300,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -2356,9 +2356,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -2366,19 +2366,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -2386,13 +2386,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -2444,9 +2444,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -2454,19 +2454,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -2474,13 +2474,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -2530,9 +2530,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -2540,19 +2540,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -2560,13 +2560,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -2618,9 +2618,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -2628,19 +2628,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -2648,13 +2648,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -2704,9 +2704,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -2714,19 +2714,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -2734,13 +2734,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -2792,9 +2792,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -2802,19 +2802,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -2822,13 +2822,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -2878,9 +2878,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -2888,19 +2888,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -2908,13 +2908,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -2966,9 +2966,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -2976,19 +2976,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -2996,13 +2996,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -3052,9 +3052,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -3062,19 +3062,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -3082,13 +3082,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -3140,9 +3140,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -3150,19 +3150,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -3170,13 +3170,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -3226,9 +3226,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -3236,19 +3236,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -3256,13 +3256,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -3314,9 +3314,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -3324,19 +3324,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -3344,13 +3344,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -3400,9 +3400,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -3410,19 +3410,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -3430,13 +3430,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
@@ -3488,9 +3488,9 @@ samples:
   - pair_id: 515-YF-806BR
     forward: GTGYCAGCMGCCGCGGTAA
     reverse: GGACTACNVGGGTWTCTAAT
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
-  - name: gtdb_panel.trained.gate.s3k
+  - name: generic_panel.trained.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: true
@@ -3498,19 +3498,19 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.nogate.s3k
+  - name: generic_panel.trained.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.trained.horseshoe.s3k
+  - name: generic_panel.trained.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.gate.s3k
+  - name: generic_panel.flat.gate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: true
@@ -3518,13 +3518,13 @@ samples:
     infer_presence_temp: 1.0
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.nogate.s3k
+  - name: generic_panel.flat.nogate.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false
     inference_args: --infer_steps 3000
     panel: community_20hm
-  - name: gtdb_panel.flat.horseshoe.s3k
+  - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
     infer_presence: false

@@ -86,6 +86,12 @@ def srInferenceArgs(meta) {
         : args
 }
 
+// The row database's MAPseq taxonomy (meta.taxonomy, when it has one). The nested run only
+// uses it for the `lca` column, so it rides with the inference flags; the matrix needs none.
+def srTaxonomyArg(meta) {
+    meta.taxonomy ? "--taxonomy ${meta.taxonomy}" : ''
+}
+
 // Panel reinterpretation (a `panel:` entry). superresolution-amplicon measures the panel
 // kernel inside the inference run and refuses a supplied --mismapping_matrix, so that run
 // takes the matrix flags too, plus the panel's reference FASTA (meta.panel_refs, resolved
@@ -126,7 +132,7 @@ workflow PROFILE {
     ch_aux           // [ id, genomes_csv, [ fasta ] ]       (empty in profile-only step)
     ch_sylph_dbs     // [ name, syldb ]                      built/prebuilt sylph DBs by name
     ch_mapseq_dbs    // [ name, fasta, tax, otu, mscluster ] built/prebuilt mapseq DBs by name
-    ch_sr_dbs        // [ "<name>:<genome|ssu>", refs_fasta ] built/prebuilt superresolution refs
+    ch_sr_dbs        // [ "<name>:<genome|ssu>", refs_fasta, tax|[] ] built/prebuilt superresolution refs
     builtNames       // [ profiler: Set of collection names resolved for it ]
 
     main:
@@ -316,8 +322,11 @@ workflow PROFILE {
     ch_sr_built_in = ch_sr.built
         .map { meta, reads -> [ "${meta.database}:${srSources()[meta.profiler]}".toString(), meta, reads ] }
         .combine(ch_sr_dbs, by: 0)
-        // Named collections are reference sets shared by every matching sample.
-        .map { key, meta, reads, refs -> [ srSetKey(meta, meta.database), meta, reads, refs ] }
+        // Named collections are reference sets shared by every matching sample. Its
+        // taxonomy goes as an absolute path string, like panel_refs below.
+        .map { key, meta, reads, refs, tax ->
+            [ srSetKey(meta, meta.database), meta + (tax ? [ taxonomy: tax.toString() ] : [:]), reads, refs ]
+        }
 
     ch_sr_all = ch_sr_self_in.mix(ch_sr_built_in)
 
@@ -335,7 +344,7 @@ workflow PROFILE {
             [ "${panel}:ssu".toString(), referenceSet, meta, reads, refs ]
         }
         .combine(ch_sr_dbs, by: 0)
-        .map { key, referenceSet, meta, reads, refs, panelRefs ->
+        .map { key, referenceSet, meta, reads, refs, panelRefs, panelTax ->
             [ referenceSet, meta + [ panel_refs: panelRefs.toString() ], reads, refs ]
         }
     ch_sr_runs = ch_sr_all
@@ -361,7 +370,8 @@ workflow PROFILE {
     // without it two flavours of the same single sample would collide there.
     ch_sr_rows = ch_sr_runs.map { referenceSet, meta, reads, refs ->
         [ referenceSet, meta + [ reference_set: referenceSet,
-                                 inference_args: meta.panel_refs ? srPanelArgs(meta) : srInferenceArgs(meta) ],
+                                 inference_args: [ meta.panel_refs ? srPanelArgs(meta) : srInferenceArgs(meta),
+                                                   srTaxonomyArg(meta) ].findAll { it }.join(' ') ],
           reads, refs ]
     }
 

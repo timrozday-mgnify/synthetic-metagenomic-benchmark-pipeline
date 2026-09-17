@@ -1,11 +1,16 @@
 # Panel reinterpretation through `sr_settings:` (stub-only).
 #
-# `database: self` stands in for the generic database (GTDB) the reads are mapped against.
-# `panel: panelA` reinterprets those labels through the panelA collection. No row profiles
+# `database: generic` stands in for the generic database (SILVA SSU) the reads are mapped
+# against; its `taxonomy:` lineages give it a .tax sidecar, which every run of the row
+# takes as --taxonomy. `panel: panelA` reinterprets those labels through the panelA collection. No row profiles
 # against panelA directly; it is built because a setting names it. Panel entries build no
 # shared matrix (the nested run measures their kernel itself), so this is 1 matrix and 3
 # inference runs. `sr_error_model` reaches the nested samplesheet for the trained kernel.
 databases:
+  generic:
+    sequences:
+      - {id: genomeA, ssu: tests/data/ssuA.fasta, taxonomy: "Bacteria;Bacillota;Bacilli"}
+      - {id: genomeB, ssu: tests/data/ssuB.fasta, taxonomy: "Bacteria;Bacteroidota;Bacteroidia"}
   panelA:
     sequences:
       - {id: genomeA, ssu: tests/data/ssuA.fasta}
@@ -22,7 +27,7 @@ samples:
     mode: amplicon
     read_length_mean: 200
     profilers: [sr_amplicon]
-    database: self
+    database: generic
     sr_error_model: tests/data/pretrained_natA/natA.model.pt
     sr_settings:
       - {name: square, mismapping_method: align, align_backend: exact-hash, align_tau: 0}

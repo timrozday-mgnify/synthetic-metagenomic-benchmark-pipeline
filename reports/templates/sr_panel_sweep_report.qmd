@@ -1,5 +1,5 @@
 ---
-title: "GTDB panel reinterpretation vs a custom database"
+title: "SILVA panel reinterpretation vs a custom database"
 format:
   html:
     toc: true
@@ -106,7 +106,7 @@ SR_MISMAPPING_DIR = PIPELINE_DIR / superresolution_mismapping_dir
 _samplesheet = Path(samplesheet)
 SAMPLESHEET = _samplesheet if _samplesheet.is_absolute() else RUN_DIR / _samplesheet
 PRESENCE_THRESHOLD = float(presence_threshold)
-ARMS = ("custom", "gtdb_panel")
+ARMS = ("custom", "generic_panel")
 MAPSEQ_ONLY = "custom.mapseq_only"
 
 
@@ -189,7 +189,7 @@ if not PAIR:
 #| output: false
 # --- methods: every grid point, plus the observed (no-inference) baselines -------------
 # `custom.mapseq_only` is MAPseq against the panel (identical under every custom point, as
-# in score_sweep.py). Each gtdb_panel kernel has its own home-label baseline: a GTDB label's
+# in score_sweep.py). Each generic_panel kernel has its own home-label baseline: a SILVA label's
 # reads split over the panel genomes whose kernel names it their home label, the rest to
 # `background` — the observed composition the rectangular inference starts from.
 def kernel_of(setting):
@@ -201,8 +201,8 @@ _first_custom = next((s for s in SETTINGS if ARM_OF[s] == "custom"), None)
 if _first_custom:
     BASELINES[MAPSEQ_ONLY] = _first_custom
 for setting in SETTINGS:
-    if ARM_OF[setting] == "gtdb_panel":
-        BASELINES.setdefault(f"gtdb_panel.{kernel_of(setting)}.home_labels", setting)
+    if ARM_OF[setting] == "generic_panel":
+        BASELINES.setdefault(f"generic_panel.{kernel_of(setting)}.home_labels", setting)
 
 METHODS = SETTINGS + list(BASELINES)
 BASELINE_NAMES = set(BASELINES)
@@ -255,8 +255,8 @@ _home_wide = LONG[LONG["method"].isin(_home)].pivot_table(
     index=["run_id", "genome_id"], columns="method", values="pred")
 if len(_home) > 1 and all(np.allclose(_home_wide[_home[0]], _home_wide[b]) for b in _home[1:]):
     LONG = LONG[~LONG["method"].isin(_home[1:])]
-    LONG.loc[LONG["method"] == _home[0], "method"] = "gtdb_panel.home_labels"
-    BASELINES = {("gtdb_panel.home_labels" if b == _home[0] else b): src
+    LONG.loc[LONG["method"] == _home[0], "method"] = "generic_panel.home_labels"
+    BASELINES = {("generic_panel.home_labels" if b == _home[0] else b): src
                  for b, src in BASELINES.items() if b not in _home[1:]}
     METHODS = SETTINGS + list(BASELINES)
     BASELINE_NAMES = set(BASELINES)
@@ -317,9 +317,9 @@ community**. The same reads are profiled two ways, each under its own parameter 
 
 - **`custom`** maps the reads against a database built from the panel itself and infers
   through a square mis-mapping matrix over the panel's references;
-- **`gtdb_panel`** keeps the reads' GTDB classification and reinterprets it through the
-  panel: a rectangular kernel (panel amplicons × GTDB labels) is measured by simulating
-  reads from the panel and mapping them to GTDB, and inference runs over the panel
+- **`generic_panel`** keeps the reads' SILVA classification and reinterprets it through the
+  panel: a rectangular kernel (panel amplicons × SILVA labels) is measured by simulating
+  reads from the panel and mapping them to SILVA, and inference runs over the panel
   genomes plus a `background` bucket for labels the panel cannot explain.
 
 Everything is scored against one ground truth: the **realized** abundance of the reads
@@ -335,7 +335,7 @@ display(Markdown(
     f"**{n_samples}** communities × **{len(DEPTHS)}** depth(s) "
     f"({', '.join(DEPTHS)}) = **{len(DIRS)}** benchmark dirs; **{len(SETTINGS)}** grid "
     f"points ({sum(ARM_OF[s] == 'custom' for s in SETTINGS)} `custom`, "
-    f"{sum(ARM_OF[s] == 'gtdb_panel' for s in SETTINGS)} `gtdb_panel`) plus "
+    f"{sum(ARM_OF[s] == 'generic_panel' for s in SETTINGS)} `generic_panel`) plus "
     f"{len(BASELINES)} observed baseline(s), over a panel of **{len(PANEL)}** genomes.\n"))
 if DROPPED:
     display(Markdown(
@@ -391,7 +391,7 @@ display(SETTINGS_TABLE.style.format(
 Blank knob cells mean the setting left that knob at the pipeline default. The
 `horseshoe (as run)` and diagnostic columns come from each run's
 `inference_diagnostics.csv`, i.e. what the nested pipeline actually did rather than what
-the samplesheet asked for. `gtdb_panel` kernels are measured inside each nested inference
+the samplesheet asked for. `generic_panel` kernels are measured inside each nested inference
 run and not published, so they have no diagonal here.
 
 ## The communities
@@ -436,7 +436,7 @@ if len(PAIR) == 2:
 | `tv` | total variation over panel genomes, both sides renormalised without `background` — 0 is perfect, 1 is disjoint |
 | `max_abs_error` | the largest single-genome error |
 | `mass_absent` | predicted share on genomes absent from that community |
-| `background` | `gtdb_panel`'s out-of-panel share. The community has no out-of-panel genome, so this is lost panel mass |
+| `background` | `generic_panel`'s out-of-panel share. The community has no out-of-panel genome, so this is lost panel mass |
 | `strain_split_error` | error in the second strain's share *within* the strain pair; only where the pair is >1% of the truth |
 
 Scores are computed with the example's own `scripts/score_sweep.py`, so they match
@@ -465,11 +465,11 @@ display(table.style.format({c: "{:.4f}" for c in table.columns if c not in ("arm
 #| output: asis
 if REFERENCE:
     _med = SCORES.groupby("method")["tv"].median()
-    best_panel = _med[[s for s in SETTINGS if ARM_OF[s] == "gtdb_panel"]].idxmin() \
-        if any(ARM_OF[s] == "gtdb_panel" for s in SETTINGS) else None
+    best_panel = _med[[s for s in SETTINGS if ARM_OF[s] == "generic_panel"]].idxmin() \
+        if any(ARM_OF[s] == "generic_panel" for s in SETTINGS) else None
     lines = [f"- Best `custom` point by median TV: **`{REFERENCE}`** ({_med[REFERENCE]:.4f})."]
     if best_panel:
-        lines.append(f"- Best `gtdb_panel` point: **`{best_panel}`** ({_med[best_panel]:.4f}).")
+        lines.append(f"- Best `generic_panel` point: **`{best_panel}`** ({_med[best_panel]:.4f}).")
     for base in BASELINES:
         lines.append(f"- `{base}` (no inference): {_med[base]:.4f}.")
     display(Markdown("\n".join(lines) + "\n"))
@@ -503,7 +503,7 @@ display(fig)
 for metric in METRICS[1:]:
     sub = SCORES.dropna(subset=[metric])
     if metric == "background":
-        sub = sub[sub["method"].map(lambda m: m.startswith("gtdb_panel"))]
+        sub = sub[sub["method"].map(lambda m: m.startswith("generic_panel"))]
     print(f"#### {metric}\n")
     fig = px.box(sub, x="method", y=metric, color="method", points="all",
                  hover_data=["sample", "depth"], color_discrete_map=COLOUR,
@@ -558,7 +558,7 @@ if REFERENCE:
 
 ### Community by community
 
-TV of each `gtdb_panel` point against the reference on the same dir. Points below the
+TV of each `generic_panel` point against the reference on the same dir. Points below the
 identity line are communities where reinterpretation did better.
 
 ```{python}
@@ -568,7 +568,7 @@ if REFERENCE:
     top = float(PAIRED["tv"].max()) * 1.05
     fig.add_trace(go.Scatter(x=[0, top], y=[0, top], mode="lines", name="identity",
                              line=dict(color="#999999", dash="dash"), hoverinfo="skip"))
-    for method in [m for m in paired_order if m.startswith("gtdb_panel")]:
+    for method in [m for m in paired_order if m.startswith("generic_panel")]:
         sub = PAIRED[PAIRED["method"] == method]
         symbol = "circle" if method in SETTINGS else "x"
         fig.add_trace(go.Scatter(
@@ -579,7 +579,7 @@ if REFERENCE:
                            f"{REFERENCE}: %{{x:.4f}}<br>this: %{{y:.4f}}<extra></extra>")))
     fig.update_layout(template="simple_white", height=560, width=820,
                       xaxis=dict(title=f"TV, {REFERENCE}", range=[0, top]),
-                      yaxis=dict(title="TV, gtdb_panel", range=[0, top]),
+                      yaxis=dict(title="TV, generic_panel", range=[0, top]),
                       legend=dict(orientation="h", y=-0.2), margin=dict(l=10, r=10, t=10, b=10))
     display(fig)
 ```
@@ -850,7 +850,7 @@ The `custom` arm's matrices, published once per matrix setting and shared by the
 and `nogate` points on top of them. Shown aggregated to genomes: cell `(a, b)` is the
 probability that a read from genome `a` is assigned to genome `b`, averaged over `a`'s 16S
 copies. Pair identifiability is the total-variation distance between the strain pair's
-rows (`0` = the genome-level matrix cannot tell them apart). The `gtdb_panel` kernels are
+rows (`0` = the genome-level matrix cannot tell them apart). The `generic_panel` kernels are
 built inside each nested inference run and are not published, so they cannot be shown.
 
 ```{python}
@@ -935,9 +935,9 @@ for record in RECORDS:
 
 Wall time of the superresolution tasks, from the run's Nextflow execution traces. Each
 `RUN_SUPERRESOLUTION` task is one nested pipeline over a batch of benchmark dirs (the
-count after the profiler in the tag is the batch size); a `gtdb_panel` task
+count after the profiler in the tag is the batch size); a `generic_panel` task
 (`panel=...`) includes building its kernel. `run` is the Nextflow launch the task
-completed in, so resumed launches and phase 1's GTDB mapping appear here too.
+completed in, so resumed launches and phase 1's SILVA mapping appear here too.
 
 ```{python}
 #| echo: false

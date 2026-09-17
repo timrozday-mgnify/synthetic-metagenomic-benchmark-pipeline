@@ -174,10 +174,10 @@ tasks:
           -P output_dir:"" \
           --output-dir "{{.RUN_DIR_ABS}}"
 
-  # --- GTDB panel reinterpretation vs custom database ---------------------------
+  # --- SILVA panel reinterpretation vs custom database ---------------------------
 
   sr-panel-sweep:
-    desc: Render the GTDB panel-reinterpretation vs custom-database report (defaults to the
+    desc: Render the SILVA panel-reinterpretation vs custom-database report (defaults to the
           sr_amp_panel_sweep run; override RUN_DIR, PIPELINE_DIR, SAMPLESHEET, RUN_LABEL,
           STRAIN_PAIR (comma-separated), REFERENCE_METHOD, PRESENCE_THRESHOLD). Reads the
           run tree directly — no preprocessing step.
@@ -189,7 +189,7 @@ tasks:
       - |
         mamba run -p {{.QUARTO_ENV}} \
           quarto render "{{.SR_PANEL_SWEEP_TEMPLATE}}" \
-          -P run_label:"{{.RUN_LABEL | default "GTDB panel reinterpretation vs custom 20HM database"}}" \
+          -P run_label:"{{.RUN_LABEL | default "SILVA panel reinterpretation vs custom 20HM database"}}" \
           -P run_dir:"{{.RUN_DIR_ABS}}" \
           -P pipeline_dir:"{{.PIPELINE_DIR | default "export/results/sr_amplicon_panel_sweep"}}" \
           -P samplesheet:"{{.SAMPLESHEET | default "export/sweep_samplesheet.yaml"}}" \

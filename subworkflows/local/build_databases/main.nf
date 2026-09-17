@@ -133,7 +133,13 @@ workflow BUILD_DATABASES {
             srSources().findAll { prof, field -> prof in spec.profilers }.collect { prof, field ->
                 def fastas = spec.sequences.collect { it[field] }
                 // Single-line manifest (literal \n) so the module's printf stays one line.
-                def manifest = spec.sequences.collect { s -> "${s.id},${s[field].name}" }.join('\\n')
+                // A lineage on every sequence adds a taxonomy column, and with it the
+                // .tax sidecar; it is quoted because a SILVA-style rank may hold a comma.
+                def taxed = spec.sequences.every { it.taxonomy }
+                def rows = spec.sequences.collect { s ->
+                    "${s.id},${s[field].name}" + (taxed ? ",\"${s.taxonomy.toString().replace('"', '""')}\"" : '')
+                }
+                def manifest = ([taxed ? 'genome_id,fasta_path,taxonomy' : 'genome_id,fasta_path'] + rows).join('\\n')
                 // meta.key is what PROFILE joins on; meta.id also names the published file.
                 [ [ id: "${spec.name}_${field}", key: "${spec.name}:${field}" ], no_file, fastas, manifest ]
             }
@@ -141,19 +147,27 @@ workflow BUILD_DATABASES {
     SR_BUILD_COLLECTION_REFS(ch_sr_in)
     ch_versions = ch_versions.mix(SR_BUILD_COLLECTION_REFS.out.versions.first())
     ch_built_sr = SR_BUILD_COLLECTION_REFS.out.refs.map { meta, refs -> [ meta.key, refs ] }
+        .join(SR_BUILD_COLLECTION_REFS.out.tax.map { meta, tax -> [ meta.key, tax ] }, by: 0, remainder: true)
+        .map { key, refs, tax -> [ key, refs, tax ?: [] ] }
 
     // Pre-built: the published layout is `<name>_<source>.sr_refs.fasta` (see
-    // conf/modules.config), so each flavour resolves its own file.
+    // conf/modules.config), so each flavour resolves its own file. The `.tax` beside it
+    // is optional: a generic database (SILVA SSU) ships one, a genome panel need not.
     ch_pre_sr = ch_b.prebuilt
         .flatMap { spec ->
             srSources().findAll { prof, field -> prof in spec.profilers }.collect { prof, field ->
-                [ "${spec.name}:${field}", globOne(spec.prebuilt_dir, "*_${field}.sr_refs.fasta", spec.name) ]
+                def tax = files("${spec.prebuilt_dir}/*_${field}.sr_refs.tax")
+                if (tax.size() > 1) {
+                    error "prebuilt database '${spec.name}': more than one *_${field}.sr_refs.tax in ${spec.prebuilt_dir}"
+                }
+                [ "${spec.name}:${field}", globOne(spec.prebuilt_dir, "*_${field}.sr_refs.fasta", spec.name),
+                  tax ? tax[0] : [] ]
             }
         }
 
     emit:
     sylph_dbs  = ch_built_sylph.mix(ch_pre_sylph)
     mapseq_dbs = ch_mapseq_dbs
-    sr_dbs     = ch_built_sr.mix(ch_pre_sr)   // [ "<name>:<genome|ssu>", refs_fasta ]
+    sr_dbs     = ch_built_sr.mix(ch_pre_sr)   // [ "<name>:<genome|ssu>", refs_fasta, tax|[] ]
     versions   = ch_versions
 }
