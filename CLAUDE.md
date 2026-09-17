@@ -118,7 +118,13 @@ null => bundled set. It's global (not per-sample) and passed as an absolute host
   (`v4_group` + `lca`), never over its own references. Its `.sr_refs.tax` (built from
   `taxonomy:` on every entry, or found beside a `path:` FASTA) rides to inference runs
   as `--taxonomy` via `meta.taxonomy` / `srTaxonomyArg`, and `ch_sr_dbs` is
-  `[ key, refs, tax|[] ]`.
+  `[ key, refs|[], tax|[], panel_taxa|[] ]`.
+- **Taxon panel entries.** A `databases:` sequence with `taxon:` (no `ssu`) becomes a row of
+  `<name>_ssu.panel_taxa.tsv` and reaches the nested run as `--panel_taxa`, resolved against
+  the row database's `.tax`. Such a collection may have no FASTA, can only be named by
+  `panel:` (main.nf), and needs a row database with a taxonomy (PROFILE). Species is the
+  only rank tested; genus panels collapse (superresolution-amplicon `dev/panel_silva_sweep.md`).
+  A panel run is recognised by `meta.sr_opts.panel`, not by `meta.panel_refs`.
 - **`mseq:` skips the nested amplicon pipeline's read mapping.** RUN_SUPERRESOLUTION
   emits it as a per-row `mseq:` in the nested samplesheet (a val path, like the reads),
   and superresolution-amplicon branches READS_TO_FASTA + MAPSEQ_OBS around it. The

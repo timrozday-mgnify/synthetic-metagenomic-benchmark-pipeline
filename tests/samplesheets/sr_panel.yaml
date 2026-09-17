@@ -4,17 +4,27 @@
 # against; its `taxonomy:` lineages give it a .tax sidecar, which every run of the row
 # takes as --taxonomy. `panel: panelA` reinterprets those labels through the panelA collection. No row profiles
 # against panelA directly; it is built because a setting names it. Panel entries build no
-# shared matrix (the nested run measures their kernel itself), so this is 1 matrix and 3
-# inference runs. `sr_error_model` reaches the nested samplesheet for the trained kernel.
+# shared matrix (the nested run measures their kernel itself), so this is 1 matrix and 5
+# inference runs. panelTaxa is a pre-built taxa-only dir (no FASTA) and panelMixed a built
+# collection mixing a genome with a taxon; taxon
+# entries resolve against generic's taxonomy, and are species (the only rank tested). `sr_error_model` reaches the nested samplesheet for the trained kernel.
 databases:
   generic:
     sequences:
-      - {id: genomeA, ssu: tests/data/ssuA.fasta, taxonomy: "Bacteria;Bacillota;Bacilli"}
-      - {id: genomeB, ssu: tests/data/ssuB.fasta, taxonomy: "Bacteria;Bacteroidota;Bacteroidia"}
+      - {id: genomeA, ssu: tests/data/ssuA.fasta,
+         taxonomy: "Bacteria;Bacillota;Bacilli;Bacillales;Bacillaceae;Bacillus;Bacillus subtilis"}
+      - {id: genomeB, ssu: tests/data/ssuB.fasta,
+         taxonomy: "Bacteria;Bacteroidota;Bacteroidia;Bacteroidales;Bacteroidaceae;Bacteroides;Bacteroides fragilis"}
   panelA:
     sequences:
       - {id: genomeA, ssu: tests/data/ssuA.fasta}
       - {id: genomeB, ssu: tests/data/ssuB.fasta}
+  panelTaxa:
+    path: tests/data/prebuilt_db/panelTaxa   # panelTaxa_ssu.panel_taxa.tsv only
+  panelMixed:
+    sequences:
+      - {id: genomeA,              ssu: tests/data/ssuA.fasta}
+      - {id: bacteroides_fragilis, taxon: "Bacteria;Bacteroidota;Bacteroidia;Bacteroidales;Bacteroidaceae;Bacteroides;Bacteroides fragilis"}
 
 samples:
   - sample: S2
@@ -34,3 +44,5 @@ samples:
       - {name: panel_trained, mismapping_method: simulate, matrix_args: --sim_error_model trained,
          panel: panelA, infer_presence: false}
       - {name: panel_flat, mismapping_method: simulate, panel: panelA, infer_presence: false}
+      - {name: panel_taxa, mismapping_method: simulate, panel: panelTaxa, infer_presence: false}
+      - {name: panel_mixed, mismapping_method: simulate, panel: panelMixed, infer_presence: false}

@@ -1,0 +1,18 @@
+# Must fail (stub): a collection with taxon entries named by a sample's `database`.
+databases:
+  panelTaxa:
+    sequences:
+      - {id: bacillus_subtilis, taxon: "Bacillus subtilis"}
+
+samples:
+  - sample: S2
+    train_id: natA
+    train_fastq_1: tests/data/natural_R1.fastq.gz
+    train_fastq_2: tests/data/natural_R2.fastq.gz
+    platform: hq-illumina
+    genomes_csv: tests/data/genomes_S2_ssu.csv
+    num_reads: 2000
+    mode: amplicon
+    read_length_mean: 200
+    profilers: [sr_amplicon]
+    database: panelTaxa

@@ -545,6 +545,32 @@ panel entry is one kernel build. The row's `sr_error_model:` hands that run a pr
 model for `--sim_error_model trained`. `examples/sr_amplicon_panel_sweep/` compares this
 against mapping to the panel directly, each under its own grid.
 
+A panel entry can also be a **species**: `{id, taxon}` instead of `{id, ssu}`, where `taxon`
+is a lineage prefix of the row database's `.tax`, or a bare name ending exactly one. Its
+sources are every database V4 group whose sequences fall under it, each fitted freely, and
+the entry's abundance is their sum (superresolution-amplicon's `--panel_taxa`). A panel may
+mix genomes and taxa; the genomes keep their own groups.
+
+```yaml
+databases:
+  panel_mixed:
+    sequences:
+      - {id: bacteroides_uniformis, ssu: references/16S/FNPN01_SSU.fasta}
+      - {id: bacteroides_fragilis,  taxon: "Bacteria;Bacteroidota;Bacteroidia;Bacteroidales;Bacteroidaceae;Bacteroides;Bacteroides fragilis"}
+```
+
+- **Species only.** SILVA NR99 has 1–24 V4 groups per gut species, and a species panel
+  scored median genome TV 0.034 (horseshoe) / 0.039 (no gate) against 0.030 as genome
+  entries. A genus is hundreds to thousands of groups, and inference collapses. The
+  species rank comes from `build_mapseq_database.py --silva-fasta` (superresolution-amplicon#11
+  or later), which derives it from SILVA's organism names.
+- The collection publishes `<name>_ssu.panel_taxa.tsv` beside its FASTA (none when it has
+  only taxa), and a `path:` dir may hold the same.
+- A collection with a taxon entry can only be named by `panel:`, not by a row's `database`.
+  The row's database must have a taxonomy, so `database: self` cannot take a taxon panel.
+- `truth.tsv` stays per genome; roll it up to entries in the scorer when entry ids differ
+  from genome ids.
+
 The generic database is a **label space**, not a set of things to report. MAPseq labels
 the reads with its V4 groups, whose lineages come from its taxonomy, but abundances are
 reported over a panel (through the rectangular panel kernel, panel V4 sources × database

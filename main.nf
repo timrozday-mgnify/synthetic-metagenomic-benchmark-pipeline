@@ -91,8 +91,9 @@ def parseProfilers(row, defaultProfilers) {
 // knob swept alongside a matrix knob costs nothing extra.
 //
 // `panel` (sr_amplicon only) names a `databases:` collection to reinterpret the row's own
-// database labels with: superresolution-amplicon's panel_references. The nested run
-// measures that kernel itself, inside the inference run, so a panel entry shares no matrix.
+// database labels with: superresolution-amplicon's panel_references, plus panel_taxa for the
+// collection's `taxon:` entries (tested at species level only). The nested run measures
+// that kernel itself, inside the inference run, so a panel entry shares no matrix.
 def srSettingKeys() {
     ['mismapping_method', 'align_backend', 'align_tau', 'align_distance_decay',
      'align_decay_model', 'matrix_args', 'panel',
@@ -212,9 +213,11 @@ workflow {
         }
     }
     def dbProfilers = [:]
+    def rowDatabases = [] as Set
     rows.each { row ->
         def name = row.database
         if (name && name != 'self') {
+            rowDatabases << name.toString()
             parseProfilers(row, defaultProfilers).each { prof ->
                 dbProfilers.computeIfAbsent(name) { [] as Set } << prof
             }
@@ -234,6 +237,18 @@ workflow {
         if (d.path && d.sequences) {
             error "database '${name}': set either 'path' or 'sequences', not both"
         }
+        // A `taxon:` entry is a taxon panel entry: its sequences are the generic database's
+        // V4 groups under that taxon, resolved by the nested run, so the collection has no
+        // reference set of its own and can only be named by `panel:`.
+        if (d.sequences) {
+            def both = d.sequences.find { it.taxon && (it.genome || it.ssu) }
+            if (both) {
+                error "database '${name}': sequence '${both.id}' sets 'taxon' and 'genome'/'ssu'; a panel entry is a taxon or a genome, not both"
+            }
+            if (d.sequences.any { it.taxon } && name in rowDatabases) {
+                error "database '${name}': has taxon entries, so it can only be named by an sr_settings 'panel:', not by a sample's 'database'"
+            }
+        }
         // Rfam rRNA-detection DBs the nested AAP run needs (params.rrnas_rfam_*);
         // collection-level and required whenever the collection feeds 'aap'.
         def rfamCm   = d.rfam_covariance_model ? resolveFile(d.rfam_covariance_model) : null
@@ -245,7 +260,7 @@ workflow {
         // or 16S (amplicon); fail here rather than deep in BUILD_DATABASES.
         if (d.sequences) {
             [ sr_shotgun: 'genome', sr_amplicon: 'ssu' ].each { prof, field ->
-                if (prof in profs && d.sequences.any { !it[field] }) {
+                if (prof in profs && d.sequences.any { !it.taxon && !it[field] }) {
                     error "database '${name}': profiler '${prof}' requires '${field}' on every sequence"
                 }
             }
@@ -259,7 +274,8 @@ workflow {
                 [ id:       s.id,
                   genome:   s.genome ? resolveFile(s.genome) : null,
                   ssu:      s.ssu    ? resolveFile(s.ssu)    : null,
-                  taxonomy: s.taxonomy ]
+                  taxonomy: s.taxonomy,
+                  taxon:    s.taxon ]
             }
             dbSpecs << [ name: name, profilers: profs, prebuilt_dir: null, sequences: seqs,
                          rfam_cm: rfamCm, rfam_claninfo: rfamClan ]

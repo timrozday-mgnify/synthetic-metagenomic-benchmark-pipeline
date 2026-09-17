@@ -135,6 +135,22 @@ def test_normalize_sr_profile_renormalises(tmp_path):
     assert lines[2] == ["genomeB", "0.250000", "0.250000"], lines
 
 
+def test_normalize_sr_profile_passes_panel_entries_through(tmp_path):
+    """A taxon panel entry and `background` keep their ids, as genome ids do."""
+    comp = tmp_path / "S1.inferred_composition.csv"
+    comp.write_text(
+        "sample,genome_id,observed_rel_abundance,inferred_mean,inferred_lo,inferred_hi\n"
+        "S1,bacteroides_uniformis,0.5,0.3,0.2,0.4\n"
+        "S1,bacteroides_fragilis,0.4,0.5,0.4,0.6\n"
+        "S1,background,0.1,0.2,0.1,0.3\n"
+    )
+    dst = tmp_path / "S1.sr_profile.tsv"
+    out = run("normalize_sr_profile.py", "--composition", str(comp), "--output", str(dst))
+    assert out.returncode == 0, out.stderr
+    ids = [ln.split("\t")[0] for ln in dst.read_text().splitlines()[1:]]
+    assert ids == ["background", "bacteroides_fragilis", "bacteroides_uniformis"], ids
+
+
 def test_preprocess_reads_superresolution_presence(tmp_path):
     """Regularised superresolution output yields a presence metric row."""
     import sys

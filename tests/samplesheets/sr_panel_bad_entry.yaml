@@ -1,0 +1,20 @@
+# Must fail (stub): one panel entry with both `taxon` and `ssu`.
+databases:
+  panelBad:
+    sequences:
+      - {id: genomeA, ssu: tests/data/ssuA.fasta, taxon: "Bacillus subtilis"}
+
+samples:
+  - sample: S2
+    train_id: natA
+    train_fastq_1: tests/data/natural_R1.fastq.gz
+    train_fastq_2: tests/data/natural_R2.fastq.gz
+    platform: hq-illumina
+    genomes_csv: tests/data/genomes_S2_ssu.csv
+    num_reads: 2000
+    mode: amplicon
+    read_length_mean: 200
+    profilers: [sr_amplicon]
+    database: self
+    sr_settings:
+      - {name: taxa, mismapping_method: simulate, panel: panelBad, infer_presence: false}
