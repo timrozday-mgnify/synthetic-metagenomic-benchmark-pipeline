@@ -531,9 +531,9 @@ What it costs is the point:
   and it carries the read-prep settings it was made with.
 
 `examples/sr_amplicon_param_sweep/` is a worked two-phase version of exactly this: one
-`--step all` run to generate and map, then one `--step profile` run over the whole grid. `examples/sr_amplicon_gtdb_sweep/` is the same two phases against a
-**pre-built** (`path:`) generic reference set, over negative-binomial
-communities rather than a sub-species pair.
+`--step all` run to generate and map, then one `--step profile` run over the whole grid. `examples/sr_amplicon_silva_sweep/` is the same two phases against a
+**pre-built** (`path:`) generic reference set (SILVA SSU), over negative-binomial
+communities rather than a sub-species pair, inferred in V4-group space and scored per genus.
 
 A `panel:` entry (`sr_amplicon` only) reinterprets the row's database labels through a
 genome panel: superresolution-amplicon's `panel_references`, for reads already mapped

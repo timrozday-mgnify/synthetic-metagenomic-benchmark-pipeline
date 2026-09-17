@@ -23,7 +23,7 @@ copy them:
   samples is a different mixture with about a third of the panel absent;
 - the **grids** come from `examples/sr_amplicon_param_sweep`: `grid:` axes expanded into
   `sr_settings:`;
-- **map SILVA once, sweep afterwards** comes from `examples/sr_amplicon_gtdb_sweep`:
+- **map SILVA once, sweep afterwards** comes from `examples/sr_amplicon_silva_sweep`:
   phase 1's SILVA classification is handed back as `mseq:`.
 
 ## The grids
