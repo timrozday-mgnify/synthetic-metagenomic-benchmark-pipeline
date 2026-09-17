@@ -9,7 +9,8 @@ Two rows per benchmark dir phase 1 generated, each with its own row-level `sr_se
   generic_panel  database: SILVA. `mseq:` is phase 1's classification of this dir against it,
               and `sr_error_model:` is the skiver model phase 1 trained. Every setting
               carries `panel:` (the custom collection), so inference runs over the panel
-              genomes plus `background`, not over SILVA's sequences.
+              genomes plus `background`, not over SILVA's sequences. The `generic_taxa`
+              settings ride on the same row: same database and mapping, a species panel.
 
     python generate_sweep_samplesheet.py [results_dir] [config.yaml]
 """
@@ -27,6 +28,7 @@ def main():
     results_dir = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else DEFAULT_RESULTS_DIR
     cfg = ps.load_config(sys.argv[2] if len(sys.argv) > 2 else HERE / "config.yaml")
     custom, panel = ps.settings(cfg, "custom"), ps.settings(cfg, "generic_panel")
+    taxa = ps.settings(cfg, "generic_taxa")
     map_name = cfg["generic"]["map_setting"]["name"]
     model = ps.trained_model(cfg, results_dir)
 
@@ -36,7 +38,7 @@ def main():
                 **({"subsample": depth} if depth else {}),
                 **({"primers": [dict(pair)]} if pair else {})}
         rows.append({**base, "database": cfg["database"]["name"], "sr_settings": custom})
-        generic = {**base, "database": cfg["generic"]["name"], "sr_settings": panel}
+        generic = {**base, "database": cfg["generic"]["name"], "sr_settings": panel + taxa}
         # Phase 1 fanned out over its one mapping setting, so its id carries that name.
         mseq = directory / "profiling" / "sr" / f"{run_id}.{map_name}.obs.mseq.gz"
         if mseq.exists():
@@ -52,10 +54,11 @@ def main():
         ps.dump_yaml(doc, fh)
 
     n_dirs = len(rows) // 2
+    n_settings = len(custom) + len(panel) + len(taxa)
     print(f"Wrote sweep_samplesheet.yaml: {n_dirs} benchmark dir(s) x ({len(custom)} custom "
-          f"+ {len(panel)} generic_panel) setting(s) = {n_dirs * (len(custom) + len(panel))} "
-          f"profiles, from {ps.n_matrices(custom)} custom matrix/matrices and "
-          f"{len(panel)} panel kernel(s)")
+          f"+ {len(panel)} generic_panel + {len(taxa)} generic_taxa) setting(s) = "
+          f"{n_dirs * n_settings} profiles, from {ps.n_matrices(custom)} custom "
+          f"matrix/matrices and {len(panel) + len(taxa)} panel kernel(s)")
     if missing:
         print(f"NOTE: {len(missing)} benchmark dir(s) have no phase-1 SILVA mapping "
               f"(e.g. {missing[0]}); their generic_panel rows omit `mseq:` and every panel "

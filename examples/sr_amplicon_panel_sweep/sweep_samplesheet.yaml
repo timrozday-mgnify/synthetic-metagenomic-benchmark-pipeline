@@ -47,6 +47,75 @@ databases:
       ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP009913.1_SSU.fasta
     - id: veillonella_parvula
       ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/HM007566.1.fasta
+  community_20hm_taxa:
+    sequences:
+    - id: bacteroides_fragilis
+      taxon: Bacteria;Bacteroidota;Bacteroidia;Bacteroidales;Bacteroidaceae;Bacteroides;Bacteroides
+        fragilis
+    - id: bacteroides_thetaiotaomicron
+      taxon: Bacteria;Bacteroidota;Bacteroidia;Bacteroidales;Bacteroidaceae;Bacteroides;Bacteroides
+        thetaiotaomicron
+    - id: bacteroides_uniformis
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/FNPN01_SSU.fasta
+    - id: bacteroides_uniformis_strain2
+      ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/BU_JCM13286_NT5170.1_SSU.fasta
+    - id: bacteroides_vulgatus
+      taxon: Bacteria;Bacteroidota;Bacteroidia;Bacteroidales;Bacteroidaceae;Bacteroides;Bacteroides
+        vulgatus
+    - id: clostridium_bolteae
+      taxon: Bacteria;Bacillota;Clostridia;Lachnospirales;Lachnospiraceae;Enterocloster;Enterocloster
+        bolteae
+    - id: clostridium_perfringens
+      taxon: Bacteria;Bacillota;Clostridia;Clostridiales;Clostridiaceae;Clostridium;Clostridium
+        perfringens
+    - id: clostridium_ramosum
+      taxon: Bacteria;Bacillota;Bacilli;Erysipelotrichales;Erysipelatoclostridiaceae;Thomasclavelia;Thomasclavelia
+        ramosum
+    - id: clostridium_saccharolyticum
+      taxon: Bacteria;Bacillota;Clostridia;Lachnospirales;Lachnospiraceae;Lachnoclostridium;Lachnoclostridium
+        saccharolyticum
+    - id: collinsella_aerofaciens
+      taxon: Bacteria;Actinomycetota;Coriobacteriia;Coriobacteriales;Coriobacteriaceae;Collinsella;Collinsella
+        aerofaciens
+    - id: coprococcus_comes
+      taxon: Bacteria;Bacillota;Clostridia;Lachnospirales;Lachnospiraceae;Coprococcus;Coprococcus
+        comes
+    - id: dorea_formicigenerans
+      taxon: Bacteria;Bacillota;Clostridia;Lachnospirales;Lachnospiraceae;Dorea;Dorea
+        formicigenerans
+    - id: eggerthella_lenta
+      taxon: Bacteria;Actinomycetota;Coriobacteriia;Coriobacteriales;Eggerthellaceae;Eggerthella;Eggerthella
+        lenta
+    - id: eubacterium_rectale
+      taxon: Bacteria;Bacillota;Clostridia;Lachnospirales;Lachnospiraceae;Agathobacter;Agathobacter
+        rectale
+    - id: fusobacterium_nucleatum
+      taxon: Bacteria;Fusobacteriota;Fusobacteriia;Fusobacteriales;Fusobacteriaceae;Fusobacterium;Fusobacterium
+        nucleatum
+    - id: methanobrevibacter_smithii
+      taxon: Archaea;Methanobacteriota;Methanobacteria;Methanobacteriales;Methanobacteriaceae;Methanobrevibacter;Methanobrevibacter
+        smithii
+    - id: parabacteroides_merdae
+      taxon: Bacteria;Bacteroidota;Bacteroidia;Bacteroidales;Tannerellaceae;Parabacteroides;Parabacteroides
+        merdae
+    - id: roseburia_intestinalis
+      taxon: Bacteria;Bacillota;Clostridia;Lachnospirales;Lachnospiraceae;Roseburia;Roseburia
+        intestinalis
+    - id: ruminococcus_gnavus
+      taxon: Bacteria;Bacillota;Clostridia;Lachnospirales;Lachnospiraceae;[Ruminococcus]
+        gnavus group;[Ruminococcus] gnavus group gnavus
+    - id: salinibacter_ruber
+      taxon: Bacteria;Rhodothermota;Rhodothermia;Rhodothermales;Rhodothermaceae;Salinibacter;Salinibacter
+        ruber
+    - id: streptococcus_parasanguinis
+      taxon: Bacteria;Bacillota;Bacilli;Lactobacillales;Streptococcaceae;Streptococcus;Streptococcus
+        parasanguinis
+    - id: streptococcus_salivarius
+      taxon: Bacteria;Bacillota;Bacilli;Lactobacillales;Streptococcaceae;Streptococcus;Streptococcus
+        salivarius
+    - id: veillonella_parvula
+      taxon: Bacteria;Bacillota;Negativicutes;Veillonellales-Selenomonadales;Veillonellaceae;Veillonella;Veillonella
+        parvula
   silva_138_2_ssu_nr99:
     path: /PATH/TO/silva_138_2_ssu_nr99
 samples:
@@ -136,6 +205,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S01.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -224,6 +315,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S02.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -310,6 +423,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S02.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -398,6 +533,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S03.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -484,6 +641,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S03.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -572,6 +751,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S04.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -658,6 +859,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S04.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -746,6 +969,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S05.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -832,6 +1077,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S05.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -920,6 +1187,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S06.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -1006,6 +1295,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S06.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -1094,6 +1405,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S07.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -1180,6 +1513,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S07.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -1268,6 +1623,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S08.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -1354,6 +1731,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S08.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -1442,6 +1841,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S09.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -1528,6 +1949,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S09.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -1616,6 +2059,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S10.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -1702,6 +2167,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S10.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -1790,6 +2277,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S11.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -1876,6 +2385,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S11.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -1964,6 +2495,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S12.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -2050,6 +2603,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S12.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -2138,6 +2713,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S13.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -2224,6 +2821,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S13.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -2312,6 +2931,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S14.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -2398,6 +3039,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S14.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -2486,6 +3149,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S15.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -2572,6 +3257,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S15.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -2660,6 +3367,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S16.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -2746,6 +3475,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S16.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -2834,6 +3585,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S17.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -2920,6 +3693,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S17.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -3008,6 +3803,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S18.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -3094,6 +3911,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S18.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -3182,6 +4021,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S19.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -3268,6 +4129,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S19.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -3356,6 +4239,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S20.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -3442,6 +4347,28 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
 - sample: S20.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -3530,3 +4457,25 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_taxa.trained.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.trained.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model trained
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    panel: community_20hm_taxa
+  - name: generic_taxa.flat.horseshoe
+    mismapping_method: simulate
+    matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true
+    panel: community_20hm_taxa

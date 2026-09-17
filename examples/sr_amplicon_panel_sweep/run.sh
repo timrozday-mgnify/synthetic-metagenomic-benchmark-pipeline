@@ -21,10 +21,11 @@ nextflow run "$REPO/main.nf" \
     --outdir "$OUTDIR" \
     --seed 42
 
-# --- Phase 2: both arms, every grid point --------------------------------------------
+# --- Phase 2: all three arms, every grid point -----------------------------------------
 # `--step profile` re-profiles those reads twice per benchmark dir: against the custom
 # 20HM collection (its own grid), and against SILVA reusing phase 1's mapping, with every
-# setting reinterpreting the labels through the 20HM panel (the other grid).
+# setting reinterpreting the labels through the 20HM panel or its species panel (the other
+# two grids).
 python "$HERE/generate_sweep_samplesheet.py" "$OUTDIR"
 
 nextflow run "$REPO/main.nf" \

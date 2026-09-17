@@ -11,7 +11,9 @@
 //
 // Each spec (one per referenced collection) is a map:
 //   [ name, profilers(Set of 'sylph'/'aap'/'sr_amplicon'/'sr_shotgun'), prebuilt_dir(file|null),
-//     sequences([ {id, genome(file|null), ssu(file|null), taxonomy} ]|null) ]
+//     sequences([ {id, genome(file|null), ssu(file|null), taxonomy, taxon} ]|null) ]
+// A sequence with a `taxon` is a taxon panel entry (main.nf allows it only in a collection
+// named by `panel:`, so only the ssu source ever sees one).
 //
 
 include { SYLPH_BUILD_DB as SYLPH_BUILD_COLLECTION } from '../../../modules/local/sylph/build_db/main'
@@ -30,6 +32,20 @@ def globOne(dir, pat, name) {
         error "prebuilt database '${name}': expected exactly one ${pat} in ${dir} (found ${hits.size()})"
     }
     hits[0]
+}
+
+// At most one file matching `pat` in a pre-built DB directory, or [] when there is none.
+def globOptional(dir, pat, name) {
+    def hits = files("${dir}/${pat}")
+    if (hits.size() > 1) {
+        error "prebuilt database '${name}': more than one ${pat} in ${dir}"
+    }
+    hits ? hits[0] : []
+}
+
+// A CSV field, quoted: a SILVA-style rank may hold a comma.
+def csvQuote(v) {
+    "\"${v.toString().replace('"', '""')}\""
 }
 
 workflow BUILD_DATABASES {
@@ -131,43 +147,55 @@ workflow BUILD_DATABASES {
     ch_sr_in = ch_b.build
         .flatMap { spec ->
             srSources().findAll { prof, field -> prof in spec.profilers }.collect { prof, field ->
-                def fastas = spec.sequences.collect { it[field] }
+                def genomes = spec.sequences.findAll { !it.taxon }
+                def taxa    = spec.sequences.findAll { it.taxon }
+                def fastas = genomes.collect { it[field] }
                 // Single-line manifest (literal \n) so the module's printf stays one line.
-                // A lineage on every sequence adds a taxonomy column, and with it the
-                // .tax sidecar; it is quoted because a SILVA-style rank may hold a comma.
-                def taxed = spec.sequences.every { it.taxonomy }
-                def rows = spec.sequences.collect { s ->
-                    "${s.id},${s[field].name}" + (taxed ? ",\"${s.taxonomy.toString().replace('"', '""')}\"" : '')
+                // A lineage on every genome adds a taxonomy column, and with it the .tax
+                // sidecar. Taxon entries add a taxon column and leave fasta_path empty.
+                def taxed = genomes && genomes.every { it.taxonomy }
+                def header = ['genome_id', 'fasta_path'] + (taxed ? ['taxonomy'] : []) + (taxa ? ['taxon'] : [])
+                def rows = genomes.collect { s ->
+                    ([s.id, s[field].name] + (taxed ? [csvQuote(s.taxonomy)] : []) + (taxa ? [''] : [])).join(',')
+                } + taxa.collect { s ->
+                    ([s.id, ''] + (taxed ? [''] : []) + [csvQuote(s.taxon)]).join(',')
                 }
-                def manifest = ([taxed ? 'genome_id,fasta_path,taxonomy' : 'genome_id,fasta_path'] + rows).join('\\n')
+                def manifest = ([header.join(',')] + rows).join('\\n')
                 // meta.key is what PROFILE joins on; meta.id also names the published file.
-                [ [ id: "${spec.name}_${field}", key: "${spec.name}:${field}" ], no_file, fastas, manifest ]
+                [ [ id: "${spec.name}_${field}", key: "${spec.name}:${field}",
+                    has_taxa: !taxa.isEmpty(), taxa_only: genomes.isEmpty() ], no_file, fastas, manifest ]
             }
         }
     SR_BUILD_COLLECTION_REFS(ch_sr_in)
     ch_versions = ch_versions.mix(SR_BUILD_COLLECTION_REFS.out.versions.first())
-    ch_built_sr = SR_BUILD_COLLECTION_REFS.out.refs.map { meta, refs -> [ meta.key, refs ] }
-        .join(SR_BUILD_COLLECTION_REFS.out.tax.map { meta, tax -> [ meta.key, tax ] }, by: 0, remainder: true)
-        .map { key, refs, tax -> [ key, refs, tax ?: [] ] }
+    // Every output is optional (a taxa-only panel has no FASTA), so collect them per key
+    // rather than joining onto one that may be missing.
+    ch_built_sr = SR_BUILD_COLLECTION_REFS.out.refs.map { meta, f -> [ meta.key, 'refs', f ] }
+        .mix(SR_BUILD_COLLECTION_REFS.out.tax.map { meta, f -> [ meta.key, 'tax', f ] })
+        .mix(SR_BUILD_COLLECTION_REFS.out.taxa.map { meta, f -> [ meta.key, 'taxa', f ] })
+        .groupTuple(by: 0)
+        .map { key, kinds, fs ->
+            def out = [kinds, fs].transpose().collectEntries()
+            [ key, out.refs ?: [], out.tax ?: [], out.taxa ?: [] ]
+        }
 
     // Pre-built: the published layout is `<name>_<source>.sr_refs.fasta` (see
     // conf/modules.config), so each flavour resolves its own file. The `.tax` beside it
-    // is optional: a generic database (SILVA SSU) ships one, a genome panel need not.
+    // is optional: a generic database (SILVA SSU) ships one, a genome panel need not. So is
+    // `<name>_ssu.panel_taxa.tsv`, and a panel that has one may have no FASTA.
     ch_pre_sr = ch_b.prebuilt
         .flatMap { spec ->
             srSources().findAll { prof, field -> prof in spec.profilers }.collect { prof, field ->
-                def tax = files("${spec.prebuilt_dir}/*_${field}.sr_refs.tax")
-                if (tax.size() > 1) {
-                    error "prebuilt database '${spec.name}': more than one *_${field}.sr_refs.tax in ${spec.prebuilt_dir}"
-                }
-                [ "${spec.name}:${field}", globOne(spec.prebuilt_dir, "*_${field}.sr_refs.fasta", spec.name),
-                  tax ? tax[0] : [] ]
+                def taxa = globOptional(spec.prebuilt_dir, "*_${field}.panel_taxa.tsv", spec.name)
+                def refs = taxa ? globOptional(spec.prebuilt_dir, "*_${field}.sr_refs.fasta", spec.name)
+                                : globOne(spec.prebuilt_dir, "*_${field}.sr_refs.fasta", spec.name)
+                [ "${spec.name}:${field}", refs, globOptional(spec.prebuilt_dir, "*_${field}.sr_refs.tax", spec.name), taxa ]
             }
         }
 
     emit:
     sylph_dbs  = ch_built_sylph.mix(ch_pre_sylph)
     mapseq_dbs = ch_mapseq_dbs
-    sr_dbs     = ch_built_sr.mix(ch_pre_sr)   // [ "<name>:<genome|ssu>", refs_fasta, tax|[] ]
+    sr_dbs     = ch_built_sr.mix(ch_pre_sr)   // [ "<name>:<genome|ssu>", refs_fasta|[], tax|[], panel_taxa|[] ]
     versions   = ch_versions
 }

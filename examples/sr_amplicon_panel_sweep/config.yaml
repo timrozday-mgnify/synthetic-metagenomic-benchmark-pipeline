@@ -56,6 +56,8 @@ generation_modes:
 #   - the `custom` arm maps the reads against it;
 #   - the `generic_panel` arm reinterprets the SILVA labels through it (every generic_panel
 #     setting gets `panel: <this name>`).
+# The generic_taxa arm's panel is a second collection, `<this name>_taxa`, made from the
+# strain pair's `ssu:` and every other genome's `silva_taxon:`.
 # Since both arms see the same panel ids, their profiles and truth.tsv line up with no
 # id translation.
 database:
@@ -77,7 +79,7 @@ generic:
   map_setting: {name: map, mismapping_method: align, align_backend: exact-hash, align_tau: 0,
                 matrix_args: --align_ambiguity_weight 0.3}
 
-# The two parameter grids, one per arm. Each is the same shape as
+# The parameter grids, one per arm. Each is the same shape as
 # examples/sr_amplicon_param_sweep's `sr_sweep.grid`: every axis is a list of named knob
 # maps, and the grid is their cartesian product. A point is named `<arm>.<axis names
 # joined by '.'>`, and that name becomes part of its output filename. Knobs are the
@@ -131,6 +133,26 @@ sr_sweep:
         # uncomment to see it. Doubles the generic_panel cost.
         # - {name: s10k, inference_args: --infer_steps 10000}
 
+  # SILVA labels, reinterpreted through a panel of TAXA: the strain pair stays as genomes,
+  # and every other genome is its SILVA species (`panel[].silva_taxon`), so an entry's
+  # sources are all SILVA V4 groups of that species, each fitted freely. It asks how much
+  # knowing only the species costs against knowing the genome (generic_panel). Species is
+  # the only rank tested: a genus is hundreds of V4 groups and inference collapses
+  # (superresolution-amplicon dev/panel_silva_sweep.md). A species is 1-24 groups there, so
+  # a kernel here simulates about 90 sources instead of about 30.
+  #
+  # Entry ids are the genome ids, so it is scored like the other arms. The generator adds
+  # `panel:` (the `<database.name>_taxa` collection). No gate: it misfit on half the
+  # samples in the SILVA sweep.
+  generic_taxa:
+    grid:
+      kernel:
+        - {name: trained, mismapping_method: simulate, matrix_args: --sim_error_model trained}
+        - {name: flat, mismapping_method: simulate, matrix_args: --sim_error_model flat}
+      prior:
+        - {name: nogate, infer_presence: false}
+        - {name: horseshoe, infer_presence: false, inference_args: --infer_horseshoe true}
+
 # Scoring (scripts/score_sweep.py): the strain pair whose split `strain_split_error`
 # reports, as [major, minor].
 score:
@@ -138,28 +160,51 @@ score:
 
 # One entry per genome: the 20HM mock community plus a second B. uniformis strain. `ssu:`
 # (full-length 16S) feeds read generation, the custom database and the reinterpretation
-# panel alike. The file names are the ones the sr_amp_param_sweep run used.
+# panel alike. `silva_taxon:` is the genome's SILVA species (a full lineage, as
+# build_mapseq_database.py --silva-fasta writes it): the generic_taxa arm's entry for that
+# genome. Every genome outside `score.strain_pair` needs one. The file names are the ones the sr_amp_param_sweep run used.
 panel:
-  - {id: bacteroides_fragilis,          ssu: references/16S/CR626927.1_SSU.fasta}
-  - {id: bacteroides_thetaiotaomicron,  ssu: references/16S/CP040530.1_SSU.fasta}
+  - {id: bacteroides_fragilis,          ssu: references/16S/CR626927.1_SSU.fasta,
+     silva_taxon: "Bacteria;Bacteroidota;Bacteroidia;Bacteroidales;Bacteroidaceae;Bacteroides;Bacteroides fragilis"}
+  - {id: bacteroides_thetaiotaomicron,  ssu: references/16S/CP040530.1_SSU.fasta,
+     silva_taxon: "Bacteria;Bacteroidota;Bacteroidia;Bacteroidales;Bacteroidaceae;Bacteroides;Bacteroides thetaiotaomicron"}
   - {id: bacteroides_uniformis,         ssu: references/16S/FNPN01_SSU.fasta}
   - {id: bacteroides_uniformis_strain2, ssu: references/16S/BU_JCM13286_NT5170.1_SSU.fasta}
-  - {id: bacteroides_vulgatus,          ssu: references/16S/CP000139.1_SSU.fasta}
-  - {id: clostridium_bolteae,           ssu: references/16S/ABCC02_SSU.fasta}
-  - {id: clostridium_perfringens,       ssu: references/16S/DACTBY01_SSU.fasta}
-  - {id: clostridium_ramosum,           ssu: references/16S/ABFX02_SSU.fasta}
-  - {id: clostridium_saccharolyticum,   ssu: references/16S/CP002109.1_SSU.fasta}
-  - {id: collinsella_aerofaciens,       ssu: references/16S/CP048433.1_SSU.fasta}
-  - {id: coprococcus_comes,             ssu: references/16S/CP070062.1_SSU.fasta}
-  - {id: dorea_formicigenerans,         ssu: references/16S/GCA_000169235.1_SSU.fasta}
-  - {id: eggerthella_lenta,             ssu: references/16S/CP001726.1_SSU.fasta}
-  - {id: eubacterium_rectale,           ssu: references/16S/GCA_000209935.1_SSU.fasta}
-  - {id: fusobacterium_nucleatum,       ssu: references/16S/GCA_000007325.1_SSU.fasta}
-  - {id: methanobrevibacter_smithii,    ssu: references/16S/GCA_000151225.1_SSU.fasta}
-  - {id: parabacteroides_merdae,        ssu: references/16S/AAXE02_SSU.fasta}
-  - {id: roseburia_intestinalis,        ssu: references/16S/ABYJ02_SSU.fasta}
-  - {id: ruminococcus_gnavus,           ssu: references/16S/CP027002.1_SSU.fasta}
-  - {id: salinibacter_ruber,            ssu: references/16S/CP000159.1_SSU.fasta}
-  - {id: streptococcus_parasanguinis,   ssu: references/16S/GCA_000164675.2_SSU.fasta}
-  - {id: streptococcus_salivarius,      ssu: references/16S/CP009913.1_SSU.fasta}
-  - {id: veillonella_parvula,           ssu: references/16S/HM007566.1.fasta}
+  - {id: bacteroides_vulgatus,          ssu: references/16S/CP000139.1_SSU.fasta,
+     silva_taxon: "Bacteria;Bacteroidota;Bacteroidia;Bacteroidales;Bacteroidaceae;Bacteroides;Bacteroides vulgatus"}
+  - {id: clostridium_bolteae,           ssu: references/16S/ABCC02_SSU.fasta,
+     silva_taxon: "Bacteria;Bacillota;Clostridia;Lachnospirales;Lachnospiraceae;Enterocloster;Enterocloster bolteae"}
+  - {id: clostridium_perfringens,       ssu: references/16S/DACTBY01_SSU.fasta,
+     silva_taxon: "Bacteria;Bacillota;Clostridia;Clostridiales;Clostridiaceae;Clostridium;Clostridium perfringens"}
+  - {id: clostridium_ramosum,           ssu: references/16S/ABFX02_SSU.fasta,
+     silva_taxon: "Bacteria;Bacillota;Bacilli;Erysipelotrichales;Erysipelatoclostridiaceae;Thomasclavelia;Thomasclavelia ramosum"}
+  - {id: clostridium_saccharolyticum,   ssu: references/16S/CP002109.1_SSU.fasta,
+     silva_taxon: "Bacteria;Bacillota;Clostridia;Lachnospirales;Lachnospiraceae;Lachnoclostridium;Lachnoclostridium saccharolyticum"}
+  - {id: collinsella_aerofaciens,       ssu: references/16S/CP048433.1_SSU.fasta,
+     silva_taxon: "Bacteria;Actinomycetota;Coriobacteriia;Coriobacteriales;Coriobacteriaceae;Collinsella;Collinsella aerofaciens"}
+  - {id: coprococcus_comes,             ssu: references/16S/CP070062.1_SSU.fasta,
+     silva_taxon: "Bacteria;Bacillota;Clostridia;Lachnospirales;Lachnospiraceae;Coprococcus;Coprococcus comes"}
+  - {id: dorea_formicigenerans,         ssu: references/16S/GCA_000169235.1_SSU.fasta,
+     silva_taxon: "Bacteria;Bacillota;Clostridia;Lachnospirales;Lachnospiraceae;Dorea;Dorea formicigenerans"}
+  - {id: eggerthella_lenta,             ssu: references/16S/CP001726.1_SSU.fasta,
+     silva_taxon: "Bacteria;Actinomycetota;Coriobacteriia;Coriobacteriales;Eggerthellaceae;Eggerthella;Eggerthella lenta"}
+  - {id: eubacterium_rectale,           ssu: references/16S/GCA_000209935.1_SSU.fasta,
+     silva_taxon: "Bacteria;Bacillota;Clostridia;Lachnospirales;Lachnospiraceae;Agathobacter;Agathobacter rectale"}
+  - {id: fusobacterium_nucleatum,       ssu: references/16S/GCA_000007325.1_SSU.fasta,
+     silva_taxon: "Bacteria;Fusobacteriota;Fusobacteriia;Fusobacteriales;Fusobacteriaceae;Fusobacterium;Fusobacterium nucleatum"}
+  - {id: methanobrevibacter_smithii,    ssu: references/16S/GCA_000151225.1_SSU.fasta,
+     silva_taxon: "Archaea;Methanobacteriota;Methanobacteria;Methanobacteriales;Methanobacteriaceae;Methanobrevibacter;Methanobrevibacter smithii"}
+  - {id: parabacteroides_merdae,        ssu: references/16S/AAXE02_SSU.fasta,
+     silva_taxon: "Bacteria;Bacteroidota;Bacteroidia;Bacteroidales;Tannerellaceae;Parabacteroides;Parabacteroides merdae"}
+  - {id: roseburia_intestinalis,        ssu: references/16S/ABYJ02_SSU.fasta,
+     silva_taxon: "Bacteria;Bacillota;Clostridia;Lachnospirales;Lachnospiraceae;Roseburia;Roseburia intestinalis"}
+  - {id: ruminococcus_gnavus,           ssu: references/16S/CP027002.1_SSU.fasta,
+     silva_taxon: "Bacteria;Bacillota;Clostridia;Lachnospirales;Lachnospiraceae;[Ruminococcus] gnavus group;[Ruminococcus] gnavus group gnavus"}
+  - {id: salinibacter_ruber,            ssu: references/16S/CP000159.1_SSU.fasta,
+     silva_taxon: "Bacteria;Rhodothermota;Rhodothermia;Rhodothermales;Rhodothermaceae;Salinibacter;Salinibacter ruber"}
+  - {id: streptococcus_parasanguinis,   ssu: references/16S/GCA_000164675.2_SSU.fasta,
+     silva_taxon: "Bacteria;Bacillota;Bacilli;Lactobacillales;Streptococcaceae;Streptococcus;Streptococcus parasanguinis"}
+  - {id: streptococcus_salivarius,      ssu: references/16S/CP009913.1_SSU.fasta,
+     silva_taxon: "Bacteria;Bacillota;Bacilli;Lactobacillales;Streptococcaceae;Streptococcus;Streptococcus salivarius"}
+  - {id: veillonella_parvula,           ssu: references/16S/HM007566.1.fasta,
+     silva_taxon: "Bacteria;Bacillota;Negativicutes;Veillonellales-Selenomonadales;Veillonellaceae;Veillonella;Veillonella parvula"}

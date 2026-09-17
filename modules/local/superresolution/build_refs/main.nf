@@ -6,7 +6,9 @@
 // alongside; used both for `database: self` (the sample's own genomes CSV) and for
 // a named `databases:` collection (BUILD_DATABASES writes an equivalent CSV).
 // A `taxonomy` column on every row also yields `<prefix>.sr_refs.tax`, the MAPseq
-// taxonomy the nested run takes as --taxonomy.
+// taxonomy the nested run takes as --taxonomy. Rows with a `taxon` (a collection's taxon
+// panel entries) go to `<prefix>.panel_taxa.tsv` instead, the nested --panel_taxa; a
+// taxa-only collection writes no FASTA (meta.taxa_only / meta.has_taxa tell the stub).
 process SR_BUILD_REFS {
     tag "$meta.id"
     label 'process_single'
@@ -21,7 +23,8 @@ process SR_BUILD_REFS {
     tuple val(meta), path(genomes_csv), path(fastas), val(manifest)
 
     output:
-    tuple val(meta), path("${task.ext.prefix ?: meta.id}.sr_refs.fasta"), emit: refs
+    tuple val(meta), path("${task.ext.prefix ?: meta.id}.sr_refs.fasta"), emit: refs, optional: true
+    tuple val(meta), path("${task.ext.prefix ?: meta.id}.panel_taxa.tsv"), emit: taxa, optional: true
     tuple val(meta), path("${task.ext.prefix ?: meta.id}.sr_refs.tax"), emit: tax, optional: true
     path "versions.yml",                                                  emit: versions
 
@@ -39,7 +42,8 @@ process SR_BUILD_REFS {
     python "\$(command -v build_sr_refs.py)" \\
         --genomes-csv sr_genomes.csv \\
         --output ${prefix}.sr_refs.fasta \\
-        --tax-output ${prefix}.sr_refs.tax
+        --tax-output ${prefix}.sr_refs.tax \\
+        --taxa-output ${prefix}.panel_taxa.tsv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -50,8 +54,9 @@ process SR_BUILD_REFS {
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    printf '>stub|0|stub\\nACGT\\n' > ${prefix}.sr_refs.fasta
+    ${meta.taxa_only ? '' : "printf '>stub|0|stub\\nACGT\\n' > ${prefix}.sr_refs.fasta"}
     ${manifest.startsWith('genome_id,fasta_path,taxonomy') ? "printf 'stub|0|stub\\tstub\\n' > ${prefix}.sr_refs.tax" : ''}
+    ${meta.has_taxa ? "printf 'id\\ttaxon\\nstub\\tstub\\n' > ${prefix}.panel_taxa.tsv" : ''}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -236,7 +236,7 @@ nextflow_pipeline {
                 // Only the square entry builds a shared matrix; a panel run measures its
                 // own kernel, so it is handed the matrix flags instead of a matrix.
                 { assert workflow.trace.succeeded().findAll { it.name.contains("BUILD_SUPERRESOLUTION_MISMAPPING") }.size() == 1 },
-                { assert workflow.trace.succeeded().findAll { it.name.contains("RUN_SUPERRESOLUTION") }.size() == 3 },
+                { assert workflow.trace.succeeded().findAll { it.name.contains("RUN_SUPERRESOLUTION") }.size() == 5 },
                 { assert trained.contains("--mismapping_method simulate --sim_error_model trained") },
 
                 // panelA is named only by `panel:`, and is built all the same.
@@ -252,8 +252,44 @@ nextflow_pipeline {
 
                 // The row's pre-trained model reaches the nested samplesheet.
                 { assert path("${sr}/S2.panel_trained.nested_samplesheet.yml").text.contains("error_model: ") },
-                { assert path("${sr}/S2.panel_trained.nested_samplesheet.yml").text.contains("natA.model.pt") }
+                { assert path("${sr}/S2.panel_trained.nested_samplesheet.yml").text.contains("natA.model.pt") },
+
+                // Taxon entries go as --panel_taxa: alone for a pre-built taxa-only panel
+                // (a dir with no FASTA), next to --panel_references for a built mixed one.
+                { assert path("${sr}/S2.panel_taxa.nested_args.txt").text.contains("--panel_taxa ") },
+                { assert path("${sr}/S2.panel_taxa.nested_args.txt").text.contains("prebuilt_db/panelTaxa/panelTaxa_ssu.panel_taxa.tsv") },
+                { assert !path("${sr}/S2.panel_taxa.nested_args.txt").text.contains("--panel_references") },
+                { assert path("${sr}/S2.panel_taxa.nested_args.txt").text.contains("generic_ssu.sr_refs.tax") },
+                { assert path("${sr}/S2.panel_mixed.nested_args.txt").text.contains("--panel_taxa ") },
+                { assert path("${sr}/S2.panel_mixed.nested_args.txt").text.contains("--panel_references ") },
+                { assert !path("${sr}/S2.panel_flat.nested_args.txt").text.contains("--panel_taxa") },
+                { assert path("${params.outdir}/databases/panelMixed/panelMixed_ssu.panel_taxa.tsv").exists() },
+                { assert path("${params.outdir}/databases/panelMixed/panelMixed_ssu.sr_refs.fasta").exists() }
             )
+        }
+    }
+
+    // Taxon panel misuse fails with a message naming the problem.
+    [
+        [ "sr_panel_bad_database", "can only be named by an sr_settings 'panel:'" ],
+        [ "sr_panel_bad_self",     "has no taxonomy to resolve them against" ],
+        [ "sr_panel_bad_entry",    "sets 'taxon' and 'genome'/'ssu'" ],
+    ].each { sheet, message ->
+        test("taxon panel refused: ${sheet} - stub") {
+            tag "stub"
+            options "-stub"
+            when {
+                params {
+                    input  = "${projectDir}/tests/samplesheets/${sheet}.yaml"
+                    outdir = "$outputDir"
+                }
+            }
+            then {
+                assertAll(
+                    { assert workflow.failed },
+                    { assert workflow.stdout.any { it.contains(message) } }
+                )
+            }
         }
     }
 

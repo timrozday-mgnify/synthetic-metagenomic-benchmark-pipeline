@@ -94,10 +94,12 @@ def srTaxonomyArg(meta) {
 
 // Panel reinterpretation (a `panel:` entry). superresolution-amplicon measures the panel
 // kernel inside the inference run and refuses a supplied --mismapping_matrix, so that run
-// takes the matrix flags too, plus the panel's reference FASTA (meta.panel_refs, resolved
-// from the named collection below).
+// takes the matrix flags too, plus the panel's reference FASTA and/or taxon entries
+// (meta.panel_refs / meta.panel_taxa, resolved from the named collection below).
 def srPanelArgs(meta) {
-    [srMatrixArgs(meta), srInferenceArgs(meta), "--panel_references ${meta.panel_refs}"]
+    [srMatrixArgs(meta), srInferenceArgs(meta),
+     meta.panel_refs ? "--panel_references ${meta.panel_refs}" : '',
+     meta.panel_taxa ? "--panel_taxa ${meta.panel_taxa}" : '']
         .findAll { it }.join(' ')
 }
 
@@ -132,7 +134,7 @@ workflow PROFILE {
     ch_aux           // [ id, genomes_csv, [ fasta ] ]       (empty in profile-only step)
     ch_sylph_dbs     // [ name, syldb ]                      built/prebuilt sylph DBs by name
     ch_mapseq_dbs    // [ name, fasta, tax, otu, mscluster ] built/prebuilt mapseq DBs by name
-    ch_sr_dbs        // [ "<name>:<genome|ssu>", refs_fasta, tax|[] ] built/prebuilt superresolution refs
+    ch_sr_dbs        // [ "<name>:<genome|ssu>", refs_fasta|[], tax|[], panel_taxa|[] ] built/prebuilt superresolution refs
     builtNames       // [ profiler: Set of collection names resolved for it ]
 
     main:
@@ -324,15 +326,20 @@ workflow PROFILE {
         .combine(ch_sr_dbs, by: 0)
         // Named collections are reference sets shared by every matching sample. Its
         // taxonomy goes as an absolute path string, like panel_refs below.
-        .map { key, meta, reads, refs, tax ->
+        .map { key, meta, reads, refs, tax, taxa ->
+            if (!refs) {
+                error "Sample ${meta.id}: database '${meta.database}' has only taxon panel entries and no references; name it with an sr_settings 'panel:' instead"
+            }
             [ srSetKey(meta, meta.database), meta + (tax ? [ taxonomy: tax.toString() ] : [:]), reads, refs ]
         }
 
     ch_sr_all = ch_sr_self_in.mix(ch_sr_built_in)
 
     // A `panel:` entry names a collection whose reference FASTA becomes the nested run's
-    // --panel_references; the row still maps against its own `database`. Carried as an
-    // absolute path string, like the reads: RUN_SUPERRESOLUTION is executor 'local'.
+    // --panel_references, and its taxon entries --panel_taxa; the row still maps against its
+    // own `database`. Carried as absolute path strings, like the reads: RUN_SUPERRESOLUTION
+    // is executor 'local'. Taxon entries resolve against the row database's taxonomy, so
+    // a row database without one ('self' included) cannot take a taxon panel.
     ch_sr_panel = ch_sr_all
         .filter { referenceSet, meta, reads, refs -> meta.sr_opts?.panel }
         .map { referenceSet, meta, reads, refs ->
@@ -344,8 +351,13 @@ workflow PROFILE {
             [ "${panel}:ssu".toString(), referenceSet, meta, reads, refs ]
         }
         .combine(ch_sr_dbs, by: 0)
-        .map { key, referenceSet, meta, reads, refs, panelRefs, panelTax ->
-            [ referenceSet, meta + [ panel_refs: panelRefs.toString() ], reads, refs ]
+        .map { key, referenceSet, meta, reads, refs, panelRefs, panelTax, panelTaxa ->
+            if (panelTaxa && !meta.taxonomy) {
+                error "sr_settings '${meta.sr_setting}' (sample ${meta.id}): panel '${meta.sr_opts.panel}' has taxon entries, " +
+                      "but database '${meta.database}' has no taxonomy to resolve them against (give every sequence a 'taxonomy:', or a prebuilt .sr_refs.tax)"
+            }
+            [ referenceSet, meta + (panelRefs ? [ panel_refs: panelRefs.toString() ] : [:]) +
+                            (panelTaxa ? [ panel_taxa: panelTaxa.toString() ] : [:]), reads, refs ]
         }
     ch_sr_runs = ch_sr_all
         .filter { referenceSet, meta, reads, refs -> !meta.sr_opts?.panel }
@@ -370,7 +382,7 @@ workflow PROFILE {
     // without it two flavours of the same single sample would collide there.
     ch_sr_rows = ch_sr_runs.map { referenceSet, meta, reads, refs ->
         [ referenceSet, meta + [ reference_set: referenceSet,
-                                 inference_args: [ meta.panel_refs ? srPanelArgs(meta) : srInferenceArgs(meta),
+                                 inference_args: [ meta.sr_opts?.panel ? srPanelArgs(meta) : srInferenceArgs(meta),
                                                    srTaxonomyArg(meta) ].findAll { it }.join(' ') ],
           reads, refs ]
     }
@@ -380,7 +392,7 @@ workflow PROFILE {
     // run; all subsequent sample runs reuse its matrix through --mismapping_matrix.
     // Panel sets have none to build: their inference run measures the kernel.
     ch_sr_mismapping_in = ch_sr_rows
-        .filter { referenceSet, meta, reads, refs -> !meta.panel_refs }
+        .filter { referenceSet, meta, reads, refs -> !meta.sr_opts?.panel }
         .groupTuple(by: 0)
         .map { referenceSet, metas, readsList, refsList ->
             def rows = [metas, readsList, refsList].transpose().sort { a, b -> a[0].id <=> b[0].id }
@@ -434,10 +446,10 @@ workflow PROFILE {
         }
     // A panel batch measures its own kernel, so it takes no matrix ([] = no file).
     ch_sr_batches_matrix = ch_sr_batches
-        .filter { referenceSet, metas, layout, refs -> !metas[0].panel_refs }
+        .filter { referenceSet, metas, layout, refs -> !metas[0].sr_opts?.panel }
         .combine(BUILD_SUPERRESOLUTION_MISMAPPING.out.mismapping.map { meta, matrix -> [ meta.reference_set, matrix ] }, by: 0)
         .mix(ch_sr_batches
-            .filter { referenceSet, metas, layout, refs -> metas[0].panel_refs }
+            .filter { referenceSet, metas, layout, refs -> metas[0].sr_opts?.panel }
             .map { referenceSet, metas, layout, refs -> [ referenceSet, metas, layout, refs, [] ] })
 
     RUN_SUPERRESOLUTION(
