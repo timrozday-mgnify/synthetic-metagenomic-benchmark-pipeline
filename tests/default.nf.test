@@ -243,6 +243,13 @@ nextflow_pipeline {
                 { assert trained.contains("--panel_references ") && trained.contains("panelA") },
                 { assert !path("${sr}/S2.square.nested_args.txt").text.contains("--panel_references") },
 
+                // The generic collection's taxonomy reaches square and panel runs alike;
+                // panelA has none and publishes none.
+                { assert trained.contains("--taxonomy ") && trained.contains("generic_ssu.sr_refs.tax") },
+                { assert path("${sr}/S2.square.nested_args.txt").text.contains("generic_ssu.sr_refs.tax") },
+                { assert path("${params.outdir}/databases/generic/generic_ssu.sr_refs.tax").exists() },
+                { assert !path("${params.outdir}/databases/panelA/panelA_ssu.sr_refs.tax").exists() },
+
                 // The row's pre-trained model reaches the nested samplesheet.
                 { assert path("${sr}/S2.panel_trained.nested_samplesheet.yml").text.contains("error_model: ") },
                 { assert path("${sr}/S2.panel_trained.nested_samplesheet.yml").text.contains("natA.model.pt") }
