@@ -8,10 +8,11 @@ Two sibling examples already do most of this, so they are imported rather than c
 * ``sr_amplicon_param_sweep/scripts/sr_sweep.py`` — expansion of a ``grid:`` into
   ``sr_settings:`` entries, and the count of mis-mapping matrices a grid costs.
 
-What is new is that the same reads are profiled two ways, each under a grid of its own:
-``custom`` maps them against a collection built from the panel, and ``generic_panel`` maps
+What is new is that the same reads are profiled three ways, each under a grid of its own:
+``custom`` maps them against a collection built from the panel, ``generic_panel`` maps
 them against SILVA and reinterprets the labels through that same collection (the
-``panel`` sr_settings knob).
+``panel`` sr_settings knob), and ``generic_taxa`` reinterprets them through a panel whose
+entries are SILVA species, apart from the strain pair.
 
     python scripts/panel_sweep.py --selfcheck
 """
@@ -32,11 +33,12 @@ mode_reads = nc.mode_reads
 depths = sw.depths
 n_matrices = sw.n_matrices
 
-ARMS = ("custom", "generic_panel")
+ARMS = ("custom", "generic_panel", "generic_taxa")
 
 
 def load_config(path):
-    """`nb_config.load_config`, plus this example's `generic:`, `score:` and two-arm `sr_sweep:`."""
+    """`nb_config.load_config`, plus this example's `generic:`, `score:`, `sr_sweep:` arms and
+    `panel[].silva_taxon`."""
     cfg = nc.load_config(path)
     generic = cfg.get("generic") or {}
     for key in ("name", "path", "map_setting"):
@@ -48,30 +50,46 @@ def load_config(path):
     if sorted(cfg.get("sr_sweep") or {}) != sorted(ARMS):
         sys.exit(f"config.yaml: sr_sweep needs exactly the arms {list(ARMS)}")
     ids = {m["id"] for m in cfg["panel"]}
-    if not set((cfg.get("score") or {}).get("strain_pair") or []) <= ids:
+    pair = (cfg.get("score") or {}).get("strain_pair") or []
+    if len(pair) != 2 or not set(pair) <= ids:
         sys.exit("config.yaml: score.strain_pair must name two panel ids")
+    untaxed = [m["id"] for m in cfg["panel"] if m["id"] not in pair and not m.get("silva_taxon")]
+    if untaxed:
+        sys.exit(f"config.yaml: generic_taxa needs panel[].silva_taxon on {untaxed}")
     for arm in ARMS:
         settings(cfg, arm)              # expands (and validates) both grids up front
     return cfg
 
 
+def taxa_name(cfg):
+    """The generic_taxa arm's panel collection."""
+    return f"{cfg['database']['name']}_taxa"
+
+
 def settings(cfg, arm):
-    """One arm's grid as `sr_settings:` entries named `<arm>.<point>`, so both arms'
+    """One arm's grid as `sr_settings:` entries named `<arm>.<point>`, so every arm's
     profiles can sit in one benchmark dir. Every `generic_panel` point reinterprets SILVA's
-    labels through the custom database's collection."""
+    labels through the custom database's collection, every `generic_taxa` point through the
+    taxa collection."""
     out = sw.settings({"sr_sweep": cfg["sr_sweep"][arm]})
+    panel = {"generic_panel": cfg["database"]["name"], "generic_taxa": taxa_name(cfg)}.get(arm)
     for s in out:
         s["name"] = f"{arm}.{s['name']}"
-        if arm == "generic_panel":
-            s["panel"] = cfg["database"]["name"]
+        if panel:
+            s["panel"] = panel
     return out
 
 
 def databases_block(cfg):
-    """Both reference sets: the collection built from `panel:` (the custom database, and
-    the reinterpretation panel) and SILVA, pre-built. The pipeline builds only the ones a
-    row or a `panel:` knob references, so phase 1 builds neither."""
-    return {**nc.database_block(cfg), cfg["generic"]["name"]: {"path": cfg["generic"]["path"]}}
+    """The collection built from `panel:` (the custom database, and the generic_panel
+    panel), the taxa panel (the strain pair's `ssu:`, every other genome's `silva_taxon:`)
+    and SILVA, pre-built. The pipeline builds only the ones a row or a `panel:` knob
+    references, so phase 1 builds none of them."""
+    pair = cfg["score"]["strain_pair"]
+    taxa = [{"id": m["id"], "ssu": m["ssu"]} if m["id"] in pair
+            else {"id": m["id"], "taxon": m["silva_taxon"]} for m in cfg["panel"]]
+    return {**nc.database_block(cfg), taxa_name(cfg): {"sequences": taxa},
+            cfg["generic"]["name"]: {"path": cfg["generic"]["path"]}}
 
 
 def benchmark_dirs(cfg, results_dir):
@@ -97,7 +115,9 @@ def trained_model(cfg, results_dir):
 def _selfcheck():
     cfg = {"database": {"name": "custom", "profilers": ["sr_amplicon"]},
            "generic": {"name": "silva", "path": "/x/silva"},
-           "panel": [{"id": "a", "ssu": "/x/a.fa"}],
+           "panel": [{"id": "a", "ssu": "/x/a.fa", "silva_taxon": "Bacteria;A;A a"},
+                     {"id": "bu", "ssu": "/x/bu.fa"}, {"id": "bu2", "ssu": "/x/bu2.fa"}],
+           "score": {"strain_pair": ["bu", "bu2"]},
            "sampling": {"n_samples": 2},
            "reads": {"subsample": ["none", 100]},
            "generation_modes": [{"name": "amp", "primers": [{"pair_id": "V4"}]}],
@@ -109,7 +129,9 @@ def _selfcheck():
                    "prior": [{"name": "nogate", "infer_presence": False},
                              {"name": "hs", "infer_presence": False,
                               "inference_args": "--infer_horseshoe true"}],
-                   "steps": [{"name": "s10k", "inference_args": "--infer_steps 10000"}]}}}}
+                   "steps": [{"name": "s10k", "inference_args": "--infer_steps 10000"}]}},
+               "generic_taxa": {"grid": {
+                   "prior": [{"name": "nogate", "infer_presence": False}]}}}}
 
     custom = settings(cfg, "custom")
     assert [s["name"] for s in custom] == ["custom.sim"] and "panel" not in custom[0], custom
@@ -121,9 +143,15 @@ def _selfcheck():
     assert panel[0]["inference_args"] == "--infer_steps 10000", panel[0]
     assert panel[1]["inference_args"] == "--infer_horseshoe true --infer_steps 10000", panel[1]
 
+    taxa = settings(cfg, "generic_taxa")
+    assert [(s["name"], s["panel"]) for s in taxa] == [("generic_taxa.nogate", "custom_taxa")], taxa
+
     block = databases_block(cfg)
     assert block["silva"] == {"path": "/x/silva"}, block
-    assert block["custom"] == {"sequences": [{"id": "a", "ssu": "/x/a.fa"}]}, block
+    assert block["custom"]["sequences"][0] == {"id": "a", "ssu": "/x/a.fa"}, block
+    assert block["custom_taxa"] == {"sequences": [
+        {"id": "a", "taxon": "Bacteria;A;A a"},
+        {"id": "bu", "ssu": "/x/bu.fa"}, {"id": "bu2", "ssu": "/x/bu2.fa"}]}, block
 
     dirs = list(benchmark_dirs(cfg, Path("/r")))
     assert len(dirs) == 4, dirs

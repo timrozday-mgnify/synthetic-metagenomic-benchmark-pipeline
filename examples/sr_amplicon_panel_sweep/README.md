@@ -2,7 +2,7 @@
 
 Asks how much is lost when amplicon reads **cannot be re-mapped against the community**.
 The reads were classified against SILVA, and the community is known to come from a panel:
-the 20HM mock plus a second *B. uniformis* strain (23 genomes). There are two ways to get
+the 20HM mock plus a second *B. uniformis* strain (23 genomes). There are three ways to get
 panel-genome abundances:
 
 - **`custom`**: map the reads against a database built from the panel itself, and infer
@@ -11,6 +11,10 @@ panel-genome abundances:
   superresolution-amplicon measures a rectangular kernel (panel V4 amplicons x SILVA
   labels) by simulating reads from the panel and mapping them against SILVA. It then
   infers the 23 genomes plus a `background` bucket for reads the panel cannot explain.
+- **`generic_taxa`**: the same, but only the *B. uniformis* pair is known as genomes. Every
+  other genome is a **species** taxon entry (`panel[].silva_taxon`), whose sources are all
+  SILVA V4 groups of that species, each fitted freely. It asks what knowing the genome buys
+  over knowing the species. Entries are named after the genomes, so it scores the same way.
 
 Each arm runs under its **own parameter grid** over the same reads, and everything is
 scored against one ground truth.
@@ -40,6 +44,8 @@ shipped grids:
 | `generic_panel` | `kernel` | `trained` (simulates with the model the reads were made with), `flat` |
 | | `prior` | `gate`, `nogate`, `horseshoe` |
 | | `steps` | `s3k` (`s10k` commented out) |
+| `generic_taxa` | `kernel` | `trained`, `flat` |
+| | `prior` | `nogate`, `horseshoe` (the gate misfit on half the samples in the SILVA sweep) |
 
 Add an axis or a point by editing `config.yaml`. Knobs are the pipeline's `sr_settings`
 keys. Any other superresolution-amplicon param goes through `matrix_args` or
@@ -48,7 +54,9 @@ keys. Any other superresolution-amplicon param goes through `matrix_args` or
 of those two keys, their flags are joined rather than overwritten, which is what lets
 `prior` and `steps` both add inference flags.
 
-Every `generic_panel` point gets `panel: <database.name>` from the generator. There is no
+Every `generic_panel` point gets `panel: <database.name>` from the generator, and every
+`generic_taxa` point `panel: <database.name>_taxa`, a collection of the strain pair's `ssu:`
+and every other genome's `silva_taxon:`. There is no
 unreinterpreted SILVA arm: its profiles would name SILVA sequences, which cannot be scored
 against panel ids. SILVA is a label space here; inference over its own references is
 sequence-space inference with no biological reading.
@@ -62,7 +70,9 @@ Two samplesheet features exist for it:
   `--panel_references`. The collection is built even if no row profiles against it. A
   panel entry builds no shared matrix: the nested run measures its kernel inside the
   inference run, so it receives the matrix flags instead of `--mismapping_matrix`.
-  `infer_distance_decay` is refused with it.
+  `infer_distance_decay` is refused with it. A collection entry with `taxon:` instead of
+  `ssu:` is a taxon entry, passed as `--panel_taxa` and resolved against the row database's
+  `.tax`; such a collection can only be named by `panel:`, and only species are tested.
 - **`sr_error_model:`** (a row key) is a pre-trained skiver `model.pt`, passed to the
   nested run as `error_model:`. The `trained` kernel simulates with it instead of
   training a model per sample.
@@ -72,12 +82,15 @@ Two samplesheet features exist for it:
 - `config.yaml` → `train.fastq_1` / `train.fastq_2`: the real reads the error model is
   trained from.
 - `config.yaml` → `panel[].ssu`: full-length 16S per genome. The shipped names are those of
-  the `sr_amp_param_sweep` run's `references/16S/`.
+  the `sr_amp_param_sweep` run's `references/16S/`. `panel[].silva_taxon` ships filled in
+  for SILVA 138.2; each resolved to exactly one lineage there.
 - `config.yaml` → `generic.path`: a directory holding `<generic.name>_ssu.sr_refs.fasta`
   (headers `{accession}|0|{accession}`) and optionally `<generic.name>_ssu.sr_refs.tax`,
   built once and out of band with superresolution-amplicon's
   `build_mapseq_database.py --silva-fasta` from SILVA Ref NR99. The `.tax` reaches every
-  run as `--taxonomy`, which only fills the `lca` column. The sequences must
+  run as `--taxonomy`, which fills the `lca` column and resolves `generic_taxa`'s species.
+  It must come from a builder that writes the species rank (superresolution-amplicon#11 or
+  later), and is required for `generic_taxa`. The sequences must
   still carry the primer sites, because superresolution-amplicon cuts its amplicons by
   in-silico PCR.
 - `benchmark.config` → `sr_amplicon_repo`: a superresolution-amplicon checkout (or set
@@ -101,13 +114,13 @@ and scoring without touching the pipeline.
 2. `generate_sweep_samplesheet.py` → `sweep_samplesheet.yaml`, then `--step profile`. There
    are two rows per benchmark dir. The `custom` row has `database: community_20hm` and the
    custom grid. The `generic_panel` row has `database: silva_138_2_ssu_nr99`, phase 1's `mseq:`,
-   `sr_error_model:`, and the panel grid.
+   `sr_error_model:`, and the `generic_panel` and `generic_taxa` grids.
 3. `scripts/score_sweep.py` → `results/sr_amplicon_panel_sweep/panel_sweep_scores.csv`.
 
 ## What it costs
 
 The shipped config is 20 communities x 2 depths = 40 benchmark dirs. Across them run
-4 `custom` + 6 `generic_panel` points, which is **400 profiles**. The expensive parts:
+4 `custom` + 6 `generic_panel` + 4 `generic_taxa` points, which is **560 profiles**. The expensive parts:
 
 - **SILVA read mapping, once**, in phase 1. No phase-2 setting re-maps the reads.
 - **2 custom matrices** over 23 references. The two `prior` points share each one.
@@ -117,6 +130,9 @@ The shipped config is 20 communities x 2 depths = 40 benchmark dirs. Across them
   panel amplicons simulated reads mapped against SILVA, once per point, whatever the number of
   dirs. Adding a `generic_panel` point adds a kernel; adding a `custom` inference point does
   not add a matrix.
+- **4 taxa kernels**, the same way, but over about 90 sources (the pair's amplicons plus
+  1–24 SILVA V4 groups per species in the SILVA sweep), so about three times a panel
+  kernel.
 - The `custom` rows map their own reads (no `mseq:`), which is cheap against 23 references.
 
 ## Output
@@ -156,7 +172,10 @@ r232**, where flat kernels were no better than home labels alone
 (`dev/panel_silva_sweep.md`), the best panel arm reached median TV 0.024 against GTDB's
 0.013, and a flat kernel with a gate 0.029. Most of the loss is the *B. uniformis* strain
 split: the pair shares its home label in SILVA. Both sweeps used equal abundances and a
-strain split, so these NB communities are a different test, not a replication.
+strain split, so these NB communities are a different test, not a replication. The same
+SILVA sweep scored a species panel (the pair as genomes, the rest as species) at median TV
+0.034 with the horseshoe and 0.039 without a gate, against 0.030 for the genome panel on the
+same flat calibrated kernel; a genus panel collapsed (entry TV 0.21–0.35).
 
 ## Caveats
 
