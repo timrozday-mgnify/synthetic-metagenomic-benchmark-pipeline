@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shared config glue for the GTDB panel-reinterpretation vs custom-database sweep.
+"""Shared config glue for the SILVA panel-reinterpretation vs custom-database sweep.
 
 Two sibling examples already do most of this, so they are imported rather than copied:
 
@@ -9,8 +9,8 @@ Two sibling examples already do most of this, so they are imported rather than c
   ``sr_settings:`` entries, and the count of mis-mapping matrices a grid costs.
 
 What is new is that the same reads are profiled two ways, each under a grid of its own:
-``custom`` maps them against a collection built from the panel, and ``gtdb_panel`` maps
-them against GTDB and reinterprets the labels through that same collection (the
+``custom`` maps them against a collection built from the panel, and ``generic_panel`` maps
+them against SILVA and reinterprets the labels through that same collection (the
 ``panel`` sr_settings knob).
 
     python scripts/panel_sweep.py --selfcheck
@@ -32,19 +32,19 @@ mode_reads = nc.mode_reads
 depths = sw.depths
 n_matrices = sw.n_matrices
 
-ARMS = ("custom", "gtdb_panel")
+ARMS = ("custom", "generic_panel")
 
 
 def load_config(path):
-    """`nb_config.load_config`, plus this example's `gtdb:`, `score:` and two-arm `sr_sweep:`."""
+    """`nb_config.load_config`, plus this example's `generic:`, `score:` and two-arm `sr_sweep:`."""
     cfg = nc.load_config(path)
-    gtdb = cfg.get("gtdb") or {}
+    generic = cfg.get("generic") or {}
     for key in ("name", "path", "map_setting"):
-        if not gtdb.get(key):
-            sys.exit(f"config.yaml: gtdb needs '{key}:'")
-    if gtdb["name"] == cfg["database"]["name"]:
-        sys.exit("config.yaml: gtdb.name and database.name must differ")
-    gtdb["path"] = str(Path(str(gtdb["path"])).expanduser())
+        if not generic.get(key):
+            sys.exit(f"config.yaml: generic needs '{key}:'")
+    if generic["name"] == cfg["database"]["name"]:
+        sys.exit("config.yaml: generic.name and database.name must differ")
+    generic["path"] = str(Path(str(generic["path"])).expanduser())
     if sorted(cfg.get("sr_sweep") or {}) != sorted(ARMS):
         sys.exit(f"config.yaml: sr_sweep needs exactly the arms {list(ARMS)}")
     ids = {m["id"] for m in cfg["panel"]}
@@ -57,21 +57,21 @@ def load_config(path):
 
 def settings(cfg, arm):
     """One arm's grid as `sr_settings:` entries named `<arm>.<point>`, so both arms'
-    profiles can sit in one benchmark dir. Every `gtdb_panel` point reinterprets GTDB's
+    profiles can sit in one benchmark dir. Every `generic_panel` point reinterprets SILVA's
     labels through the custom database's collection."""
     out = sw.settings({"sr_sweep": cfg["sr_sweep"][arm]})
     for s in out:
         s["name"] = f"{arm}.{s['name']}"
-        if arm == "gtdb_panel":
+        if arm == "generic_panel":
             s["panel"] = cfg["database"]["name"]
     return out
 
 
 def databases_block(cfg):
     """Both reference sets: the collection built from `panel:` (the custom database, and
-    the reinterpretation panel) and GTDB, pre-built. The pipeline builds only the ones a
+    the reinterpretation panel) and SILVA, pre-built. The pipeline builds only the ones a
     row or a `panel:` knob references, so phase 1 builds neither."""
-    return {**nc.database_block(cfg), cfg["gtdb"]["name"]: {"path": cfg["gtdb"]["path"]}}
+    return {**nc.database_block(cfg), cfg["generic"]["name"]: {"path": cfg["generic"]["path"]}}
 
 
 def benchmark_dirs(cfg, results_dir):
@@ -96,14 +96,14 @@ def trained_model(cfg, results_dir):
 
 def _selfcheck():
     cfg = {"database": {"name": "custom", "profilers": ["sr_amplicon"]},
-           "gtdb": {"name": "gtdb", "path": "/x/gtdb"},
+           "generic": {"name": "silva", "path": "/x/silva"},
            "panel": [{"id": "a", "ssu": "/x/a.fa"}],
            "sampling": {"n_samples": 2},
            "reads": {"subsample": ["none", 100]},
            "generation_modes": [{"name": "amp", "primers": [{"pair_id": "V4"}]}],
            "sr_sweep": {
                "custom": {"grid": {"matrix": [{"name": "sim", "mismapping_method": "simulate"}]}},
-               "gtdb_panel": {"grid": {
+               "generic_panel": {"grid": {
                    "kernel": [{"name": "trained", "mismapping_method": "simulate",
                                "matrix_args": "--sim_error_model trained"}],
                    "prior": [{"name": "nogate", "infer_presence": False},
@@ -113,16 +113,16 @@ def _selfcheck():
 
     custom = settings(cfg, "custom")
     assert [s["name"] for s in custom] == ["custom.sim"] and "panel" not in custom[0], custom
-    panel = settings(cfg, "gtdb_panel")
-    assert [s["name"] for s in panel] == ["gtdb_panel.trained.nogate.s10k",
-                                          "gtdb_panel.trained.hs.s10k"], panel
+    panel = settings(cfg, "generic_panel")
+    assert [s["name"] for s in panel] == ["generic_panel.trained.nogate.s10k",
+                                          "generic_panel.trained.hs.s10k"], panel
     assert all(s["panel"] == "custom" for s in panel), panel
     # Flags from two axes add up; the steps axis must not drop the horseshoe flag.
     assert panel[0]["inference_args"] == "--infer_steps 10000", panel[0]
     assert panel[1]["inference_args"] == "--infer_horseshoe true --infer_steps 10000", panel[1]
 
     block = databases_block(cfg)
-    assert block["gtdb"] == {"path": "/x/gtdb"}, block
+    assert block["silva"] == {"path": "/x/silva"}, block
     assert block["custom"] == {"sequences": [{"id": "a", "ssu": "/x/a.fa"}]}, block
 
     dirs = list(benchmark_dirs(cfg, Path("/r")))

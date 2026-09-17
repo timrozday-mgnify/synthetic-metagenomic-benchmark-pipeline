@@ -47,8 +47,8 @@ databases:
       ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/CP009913.1_SSU.fasta
     - id: veillonella_parvula
       ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/examples/sr_amplicon_panel_sweep/references/16S/HM007566.1.fasta
-  gtdb_ssu_r232:
-    path: /PATH/TO/gtdb_ssu_r232
+  silva_138_2_ssu_nr99:
+    path: /PATH/TO/silva_138_2_ssu_nr99
 samples:
 - sample: S01.amplicon_16s
   train_id: sc2200627
@@ -63,7 +63,7 @@ samples:
   read_length_variance: 0
   profilers:
   - sr_amplicon
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
   - name: map
     mismapping_method: align
@@ -90,7 +90,7 @@ samples:
   read_length_variance: 0
   profilers:
   - sr_amplicon
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
   - name: map
     mismapping_method: align
@@ -117,7 +117,7 @@ samples:
   read_length_variance: 0
   profilers:
   - sr_amplicon
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
   - name: map
     mismapping_method: align
@@ -144,7 +144,7 @@ samples:
   read_length_variance: 0
   profilers:
   - sr_amplicon
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
   - name: map
     mismapping_method: align
@@ -171,7 +171,7 @@ samples:
   read_length_variance: 0
   profilers:
   - sr_amplicon
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
   - name: map
     mismapping_method: align
@@ -198,7 +198,7 @@ samples:
   read_length_variance: 0
   profilers:
   - sr_amplicon
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
   - name: map
     mismapping_method: align
@@ -225,7 +225,7 @@ samples:
   read_length_variance: 0
   profilers:
   - sr_amplicon
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
   - name: map
     mismapping_method: align
@@ -252,7 +252,7 @@ samples:
   read_length_variance: 0
   profilers:
   - sr_amplicon
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
   - name: map
     mismapping_method: align
@@ -279,7 +279,7 @@ samples:
   read_length_variance: 0
   profilers:
   - sr_amplicon
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
   - name: map
     mismapping_method: align
@@ -306,7 +306,7 @@ samples:
   read_length_variance: 0
   profilers:
   - sr_amplicon
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
   - name: map
     mismapping_method: align
@@ -333,7 +333,7 @@ samples:
   read_length_variance: 0
   profilers:
   - sr_amplicon
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
   - name: map
     mismapping_method: align
@@ -360,7 +360,7 @@ samples:
   read_length_variance: 0
   profilers:
   - sr_amplicon
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
   - name: map
     mismapping_method: align
@@ -387,7 +387,7 @@ samples:
   read_length_variance: 0
   profilers:
   - sr_amplicon
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
   - name: map
     mismapping_method: align
@@ -414,7 +414,7 @@ samples:
   read_length_variance: 0
   profilers:
   - sr_amplicon
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
   - name: map
     mismapping_method: align
@@ -441,7 +441,7 @@ samples:
   read_length_variance: 0
   profilers:
   - sr_amplicon
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
   - name: map
     mismapping_method: align
@@ -468,7 +468,7 @@ samples:
   read_length_variance: 0
   profilers:
   - sr_amplicon
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
   - name: map
     mismapping_method: align
@@ -495,7 +495,7 @@ samples:
   read_length_variance: 0
   profilers:
   - sr_amplicon
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
   - name: map
     mismapping_method: align
@@ -522,7 +522,7 @@ samples:
   read_length_variance: 0
   profilers:
   - sr_amplicon
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
   - name: map
     mismapping_method: align
@@ -549,7 +549,7 @@ samples:
   read_length_variance: 0
   profilers:
   - sr_amplicon
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
   - name: map
     mismapping_method: align
@@ -576,7 +576,7 @@ samples:
   read_length_variance: 0
   profilers:
   - sr_amplicon
-  database: gtdb_ssu_r232
+  database: silva_138_2_ssu_nr99
   sr_settings:
   - name: map
     mismapping_method: align

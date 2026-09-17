@@ -199,8 +199,8 @@ databases:
         ssu: references/16S/CR626927.1_SSU.fasta          # for a mapseq DB
         taxonomy: "Bacteria;Bacteroides;fragilis"          # for a mapseq DB (explicit)
       # ... more sequences ...
-  gtdb_r220:                        # OR point at a pre-built DB directory
-    path: /dbs/databases/gtdb_r220
+  silva_138_2_ssu_nr99:             # OR point at a pre-built DB directory
+    path: /dbs/databases/silva_138_2_ssu_nr99
 
 samples:
   - sample: S1
@@ -391,12 +391,12 @@ collection or a config:
 ```groovy
 // aap.config
 params.mapseq_databases {
-    gtdb_r220 {
-        fasta     = '/dbs/gtdb-r220.fasta'
-        tax       = '/dbs/gtdb-r220-tax.txt'
-        otu       = '/dbs/gtdb-r220.otu'
-        mscluster = '/dbs/gtdb-r220.fasta.mscluster'
-        label     = 'GTDB-r220'
+    silva_138_2_ssu_nr99 {
+        fasta     = '/dbs/silva-138.2-ssu-nr99.fasta'
+        tax       = '/dbs/silva-138.2-ssu-nr99.tax'
+        otu       = '/dbs/silva-138.2-ssu-nr99.otu'
+        mscluster = '/dbs/silva-138.2-ssu-nr99.fasta.mscluster'
+        label     = 'SILVA-138.2-SSU-NR99'
         run_otu   = true
         run_asv   = false
     }
@@ -532,18 +532,32 @@ What it costs is the point:
 
 `examples/sr_amplicon_param_sweep/` is a worked two-phase version of exactly this: one
 `--step all` run to generate and map, then one `--step profile` run over the whole grid. `examples/sr_amplicon_gtdb_sweep/` is the same two phases against a
-**pre-built** (`path:`) reference set the size of GTDB, over negative-binomial
+**pre-built** (`path:`) generic reference set, over negative-binomial
 communities rather than a sub-species pair.
 
 A `panel:` entry (`sr_amplicon` only) reinterprets the row's database labels through a
 genome panel: superresolution-amplicon's `panel_references`, for reads already mapped
-against something like GTDB. It names a `databases:` collection, which is built even if no
+against a generic database such as SILVA SSU. It names a `databases:` collection, which is built even if no
 row profiles against it, and inference runs over that collection's genomes plus
 `background` instead of over the database's own references. The nested run measures the
 panel kernel itself, inside the inference run, so a panel entry shares no matrix and every
 panel entry is one kernel build. The row's `sr_error_model:` hands that run a pre-trained
 model for `--sim_error_model trained`. `examples/sr_amplicon_panel_sweep/` compares this
 against mapping to the panel directly, each under its own grid.
+
+The generic database is a **label space**, not a set of things to report. MAPseq labels
+the reads with its V4 groups, whose lineages come from its taxonomy, but abundances are
+reported over a panel (through the rectangular panel kernel, panel V4 sources × database
+V4 groups) or over taxa (`--infer_space v4_group` plus the `lca` column). The square
+mis-mapping matrix over the generic database is still built, for `v4_group` inference
+only. Genome-space inference over it is sequence-space inference with no biological
+reading: a SILVA "genome" is one rRNA sequence. SILVA SSU replaces GTDB here because
+nothing needs genomes any more; sylph still does, so its examples stay on GTDB.
+
+Measured in superresolution-amplicon's `dev/panel_silva_sweep.md` (20 samples, 20-genome
+panel): a genome panel over SILVA 138.2 NR99 reaches median genome TV 0.024, against 0.013
+over GTDB r232. The loss is mostly the *B. uniformis* strain split, because the pair shares
+its home label in SILVA.
 
 Neither needs an external database: the only reference input is one combined FASTA
 over the community, which the pipeline builds for you with headers
@@ -556,7 +570,11 @@ over the community, which the pipeline builds for you with headers
 - **A built collection** — a `database` name defined in the samplesheet `databases:`
   block. `sr_shotgun` uses each entry's `genome`, `sr_amplicon` its `ssu`; the result
   publishes to `<outdir>/databases/<name>/<name>_{genome,ssu}.sr_refs.fasta`, which a
-  `path:` entry reads back. Use this to profile every sample against the *whole* panel
+  `path:` entry reads back. When every entry has a `taxonomy:` lineage it also publishes
+  `<name>_{genome,ssu}.sr_refs.tax` (MAPseq `.tax`, headers as in the FASTA), and every
+  run against that database gets it as `--taxonomy`. A `path:` dir may hold one too; for
+  a SILVA-built generic database it is superresolution-amplicon's
+  `build_mapseq_database.py --silva-fasta` `.tax`. Use this to profile every sample against the *whole* panel
   (including genomes absent from a given sample) rather than only its own genomes.
 
 There is no `params.*_databases` fallback — an unknown `database` name is an error.
