@@ -12,6 +12,8 @@
 #   S4 - as S3, sharing srA's reference set: two samples behind ONE mismapping
 #        matrix, which is what keeps the fan-out (combine, not join) honest.
 databases:
+  silvaLoose:
+    path: tests/data/prebuilt_db/silvaLoose   # SILVA-shaped filenames, not the convention
   srA:
     sequences:
       - id: genomeA
@@ -68,3 +70,18 @@ samples:
     mode: shotgun
     profilers: [sr_shotgun]
     database: srA
+
+  # S5 - amplicon reads against a PRE-BUILT reference dir whose files are named the way
+  # a SILVA release is (`SILVA_<ver>_SSURef_tax_silva.{fasta,tax}`), not the pipeline's
+  # `<name>_ssu.sr_refs.*` convention: the loose glob fallback has to find them.
+  - sample: S5
+    train_id: natA
+    train_fastq_1: tests/data/natural_R1.fastq.gz
+    train_fastq_2: tests/data/natural_R2.fastq.gz
+    platform: hq-illumina
+    genomes_csv: tests/data/genomes_S2_ssu.csv
+    num_reads: 2000
+    mode: amplicon
+    read_length_mean: 200
+    profilers: [sr_amplicon]
+    database: silvaLoose

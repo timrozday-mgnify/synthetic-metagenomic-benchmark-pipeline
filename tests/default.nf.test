@@ -123,6 +123,10 @@ nextflow_pipeline {
                 { assert path("${params.outdir}/S3/S3.sr_profile.tsv").exists() },
                 { assert path("${params.outdir}/S4/S4.sr_profile.tsv").exists() },
 
+                // S5's pre-built dir uses SILVA's own filenames, not `<name>_ssu.sr_refs.*`:
+                // resolving it at all is what the loose glob fallback buys.
+                { assert path("${params.outdir}/S5/S5.sr_profile.tsv").exists() },
+
                 // Raw composition CSV kept under profiling/sr/.
                 { assert path("${params.outdir}/S1/profiling/sr/S1.inferred_composition.csv").exists() },
 
@@ -143,13 +147,14 @@ nextflow_pipeline {
                 // out to sr_shotgun + sylph). Asserted here as well as in the e2e test:
                 // e2e only runs on main, so a samplesheet gaining a sample used to drift
                 // this count and not be caught until after merge.
-                { assert workflow.trace.succeeded().findAll { it.name.contains("GENOME_BLENDER_GENERATE") }.size() == 4 },
+                { assert workflow.trace.succeeded().findAll { it.name.contains("GENOME_BLENDER_GENERATE") }.size() == 5 },
 
-                // Only the 'self' samples build their own references (S1, S2); S3 and S4
-                // share the collection's. One matrix build AND one batched inference run
-                // per reference set — S3 and S4 go into srA's single nested run together.
-                { assert workflow.trace.succeeded().findAll { it.name.contains("BUILD_SUPERRESOLUTION_MISMAPPING") }.size() == 3 },
-                { assert workflow.trace.succeeded().findAll { it.name.contains("RUN_SUPERRESOLUTION") }.size() == 3 },
+                // Only the 'self' samples build their own references (S1, S2); S3, S4 and S5
+                // share the collection's (S5 uses a pre-built one). One matrix build AND one
+                // batched inference run per reference set — S3 and S4 go into srA's single
+                // nested run together.
+                { assert workflow.trace.succeeded().findAll { it.name.contains("BUILD_SUPERRESOLUTION_MISMAPPING") }.size() == 4 },
+                { assert workflow.trace.succeeded().findAll { it.name.contains("RUN_SUPERRESOLUTION") }.size() == 4 },
                 { assert workflow.trace.succeeded().findAll { it.name.contains("SR_BUILD_REFS") }.size() == 2 },
                 // ...and that batch really is one task holding both samples.
                 { assert workflow.trace.succeeded().findAll {

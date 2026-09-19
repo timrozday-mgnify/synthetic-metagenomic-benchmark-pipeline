@@ -76,7 +76,7 @@ database:
 # the panel: SILVA is only the label space the reads are mapped into.
 generic:
   name: silva_138_2_ssu_nr99
-  path: /PATH/TO/silva_138_2_ssu_nr99          # dir holding silva_138_2_ssu_nr99_ssu.sr_refs.{fasta,tax}
+  path: /PATH/TO/silva_138_2_ssu_nr99          # dir holding the reference FASTA + its .tax (any release)
   # Phase 1 maps every benchmark dir against SILVA once, under this one setting, so that
   # phase 2 can hand the classification back as `mseq:`. Its composition is a by-product
   # and is not scored. exact-hash is the matrix mode that is cheap at SILVA scale.

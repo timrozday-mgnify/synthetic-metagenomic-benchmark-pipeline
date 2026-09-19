@@ -112,8 +112,10 @@ sr_sweep:
 #   <path>/<name>_ssu.sr_refs.tax        MAPseq taxonomy, one SILVA lineage per header
 #
 # Build both once, out of band, with superresolution-amplicon's
-# `bin/build_mapseq_database.py --silva-fasta SILVA_138.2_SSURef_NR99_tax_silva.fasta.gz`
-# and rename them to the pattern above. Nothing is built during the run. The `.tax` is
+# `bin/build_mapseq_database.py --silva-fasta SILVA_<ver>_SSURef[_NR99]_tax_silva.fasta.gz`
+# - any release, NR99 or the full Ref. The names above are a convention: a directory
+# holding only the FASTA and its `.tax` under the builder's own names resolves too, so
+# there is nothing to rename. Nothing is built during the run. The `.tax` is
 # what makes this example scoreable: every nested run gets it as `--taxonomy`, and it
 # names each V4 group's `lca`.
 #
@@ -127,7 +129,7 @@ sr_sweep:
 database:
   name: silva_138_2_ssu_nr99
   profilers: [sr_amplicon]
-  path: /PATH/TO/silva_138_2_ssu_nr99   # dir holding silva_138_2_ssu_nr99_ssu.sr_refs.{fasta,tax}
+  path: /PATH/TO/silva_138_2_ssu_nr99   # dir holding the reference FASTA + its .tax (any release)
   # sequences_from_panel: true          # build from `panel:` instead of using `path:`
 
 # One entry per genome in the synthetic community. `ssu:` (full-length 16S) feeds the

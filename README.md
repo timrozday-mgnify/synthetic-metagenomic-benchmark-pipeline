@@ -222,10 +222,15 @@ Per-entry rules:
   `ribo.clan_info` file) are **required for an `aap` collection** — the nested
   amplicon-analysis-pipeline needs them for rRNA detection and aborts with
   `file() ... cannot be empty` if unset. Both are pass-through host paths.
-- `path:` points at a directory laid out exactly like this pipeline publishes to
+- `path:` points at a directory laid out like this pipeline publishes to
   `<outdir>/databases/<name>/` (`<name>.syldb` and/or `<name>.mapseq.{fasta,tax,otu}`
   + `<name>.mapseq.fasta.mscluster`), so a `databases/<name>/` dir from a prior run is
-  directly reusable.
+  directly reusable. The names are a convention, not a requirement: each file is
+  matched by its published name first and then by plain extension (`*.{fasta,fa,fna}`,
+  `*.tax`, `*.otu`, `*.sr_refs.fasta`), so a directory built out of band — any SILVA
+  release, NR99 or the full Ref — can be used as-is, without renaming. Exactly one file
+  may match, and a directory with no conventionally-named file serves the same FASTA to
+  both superresolution flavours.
 
 Built DBs are published to `<outdir>/databases/<name>/` for reuse.
 
@@ -598,7 +603,8 @@ over the community, which the pipeline builds for you with headers
 - **A built collection** — a `database` name defined in the samplesheet `databases:`
   block. `sr_shotgun` uses each entry's `genome`, `sr_amplicon` its `ssu`; the result
   publishes to `<outdir>/databases/<name>/<name>_{genome,ssu}.sr_refs.fasta`, which a
-  `path:` entry reads back. When every entry has a `taxonomy:` lineage it also publishes
+  `path:` entry reads back (or any `*.sr_refs.fasta` / `*.{fasta,fa,fna}` in that dir,
+  so a SILVA set need not be renamed). When every entry has a `taxonomy:` lineage it also publishes
   `<name>_{genome,ssu}.sr_refs.tax` (MAPseq `.tax`, headers as in the FASTA), and every
   run against that database gets it as `--taxonomy`. A `path:` dir may hold one too; for
   a SILVA-built generic database it is superresolution-amplicon's

@@ -25,21 +25,32 @@ include { SR_BUILD_REFS as SR_BUILD_COLLECTION_REFS } from '../../../modules/loc
 // Panel FASTA field feeding each superresolution flavour's reference set.
 def srSources() { [ sr_shotgun: 'genome', sr_amplicon: 'ssu' ] }
 
-// Resolve exactly one file matching `pat` inside a pre-built DB directory.
-def globOne(dir, pat, name) {
-    def hits = files("${dir}/${pat}")
-    if (hits.size() != 1) {
-        error "prebuilt database '${name}': expected exactly one ${pat} in ${dir} (found ${hits.size()})"
+// Hits for the first of `pats` that matches anything inside a pre-built DB directory.
+// The published convention comes first; the looser patterns after it let a directory
+// built out of band (any SILVA release, NR99 or full) be used without renaming.
+def globHits(dir, pats, name) {
+    def hit = (pats instanceof List ? pats : [pats]).findResult { pat ->
+        def hits = files("${dir}/${pat}")
+        if (hits.size() > 1) {
+            error "prebuilt database '${name}': more than one ${pat} in ${dir}"
+        }
+        hits ?: null
+    }
+    hit ?: []
+}
+
+// Resolve exactly one file matching one of `pats` inside a pre-built DB directory.
+def globOne(dir, pats, name) {
+    def hits = globHits(dir, pats, name)
+    if (!hits) {
+        error "prebuilt database '${name}': no ${pats} in ${dir}"
     }
     hits[0]
 }
 
-// At most one file matching `pat` in a pre-built DB directory, or [] when there is none.
-def globOptional(dir, pat, name) {
-    def hits = files("${dir}/${pat}")
-    if (hits.size() > 1) {
-        error "prebuilt database '${name}': more than one ${pat} in ${dir}"
-    }
+// At most one file matching one of `pats`, or [] when there is none.
+def globOptional(dir, pats, name) {
+    def hits = globHits(dir, pats, name)
     hits ? hits[0] : []
 }
 
@@ -77,10 +88,10 @@ workflow BUILD_DATABASES {
         .filter { 'aap' in it.profilers }
         .map { spec ->
             [ spec.name,
-              globOne(spec.prebuilt_dir, '*.mapseq.fasta', spec.name),
-              globOne(spec.prebuilt_dir, '*.mapseq.tax',   spec.name),
-              globOne(spec.prebuilt_dir, '*.mapseq.otu',   spec.name),
-              globOne(spec.prebuilt_dir, '*.mscluster',    spec.name) ]
+              globOne(spec.prebuilt_dir, ['*.mapseq.fasta', '*.{fasta,fa,fna}'], spec.name),
+              globOne(spec.prebuilt_dir, ['*.mapseq.tax', '*.tax'],              spec.name),
+              globOne(spec.prebuilt_dir, ['*.mapseq.otu', '*.otu'],              spec.name),
+              globOne(spec.prebuilt_dir, '*.mscluster',                          spec.name) ]
         }
 
     //
@@ -186,10 +197,13 @@ workflow BUILD_DATABASES {
     ch_pre_sr = ch_b.prebuilt
         .flatMap { spec ->
             srSources().findAll { prof, field -> prof in spec.profilers }.collect { prof, field ->
-                def taxa = globOptional(spec.prebuilt_dir, "*_${field}.panel_taxa.tsv", spec.name)
-                def refs = taxa ? globOptional(spec.prebuilt_dir, "*_${field}.sr_refs.fasta", spec.name)
-                                : globOne(spec.prebuilt_dir, "*_${field}.sr_refs.fasta", spec.name)
-                [ "${spec.name}:${field}", refs, globOptional(spec.prebuilt_dir, "*_${field}.sr_refs.tax", spec.name), taxa ]
+                def refsPats = [ "*_${field}.sr_refs.fasta", '*.sr_refs.fasta', '*.{fasta,fa,fna}' ]
+                def taxPats  = [ "*_${field}.sr_refs.tax", '*.sr_refs.tax', '*.tax' ]
+                def taxaPats = [ "*_${field}.panel_taxa.tsv", '*.panel_taxa.tsv' ]
+                def taxa = globOptional(spec.prebuilt_dir, taxaPats, spec.name)
+                def refs = taxa ? globOptional(spec.prebuilt_dir, refsPats, spec.name)
+                                : globOne(spec.prebuilt_dir, refsPats, spec.name)
+                [ "${spec.name}:${field}", refs, globOptional(spec.prebuilt_dir, taxPats, spec.name), taxa ]
             }
         }
 

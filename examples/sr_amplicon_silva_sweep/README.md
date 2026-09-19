@@ -41,9 +41,11 @@ A pre-built database is a directory laid out the way the pipeline publishes its 
 ```
 
 Build them once, out of band, with superresolution-amplicon's
-`bin/build_mapseq_database.py --silva-fasta SILVA_138.2_SSURef_NR99_tax_silva.fasta.gz`
-(it converts U to T, drops the organism name and pads lineages), then rename them to the
-pattern above. `BUILD_DATABASES` resolves both by glob. The `.tax` is optional to the
+`bin/build_mapseq_database.py --silva-fasta SILVA_<ver>_SSURef[_NR99]_tax_silva.fasta.gz`
+(it converts U to T, drops the organism name and pads lineages). Any release works, NR99
+or the full Ref, and the names above are only a convention: `BUILD_DATABASES` falls back
+to a lone `*.{fasta,fa,fna}` + `*.tax` in the directory, so there is nothing to rename.
+Only the FASTA and its `.tax` may live there. The `.tax` is optional to the
 pipeline but not to this example: it reaches every nested run as `--taxonomy`, which
 fills the `lca` column the scores are computed from.
 
