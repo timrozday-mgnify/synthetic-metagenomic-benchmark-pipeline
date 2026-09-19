@@ -90,7 +90,9 @@ Two samplesheet features exist for it:
 - `config.yaml` → `generic.path`: a directory holding `<generic.name>_ssu.sr_refs.fasta`
   (headers `{accession}|0|{accession}`) and optionally `<generic.name>_ssu.sr_refs.tax`,
   built once and out of band with superresolution-amplicon's
-  `build_mapseq_database.py --silva-fasta` from SILVA Ref NR99. The `.tax` reaches every
+  `build_mapseq_database.py --silva-fasta` from any SILVA SSU release, NR99 or full Ref.
+  Those names are a convention only: a directory holding just the FASTA and its `.tax`
+  under the builder's own names resolves too. The `.tax` reaches every
   run as `--taxonomy`, which fills the `lca` column and resolves `generic_taxa`'s species.
   It must come from a builder that writes the species rank (superresolution-amplicon#11 or
   later), and is required for `generic_taxa`. The sequences must
