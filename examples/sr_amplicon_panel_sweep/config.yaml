@@ -20,6 +20,10 @@ train:
 reads:
   num_reads: 1000000           # 500k pairs x 2 (pipeline counts paired reads as pairs*2)
   subsample: [none, 100000]    # one benchmark dir per depth; `none` = full depth
+  # The nested run maps at most `obs_max_reads` fragments per sample (100,000
+  # upstream), so every depth at or above 200,000 reads (100,000 pairs) infers from
+  # the same 100,000 fragments. A `200000` point next to `none` is two draws of one
+  # depth, not two depths -- the HPC panel run did exactly that. Keep depths below it.
   paired_end: true
   read_length_mean: 300
   read_length_variance: 0

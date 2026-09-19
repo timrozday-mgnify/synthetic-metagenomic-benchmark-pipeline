@@ -83,7 +83,10 @@ Two samplesheet features exist for it:
   trained from.
 - `config.yaml` → `panel[].ssu`: full-length 16S per genome. The shipped names are those of
   the `sr_amp_param_sweep` run's `references/16S/`. `panel[].silva_taxon` ships filled in
-  for SILVA 138.2; each resolved to exactly one lineage there.
+  for SILVA 138.2; each resolved to exactly one lineage there. A name that matches nothing
+  in *your* `.tax` is not an error: the nested run drops that entry with a warning and its
+  reads land in `background`. Check the published
+  `mismapping/panel_<key>/panel_translation.tsv` for the 21 entries before reading the arm.
 - `config.yaml` → `generic.path`: a directory holding `<generic.name>_ssu.sr_refs.fasta`
   (headers `{accession}|0|{accession}`) and optionally `<generic.name>_ssu.sr_refs.tax`,
   built once and out of band with superresolution-amplicon's
@@ -93,8 +96,12 @@ Two samplesheet features exist for it:
   later), and is required for `generic_taxa`. The sequences must
   still carry the primer sites, because superresolution-amplicon cuts its amplicons by
   in-silico PCR.
-- `benchmark.config` → `sr_amplicon_repo`: a superresolution-amplicon checkout (or set
-  `sr_revision`) that has panel reinterpretation.
+- `benchmark.config` pins `sr_revision` to a superresolution-amplicon commit, on purpose:
+  that project's `main` has since migrated to panel-only kernels and rejects
+  `--mismapping_matrix`, which is how this pipeline measures one matrix per reference set
+  and reuses it across the batch. Do not move the pin to `main` until upstream's
+  panel-kernel input (P.4) lands and this pipeline is wired to it. A local checkout goes in
+  `sr_amplicon_repo` instead, and then the revision is ignored.
 
 The scripts need **PyYAML + numpy**. `python scripts/panel_sweep.py --selfcheck` and
 `python scripts/score_sweep.py --selfcheck` test the grid expansion, samplesheet layout
@@ -120,7 +127,10 @@ and scoring without touching the pipeline.
 ## What it costs
 
 The shipped config is 20 communities x 2 depths = 40 benchmark dirs. Across them run
-4 `custom` + 6 `generic_panel` + 4 `generic_taxa` points, which is **560 profiles**. The expensive parts:
+4 `custom` + 6 `generic_panel` + 4 `generic_taxa` points, which is **560 profiles**. The
+depth axis doubles all of that, and only earns it below the nested run's
+`obs_max_reads` (100,000 fragments) — see `reads.subsample` in config.yaml. The
+expensive parts:
 
 - **SILVA read mapping, once**, in phase 1. No phase-2 setting re-maps the reads.
 - **2 custom matrices** over 23 references. The two `prior` points share each one.
