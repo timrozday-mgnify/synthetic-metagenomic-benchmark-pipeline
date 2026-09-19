@@ -55,8 +55,21 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import plotly.io as pio
 import yaml
-from IPython.display import Markdown, display
+from IPython.display import HTML, Markdown, display
+from plotly.offline import get_plotlyjs
+
+
+# ponytail: plotly's notebook renderer re-embeds plotly.js (~5 MB) with every figure under
+# Quarto; figures here skip it and the title cell embeds the library once.
+class _PlotlyOnce(pio.base_renderers.MimetypeRenderer):
+    def to_mimebundle(self, fig_dict):
+        return {"text/html": pio.to_html(fig_dict, include_plotlyjs=False, full_html=False)}
+
+
+pio.renderers["plotly_once"] = _PlotlyOnce()
+pio.renderers.default = "plotly_once"
 
 _script_candidates = [
     Path(report_scripts_dir) if report_scripts_dir else None,
@@ -157,6 +170,7 @@ PRESENCE_THRESHOLD = float(presence_threshold)
 ```{python}
 #| echo: false
 title_label = run_label or RUN_DIR.name
+display(HTML(f"<script>{get_plotlyjs()}</script>"))
 display(Markdown(f"# {title_label}"))
 ```
 

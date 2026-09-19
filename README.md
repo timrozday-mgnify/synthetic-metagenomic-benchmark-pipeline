@@ -570,6 +570,8 @@ databases:
   The row's database must have a taxonomy, so `database: self` cannot take a taxon panel.
 - `truth.tsv` stays per genome; roll it up to entries in the scorer when entry ids differ
   from genome ids.
+- `inferred_composition.csv` is at entry level; the per-V4-group fit behind it is published
+  beside it as `<id>.inferred_panel_members.csv`.
 
 The generic database is a **label space**, not a set of things to report. MAPseq labels
 the reads with its V4 groups, whose lineages come from its taxonomy, but abundances are
@@ -717,6 +719,7 @@ Published under `results/<sample>/`:
 | `<sample>.truth.tsv` | Ground-truth profile: `genome_id, target_rel_abundance, realized_n_reads, realized_rel_abundance`. |
 | `<sample>.sylph_profile.tsv` | Predicted profile (sylph), when `profilers` includes `sylph`. |
 | `<sample>/profiling/` | Raw profiler outputs (`sylph/`, `aap/`, `sr/`). |
+| `<sample>/profiling/sr/<id>.inferred_panel_members.csv` | Taxon panels only: the member (V4-group) level fit summed into each entry of `inferred_composition.csv`. |
 | `<sample>/profiling/sr/<id>.obs.mseq.gz` | `sr_amplicon` only: mapseq's classification of the reads against the reference amplicons. Feed it back as a row's `mseq:` to re-profile without re-mapping. Absent when that run was itself given one. |
 
 Built profiler databases (from a samplesheet `databases:` block) are published under
