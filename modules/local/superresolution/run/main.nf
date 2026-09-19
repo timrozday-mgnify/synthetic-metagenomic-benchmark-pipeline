@@ -308,6 +308,11 @@ process RUN_SUPERRESOLUTION {
     // under different settings then skips the run's one genuinely expensive stage.
     // Optional — the shotgun sibling has no mapseq step.
     tuple val(metas), path("sr_out/mapseq/**"), optional: true, emit: obs_mseq
+    // The panel kernel K the nested run measured inside itself (panel settings only).
+    // It is keyed by content (panel + database + model + method), not by sample, so one
+    // copy covers every sample and setting that shared it — which is why it publishes to
+    // the run-level mismapping/ dir rather than into each sample's profiling/sr/.
+    tuple val(metas), path("sr_out/mismapping/**"), optional: true, emit: panel_kernel
     path "versions.yml",                             emit: versions
 
     when:
@@ -412,6 +417,14 @@ process RUN_SUPERRESOLUTION {
     printf '#stub\\n' | gzip > sr_out/mapseq/${id}/${id}.obs.mseq.gz""" : '')
     }.join('\n    ')
     def sheet_cmds = srSheetCmds(layout)
+    // A panel run measures its kernel inside the inference run and publishes it under
+    // mismapping/. One per batch, as the live run does, so the publishing path is stubbed too.
+    def stub_kernel = metas[0].sr_opts?.panel
+        ? """
+    mkdir -p sr_out/mismapping/panel_${metas[0].sr_opts.panel}
+    touch sr_out/mismapping/panel_${metas[0].sr_opts.panel}/mismapping_matrix.npz
+    printf '{"stub": true, "panel": "%s"}\\n' '${metas[0].sr_opts.panel}' > sr_out/mismapping/panel_${metas[0].sr_opts.panel}/provenance.json"""
+        : ''
     """
     # Same samplesheet the live script writes, published beside each sample's stub
     # composition. A stub cannot run the nested pipeline, but it can prove what the
@@ -422,6 +435,7 @@ process RUN_SUPERRESOLUTION {
     ${sheet_cmds}
 
     ${stub_cmds}
+    ${stub_kernel}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

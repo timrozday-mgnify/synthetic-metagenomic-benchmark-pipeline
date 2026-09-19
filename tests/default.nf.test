@@ -264,7 +264,12 @@ nextflow_pipeline {
                 { assert path("${sr}/S2.panel_mixed.nested_args.txt").text.contains("--panel_references ") },
                 { assert !path("${sr}/S2.panel_flat.nested_args.txt").text.contains("--panel_taxa") },
                 { assert path("${params.outdir}/databases/panelMixed/panelMixed_ssu.panel_taxa.tsv").exists() },
-                { assert path("${params.outdir}/databases/panelMixed/panelMixed_ssu.sr_refs.fasta").exists() }
+                { assert path("${params.outdir}/databases/panelMixed/panelMixed_ssu.sr_refs.fasta").exists() },
+
+                // A panel run's kernel is measured inside the nested run; it publishes to
+                // the run-level mismapping dir, not into a sample's profiling dir.
+                { assert path("${params.outdir}/mismapping/panel_panelA/mismapping_matrix.npz").exists() },
+                { assert path("${params.outdir}/mismapping/panel_panelA/provenance.json").text.contains("panelA") }
             )
         }
     }
