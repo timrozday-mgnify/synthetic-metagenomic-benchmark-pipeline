@@ -20,10 +20,13 @@ process SKIVER_TRAIN {
     def args     = task.ext.args ?: ''
     def prefix   = task.ext.prefix ?: "${meta.id}"
     def platform = meta.platform
-    // Candidate component strings: a single override wins; otherwise the
-    // comma-separated candidate list is fitted and the min-AIC model kept.
-    // (HEAD skiver is model-config driven; this is AIC selection over a fixed set.)
-    def components = params.error_model_components ?: params.error_model_candidates
+    // Candidate component strings: the row's own `error_model_components:` wins, then
+    // the run-global single override; otherwise the comma-separated candidate list is
+    // fitted and the min-AIC model kept. (HEAD skiver is model-config driven; this is
+    // AIC selection over a fixed set.) The per-train override is what lets one run
+    // compare, say, a context-free BaseContext(1) against the AIC default - each needs
+    // its own train_id, since that is what training is deduped and keyed by.
+    def components = meta.components ?: params.error_model_components ?: params.error_model_candidates
     """
     export SKIVER_SCRIPTS=\${SKIVER_SCRIPTS:-/opt/skiver/scripts}
 

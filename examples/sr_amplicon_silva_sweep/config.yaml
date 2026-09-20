@@ -14,6 +14,23 @@ train:
   fastq_2: /PATH/TO/SC2200627_R2.fastq.gz
   platform: hq-illumina        # 2x300 MiSeq amplicon tails may fit 'lq-illumina' better
 
+# Error-model arms. Unlike everything else in this file these change the READS, not the
+# profiling: phase 1 generates the whole community set once per arm, so the profiling
+# sweep below can be read against the error model the reads were made with.
+#   trained : the pipeline's default - `error_model_candidates` fitted from train.fastq_*
+#             and the min-AIC model kept. The realistic case.
+#   flat    : the same reads, one context-free model. BaseContext(1) is the shortest
+#             context skiver accepts, so this is "fitted, but blind to sequence context".
+#   naive   : no training at all - skiver's bundled `hq-illumina` preset. The number to
+#             beat: if a sweep's conclusions survive it, the training bought nothing.
+# Each arm gets its own train_id (`<train.id>.<name>`), because training is deduped and
+# keyed by train_id. A `preset:` arm trains nothing; a `components:` arm fits that string
+# instead of the candidate list. Delete the block for one arm on the run's own model.
+error_models:
+  - {name: trained}
+  - {name: flat, components: BaseContext(1)}
+  - {name: naive, preset: illumina}
+
 reads:
   num_reads: 1000000           # 500k pairs x 2 (pipeline counts paired reads as pairs*2)
   subsample: [none, 100000]    # one benchmark dir per depth; `none` = full depth
@@ -83,6 +100,24 @@ generation_modes:
 # `sim_n_per_ref` reads for every reference in the set, which is fine for a 20-genome
 # collection and not fine for SILVA. Uncomment it only if you know the reference set is
 # small - and expect it to dominate the run.
+# Profiling arms. Four ways to turn ONE set of reads into abundances, all scored in the
+# same genus space by scripts/score_sweep.py:
+#   silva        sr_amplicon against `database:` in V4-group space - the sweep proper,
+#                fanned over the whole grid below.
+#   custom       sr_amplicon against `custom_database:`, a collection the pipeline builds
+#                from `panel:` itself. The upper bound: a reference set that IS the
+#                community. It maps its own reads (cheap against 20 references), so it
+#                does not reuse phase 1's SILVA classification.
+#   silva_panel  sr_amplicon against `database:` again, but with its labels reinterpreted
+#                through that same panel collection (an sr_settings `panel:`). What
+#                knowing the community buys when the reads can only be mapped to SILVA.
+#   aap          no superresolution at all: the EBI amplicon-analysis-pipeline's own
+#                MAPseq labels against `aap_database:`. The baseline the other three
+#                have to beat to be worth running.
+# The three non-sweep arms run at ONE grid point so the arm comparison is not multiplied
+# by the sweep. Name it here; it must be a point of the grid below.
+arm_point: exact.nogate
+
 sr_sweep:
   grid:
     matrix:
@@ -131,6 +166,30 @@ database:
   profilers: [sr_amplicon]
   path: /PATH/TO/silva_138_2_ssu_nr99   # dir holding the reference FASTA + its .tax (any release)
   # sequences_from_panel: true          # build from `panel:` instead of using `path:`
+
+# The `custom` arm's reference set, and the `silva_panel` arm's `panel:`. One collection
+# serves both: it is built in-pipeline from every `panel[].ssu` + `panel[].taxonomy`, so
+# there is nothing to fill in and it publishes to `<outdir>/databases/<name>/`.
+custom_database:
+  name: community_panel
+
+# The `aap` arm's database. The amplicon-analysis-pipeline classifies with MAPseq, so
+# this is a mapseq database directory - NOT the superresolution reference set above.
+# A pre-built dir holds the four MAPseq files, resolved by BUILD_DATABASES:
+#
+#   <path>/*.mapseq.fasta (or a lone *.fasta)   the reference sequences
+#   <path>/*.mapseq.tax   (or a lone *.tax)     one lineage per reference
+#   <path>/*.mapseq.otu   (or a lone *.otu)     mapseq's OTU table
+#   <path>/*.mscluster                          mapseq's cluster index
+#
+# Use MAPseq's own distributed SILVA database, or build one from a SILVA release with
+# `mapseq -cluster`. The two Rfam files are AAP's rRNA detection step and the pipeline
+# requires both of any `aap` collection.
+aap_database:
+  name: silva_138_2_ssu_mapseq
+  path: /PATH/TO/silva_mapseq_db
+  rfam_covariance_model: /PATH/TO/ribosomal_RNA.cm
+  rfam_claninfo: /PATH/TO/ribosomal_RNA.claninfo
 
 # One entry per genome in the synthetic community. `ssu:` (full-length 16S) feeds the
 # in-silico PCR that generates the reads. The references the reads are PROFILED against

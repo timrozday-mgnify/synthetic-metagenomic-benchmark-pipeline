@@ -156,6 +156,14 @@ null => bundled set. It's global (not per-sample) and passed as an absolute host
   actually references is built (a collection feeding both superresolution flavours
   yields two reference FASTAs, keyed `"<name>:<genome|ssu>"`). mapseq collections need explicit
   per-sequence `taxonomy` + a pre-extracted `ssu` (no barrnap step in-pipeline).
+- **Error models are per-row, not just per-run.** A row's `error_model:` (`none` |
+  `illumina` | `pacbio` | `nanopore`) skips training for its `train_id` entirely and makes
+  GENOME_BLENDER_GENERATE pass `--error-model` instead of `--skiver-model`; its model/cal
+  slots carry `assets/NO_FILE` (stageAs'd to distinct names, or they collide). A row's
+  `error_model_components:` overrides `params.error_model_components` for that `train_id`
+  in SKIVER_TRAIN. Both are keyed by `train_id`, which is what training is deduped by, so
+  each variant needs its own. `examples/sr_amplicon_silva_sweep` uses them to compare
+  trained / context-free / untrained reads in one run.
 - **Nested pipelines resume too.** `RUN_AAP`, `BUILD_SUPERRESOLUTION_MISMAPPING` and
   `RUN_SUPERRESOLUTION` launch their nested `nextflow run` with `-resume`, a `-w` under
   `${workDir}/nested/<aap|sr>/<key>` and `NXF_CACHE_DIR` pointing at that same directory
