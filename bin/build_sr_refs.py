@@ -27,6 +27,10 @@ import csv
 import gzip
 import os
 
+# ponytail: SILVA (and any other rRNA reference) ships RNA, so primer matching downstream
+# finds nothing unless U is folded to T. Everything else passes through untouched.
+_RNA_TO_DNA = str.maketrans("Uu", "Tt")
+
 
 def _open_text(path: str):
     """Open a FASTA that may or may not be gzipped."""
@@ -94,6 +98,7 @@ def build(rows: list[tuple[str, str, str, str]], out_path: str, resolve=lambda p
                         index += 1
                         written += 1
                     else:
+                        line = line.translate(_RNA_TO_DNA)
                         out.write(line if line.endswith("\n") else line + "\n")
             if index == 0:
                 raise SystemExit(f"build_sr_refs: {path} (genome '{genome_id}') has no records")
@@ -143,6 +148,17 @@ def _selfcheck() -> None:
         assert [h[1:].split("|", 1)[0] for h in heads] == ["genomeA", "genomeA", "genomeB"]
         seqs = [ln.strip() for ln in open(out) if not ln.startswith(">")]
         assert seqs == ["ACGT", "TTTT", "GGGG"], seqs
+
+        # RNA references (SILVA) are folded to DNA so primers can match.
+        rna = os.path.join(d, "rna.fasta")
+        with open(rna, "w") as fh:
+            fh.write(">r1\nACGUuGU\n")
+        rna_csv = os.path.join(d, "rna.csv")
+        with open(rna_csv, "w") as fh:
+            fh.write("genome_id,fasta_path\nrna,rna.fasta\n")
+        rna_out = os.path.join(d, "rna_refs.fasta")
+        build(read_rows(rna_csv), rna_out, resolve=lambda f: os.path.join(d, f))
+        assert [ln.strip() for ln in open(rna_out) if not ln.startswith(">")] == ["ACGTtGT"]
         assert not os.path.exists(os.path.join(d, "none.tax"))
         build(read_rows(csv_path), out, resolve=lambda f: os.path.join(d, f),
               tax_path=os.path.join(d, "none.tax"))
