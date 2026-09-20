@@ -81,6 +81,21 @@ def parseProfilers(row, defaultProfilers) {
     list.collect { it?.toString()?.trim() }.findAll { it }.unique()
 }
 
+// A row's `error_model:` names one of skiver's bundled platform presets (or `none`)
+// instead of a model trained from its own FASTQs. Nothing is trained for that row's
+// train_id and GENOME_BLENDER_GENERATE passes `--error-model` straight through, so an
+// untrained baseline is one column, not a separate run. Pair it with a distinct
+// train_id: `train_id` is what the trained model is keyed by.
+def parseErrorModel(row) {
+    def v = row.error_model?.toString()?.trim()
+    if (!v) return null
+    def known = ['none', 'illumina', 'pacbio', 'nanopore']
+    if (!(v in known)) {
+        error "sample '${row.sample}': error_model '${v}' must be one of ${known.join(', ')}"
+    }
+    v
+}
+
 // Knobs a superresolution `sr_settings:` entry may set. The first seven reach the matrix
 // build, the rest the inference run; a key absent from an entry falls back to the
 // matching sr_<amplicon|shotgun>_<key> param (`panel` has none). Kept as a method, not a
@@ -334,6 +349,10 @@ workflow {
                 // A pre-trained skiver model.pt the nested sr_amplicon run simulates with
                 // (--sim_error_model trained) instead of training its own. Path string, as mseq.
                 sr_error_model: (row.sr_error_model ? resolveFile(row.sr_error_model).toString() : null),
+                // Generate from one of skiver's bundled platform presets instead of a
+                // model trained off this row's FASTQs: nothing is trained for its
+                // train_id and GENOME_BLENDER_GENERATE passes --error-model instead.
+                error_model: parseErrorModel(row),
             ]
             def genomesCsv = resolveFile(row.genomes_csv)
             // Resolve the FASTA files referenced by the genomes CSV so Nextflow stages them.
@@ -347,10 +366,16 @@ workflow {
         // Rows pointing at an already-trained error-model dir (from a prior
         // `--step train` run): reach in for the model + calibration, keyed by
         // train_id, and skip training for those train_ids.
+        // Preset rows train nothing either; their model/calibration slots are the
+        // NO_FILE placeholder, which the generate module never reads.
+        def presetRows = rows.findAll { parseErrorModel(it) }
+        def no_file = file("${projectDir}/assets/NO_FILE")
+
         def pretrainedRows = rows.findAll { it.error_model_dir }
-        pretrainedIds = pretrainedRows.collect { it.train_id } as Set  // reassigns the outer local
+        pretrainedIds = (pretrainedRows + presetRows).collect { it.train_id } as Set  // reassigns the outer local
         ch_pretrained = Channel
-            .fromList(pretrainedRows.collect { row ->
+            .fromList(presetRows.collect { row -> [ row.train_id, no_file, no_file ] })
+            .mix(Channel.fromList(pretrainedRows.collect { row ->
                 def dir = resolveFile(row.error_model_dir)
                 def m = files("${dir}/*.model.pt")
                 def c = files("${dir}/*.phred_calibration.json")
@@ -358,7 +383,7 @@ workflow {
                     error "error_model_dir '${dir}' for train_id ${row.train_id} must contain exactly one *.model.pt and one *.phred_calibration.json"
                 }
                 [ row.train_id, m[0], c[0] ]
-            })
+            }))
             .unique { it[0] }
     }
 
@@ -370,7 +395,12 @@ workflow {
             .map { row ->
                 def reads = [ resolveFile(row.train_fastq_1) ]
                 if (row.train_fastq_2?.trim()) reads << resolveFile(row.train_fastq_2)
-                def meta_train = [ id: row.train_id, platform: row.platform, subsample: parseSubsampleScalar(row.train_subsample) ]
+                def meta_train = [ id: row.train_id, platform: row.platform,
+                                   subsample: parseSubsampleScalar(row.train_subsample),
+                                   // Per-train override of the fitted component string(s),
+                                   // so one run can compare a flat model against the
+                                   // AIC-selected default. Requires a distinct train_id.
+                                   components: (row.error_model_components ?: null) ]
                 [ row.train_id, meta_train, reads ]
             }
             .unique { it[0] }

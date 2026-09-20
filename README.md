@@ -124,6 +124,8 @@ databases (see [Named sequence collections](#named-sequence-collections-database
 | `train_fastq_1` | Natural-metagenome reads to learn the error profile from. Not needed when `error_model_dir` is set. |
 | `train_fastq_2` | Optional mate (paired training reads). Leave blank for single-end. |
 | `error_model_dir` | Optional. Path to an `error_models/<train_id>/` directory produced by an earlier `--step train` (or `generate`/`all`) run. When set, the row's `train_id` is **not** trained — the `*.model.pt` + `*.phred_calibration.json` in that dir are used, and `train_fastq_*`/`train_subsample` are ignored. Set it for **all or none** of a `train_id`'s rows. |
+| `error_model` | Optional. `none` \| `illumina` \| `pacbio` \| `nanopore` — generate from one of skiver's bundled platform presets (or with no errors at all) instead of a model trained from reads. The row's `train_id` is **not** trained and `train_fastq_*` are ignored, so an untrained baseline costs one column rather than a separate run. Give it its own `train_id`. |
+| `error_model_components` | Optional. Component string(s) fitted for this row's `train_id`, overriding `params.error_model_components`/`error_model_candidates` (e.g. `BaseContext(1)` for a context-free model). Training is deduped by `train_id`, so a second component string needs a second `train_id`. |
 | `train_subsample` | Optional read/pair count to subsample the training reads to before training. `none`/`null`/empty/omitted → train on the full read set. Taken from the first row seen for a given `train_id`, same as `train_fastq_1`/`train_fastq_2`. |
 | `platform` | `hq-illumina` \| `lq-illumina` \| `ont` \| `pacbio`. |
 | `genomes_csv` | A genome-blender input CSV: `genome_id,fasta_path,abundance`. |

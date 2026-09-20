@@ -1,0 +1,32 @@
+# Three error-model arms over one community: a preset row (no training at all), a row
+# fitting its own component string, and the default AIC candidates. Each needs its own
+# train_id - training is deduped by it.
+- sample: S1.naive
+  train_id: natA.naive
+  error_model: illumina
+  train_fastq_1: tests/data/natural_R1.fastq.gz
+  train_fastq_2: tests/data/natural_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: tests/data/genomes_S1.csv
+  num_reads: 2000
+  mode: shotgun
+  paired_end: true
+- sample: S1.flat
+  train_id: natA.flat
+  error_model_components: BaseContext(1)
+  train_fastq_1: tests/data/natural_R1.fastq.gz
+  train_fastq_2: tests/data/natural_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: tests/data/genomes_S1.csv
+  num_reads: 2000
+  mode: shotgun
+  paired_end: true
+- sample: S1.trained
+  train_id: natA
+  train_fastq_1: tests/data/natural_R1.fastq.gz
+  train_fastq_2: tests/data/natural_R2.fastq.gz
+  platform: hq-illumina
+  genomes_csv: tests/data/genomes_S1.csv
+  num_reads: 2000
+  mode: shotgun
+  paired_end: true

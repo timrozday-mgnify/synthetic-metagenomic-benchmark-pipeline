@@ -5,7 +5,9 @@ process GENOME_BLENDER_GENERATE {
     container "ghcr.io/timrozday-mgnify/smb-genome-blender:${params.smb_genome_blender_tag}"
 
     input:
-    tuple val(meta), path(genomes_csv), path(fastas), path(model_pt), path(phred_cal)
+    // The two model slots are stageAs'd to distinct names: a preset row passes the
+    // shared NO_FILE placeholder in both, which otherwise collides on staging.
+    tuple val(meta), path(genomes_csv), path(fastas), path(model_pt, stageAs: 'error_model/*'), path(phred_cal, stageAs: 'phred_calibration/*')
 
     output:
     tuple val(meta), path("${meta.id}*.fastq.gz"), emit: reads
@@ -34,6 +36,12 @@ process GENOME_BLENDER_GENERATE {
     // Chunked runs (workflow-level fan-out) carry a distinct per-chunk seed so
     // chunks don't emit identical reads; falls back to the global seed otherwise.
     def seed = meta.seed ?: params.seed
+    // A row naming `error_model` is generated from one of skiver's bundled platform
+    // presets instead of a trained model: no training happened for its train_id, so
+    // model_pt/phred_cal are the NO_FILE placeholder and must not be passed.
+    def model_flags = meta.error_model
+        ? "--error-model ${meta.error_model}"
+        : "--skiver-model ${model_pt} --skiver-phred-calibration ${phred_cal}"
     """
     # Point the genomes CSV at the locally staged FASTA basenames.
     python "\$(command -v rewrite_genomes_csv.py)" ${genomes_csv} genomes.local.csv
@@ -43,8 +51,7 @@ process GENOME_BLENDER_GENERATE {
         --num-reads ${meta.num_reads} \\
         --output-prefix ${prefix} \\
         --read-prefix ${prefix}: \\
-        --skiver-model ${model_pt} \\
-        --skiver-phred-calibration ${phred_cal} \\
+        ${model_flags} \\
         --seed ${seed} \\
         ${mode_flag} \\
         ${pair_flag} \\

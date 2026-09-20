@@ -1,19 +1,31 @@
 #!/usr/bin/env python3
-"""Score every grid point per genus: one CSV row per benchmark dir x method.
+"""Score every profiling arm and grid point per genus: one CSV row per benchmark dir x
+method.
 
     python scripts/score_sweep.py [results_dir] [config.yaml] > scores.csv
 
-Truth is `truth.tsv` rolled up to genus through `panel[].taxonomy`. A prediction is the
-run's `inferred_v4_groups.csv`: each V4 group's mass goes to the genus of its `lca`, and a
-group whose `lca` stops above genus (members from several genera) goes to `unresolved`.
+Genus is the one space all four arms can be compared in - two of them report panel
+genomes, one reports SILVA V4 groups and one reports SILVA lineages - so everything is
+rolled up to it. Truth is `truth.tsv` through `panel[].taxonomy`. Predictions:
+
+  silva        `inferred_v4_groups.csv` - each V4 group's mass goes to the genus of its
+               `lca`; a group whose `lca` stops above genus goes to `unresolved`.
+  custom,      `inferred_composition.csv` - each panel genome's mass goes to its own
+  silva_panel  lineage's genus. `silva_panel`'s `background` bucket (reads the panel
+               cannot explain) goes to `unresolved`.
+  aap          the amplicon-analysis-pipeline's krona table - a count per lineage,
+               summed per genus; a lineage stopping above genus goes to `unresolved`.
 
   tv             total variation over genera plus `unresolved` (truth has none there)
   max_abs_error  the largest per-genus error, and `worst_genus` it is on
   mass_absent    predicted share on genera the community does not contain
-  unresolved     predicted share SILVA cannot place at genus
+  unresolved     predicted share that arm cannot place at genus
 
-`mapseq_only` is the first grid point's `observed_rel_abundance`: MAPseq's labels with no
-inference, which no inference knob changes.
+`mapseq_only` is the first `silva` grid point's `observed_rel_abundance`: MAPseq's labels
+against SILVA with no inference, which no inference knob changes.
+
+The `error_model` column names the arm the READS came from (trained / flat / naive), so a
+method's row is only comparable with another method's at the same error model.
 """
 import csv
 import sys
@@ -24,9 +36,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import silva_sweep as ss  # noqa: E402
 
 HERE = Path(__file__).resolve().parent.parent
-COLUMNS = ["sample", "depth", "method", "tv", "max_abs_error", "worst_genus",
-           "mass_absent", "unresolved"]
+COLUMNS = ["sample", "error_model", "depth", "arm", "method", "tv", "max_abs_error",
+           "worst_genus", "mass_absent", "unresolved"]
 UNRESOLVED = "unresolved"
+# superresolution's bucket for reads a `panel:` reinterpretation cannot explain. It is
+# not a genus, and the truth has no mass there, so it scores like `unresolved`.
+BACKGROUND = "background"
 
 
 def truth_genera(path, lineage):
@@ -44,6 +59,42 @@ def predicted_genera(path, column):
     with open(path, newline="") as fh:
         for row in csv.DictReader(fh):
             out[ss.genus(row["lca"]) or UNRESOLVED] += float(row[column])
+    return dict(out)
+
+
+def genome_genera(path, lineage, column="inferred_mean"):
+    """{genus | 'unresolved': share} from an inferred_composition.csv, whose rows are
+    panel genomes. `background` is superresolution's out-of-panel bucket."""
+    out = defaultdict(float)
+    with open(path, newline="") as fh:
+        for row in csv.DictReader(fh):
+            gid = (row.get("genome_id") or "").strip()
+            if not gid:
+                continue
+            key = UNRESOLVED if gid == BACKGROUND else ss.genus(lineage[gid])
+            out[key or UNRESOLVED] += float(row[column])
+    return dict(out)
+
+
+def krona_genera(path):
+    """{genus | 'unresolved': share} from an amplicon-analysis-pipeline krona table:
+    `<count>\t<rank>\t<rank>...`, one line per assigned lineage.
+
+    Lenient about the leading rank on purpose - MAPseq writes the domain first, but a
+    krona table built through Root/unclassified prefixes is common enough that dropping
+    them is cheaper than pinning one writer's layout.
+    """
+    out = defaultdict(float)
+    for line in Path(path).read_text().splitlines():
+        fields = [f.strip() for f in line.split("\t")]
+        if len(fields) < 2:
+            continue
+        try:
+            count = float(fields[0])
+        except ValueError:                  # a header line, if the writer emits one
+            continue
+        ranks = [r for r in fields[1:] if r and r.lower() not in ("root", "unclassified")]
+        out[ss.genus(";".join(ranks)) or UNRESOLVED] += count
     return dict(out)
 
 
@@ -71,23 +122,41 @@ def main():
     writer = csv.DictWriter(sys.stdout, COLUMNS, extrasaction="ignore")
     writer.writeheader()
     skipped = 0
-    for sample, directory, depth, _pair in ss.benchmark_dirs(cfg, results_dir):
+    for sample, directory, depth, _pair, em in ss.benchmark_dirs(cfg, results_dir):
         truths = sorted(directory.glob("*.truth.tsv"))
         if not truths:
             skipped += 1
             continue
         truth = truth_genera(truths[0], lineage)
         run_id = f"{sample}.sub{depth}" if depth else sample
-        groups = {name: directory / "profiling" / "sr" / f"{run_id}.{name}.inferred_v4_groups.csv"
-                  for name in names}
-        profiles = {name: (path, "inferred_mean") for name, path in groups.items()}
-        profiles["mapseq_only"] = (groups[names[0]], "observed_rel_abundance")
-        for method, (path, column) in profiles.items():
-            if path.exists():
-                row = {"sample": sample, "depth": depth or "full", "method": method,
-                       **scores(predicted_genera(path, column), truth)}
-                writer.writerow({k: f"{v:.5f}" if isinstance(v, float) else v
-                                 for k, v in row.items()})
+        sr = directory / "profiling" / "sr"
+
+        # arm -> {method: callable() -> {genus: share}}, only for files that exist.
+        methods = []
+        groups = {name: sr / f"{run_id}.{name}.inferred_v4_groups.csv" for name in names}
+        for name, path in groups.items():
+            methods.append(("silva", name, path, lambda p=path: predicted_genera(p, "inferred_mean")))
+        first = groups[names[0]]
+        methods.append(("silva", "mapseq_only", first,
+                        lambda p=first: predicted_genera(p, "observed_rel_abundance")))
+        for arm in ("custom", "silva_panel"):
+            for entry in ss.arm_settings(cfg, arm):
+                path = sr / f"{run_id}.{entry['name']}.inferred_composition.csv"
+                methods.append((arm, entry["name"], path,
+                                lambda p=path: genome_genera(p, lineage)))
+        # AAP publishes its whole output tree; the krona table is the one file that is a
+        # count per lineage, which is all the genus roll-up needs.
+        for path in sorted(directory.glob(f"profiling/aap/{run_id}/taxonomy-summary/**/*krona.txt")):
+            methods.append(("aap", "aap", path, lambda p=path: krona_genera(p)))
+
+        for arm, method, path, predict in methods:
+            if not path.exists():
+                continue
+            row = {"sample": sample, "error_model": em["name"] or "default",
+                   "depth": depth or "full", "arm": arm, "method": method,
+                   **scores(predict(), truth)}
+            writer.writerow({k: f"{v:.5f}" if isinstance(v, float) else v
+                             for k, v in row.items()})
     if skipped:
         print(f"NOTE: {skipped} benchmark dir(s) under {results_dir} have no truth.tsv yet",
               file=sys.stderr)
@@ -119,6 +188,27 @@ def _selfcheck():
     assert s["worst_genus"] == "Streptococcus" and abs(s["max_abs_error"] - 0.2) < 1e-9, s
     assert abs(s["mass_absent"] - 0.1) < 1e-9 and abs(s["unresolved"] - 0.1) < 1e-9, s
     assert scores({bac: 2.0}, {bac: 1.0})["tv"] == 0, "both sides renormalised"
+
+    # The genome-space arms (custom / silva_panel): panel ids rolled up through the same
+    # lineages, with `background` landing on `unresolved`.
+    with tempfile.TemporaryDirectory() as d:
+        comp = Path(d) / "S.custom.inferred_composition.csv"
+        comp.write_text("sample,genome_id,observed_rel_abundance,inferred_mean\n"
+                        "S,bf,0.2,0.3\nS,bt,0.2,0.2\nS,ss,0.5,0.4\n"
+                        f"S,{BACKGROUND},0.1,0.1\n")
+        g = genome_genera(comp, {"bf": bac, "bt": bac, "ss": strep})
+    assert abs(g[bac] - 0.5) < 1e-9 and abs(g[UNRESOLVED] - 0.1) < 1e-9, g
+
+    # The aap arm: a krona count-per-lineage table. A leading Root rank is dropped, and a
+    # lineage that stops above genus is unresolved.
+    with tempfile.TemporaryDirectory() as d:
+        krona = Path(d) / "S_SILVA-SSU.krona.txt"
+        krona.write_text("\t".join(["50"] + bac.split(";")) + "\n"
+                         + "\t".join(["30", "Root"] + strep.split(";")) + "\n"
+                         + "\t".join(["20"] + fam.split(";")) + "\n")
+        k = krona_genera(krona)
+    assert k == {bac: 50.0, strep: 30.0, UNRESOLVED: 20.0}, k
+    assert abs(scores(k, {bac: 0.5, strep: 0.3})["unresolved"] - 0.2) < 1e-9
     print("score_sweep selfcheck OK")
 
 

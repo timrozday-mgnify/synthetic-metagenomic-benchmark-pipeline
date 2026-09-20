@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Phase 1: config.yaml -> samplesheet.yaml + genomes/sample_NN.amplicon_16s.csv.
 
-One `--step all` run off this samplesheet trains the error model, draws the
+One `--step all` run off this samplesheet trains the error model(s), draws the
 negative-binomial communities, generates their V4 amplicon reads at every subsample
 depth, and profiles each depth with superresolution-amplicon ONCE against the pre-built
-reference set. No `sr_settings:` here on purpose - phase 1 exists to produce the two
+reference set. The communities are generated once per `error_models:` arm - the reads
+themselves differ, so each arm is its own set of samples with its own train_id. No `sr_settings:` here on purpose - phase 1 exists to produce the two
 things phase 2 reuses: the reads (and their truth.tsv), and the mapseq classification of
 those reads, published to `<benchmark_dir>/profiling/sr/<id>.obs.mseq.gz`.
 
@@ -30,6 +31,7 @@ def main():
     n = cfg["sampling"]["n_samples"]
     abundances = gs.sample_abundances(cfg)          # (n_samples, n_genomes) integers
     modes = gs.generation_modes(cfg)
+    error_arms = gs.error_models(cfg)
 
     (HERE / "genomes").mkdir(exist_ok=True)
     rows = []
@@ -48,26 +50,37 @@ def main():
                 for member, drawn in zip(panel, abundance):
                     if drawn > 0:                   # absent this sample
                         writer.writerow([member["id"], fasta[member["id"]], int(drawn)])
-            rows.append(_row(cfg, gm, reads, f"S{i:02d}.{gm['name']}", csv_path))
+            # Same community, one sample per error-model arm: the abundances are shared
+            # so the arms differ only in how the reads were damaged.
+            for em in error_arms:
+                rows.append(_row(cfg, gm, reads, em,
+                                 gs.sample_id(cfg, em, gm, i), csv_path))
 
     doc = {"databases": gs.database_block(cfg), "samples": rows}
     with open(HERE / "samplesheet.yaml", "w") as fh:
         gs.dump_yaml(doc, fh)
 
+    arms = ", ".join(e["name"] or "default" for e in error_arms)
     print(f"Wrote samplesheet.yaml: {len(rows)} sample(s) x {len(gs.depths(cfg))} "
-          f"depth(s) against '{cfg['database']['name']}'; mean genomes present/sample: "
+          f"depth(s) against '{cfg['database']['name']}'; error-model arms: {arms}; "
+          f"mean genomes present/sample: "
           f"{(abundances > 0).sum(axis=1).mean():.1f}/{len(panel)}")
 
 
-def _row(cfg, gm, reads, sample, csv_path):
+def _row(cfg, gm, reads, em, sample, csv_path):
     train = cfg["train"]
     subsample = reads.get("subsample")
     return {
         "sample": sample,
-        "train_id": train["id"],
+        # One train_id per error-model arm: the pipeline dedupes training by it, so two
+        # arms sharing an id would silently share one model. A `preset:` arm trains
+        # nothing at all and ignores the FASTQs below; they stay for the other arms.
+        "train_id": em["train_id"],
         "train_fastq_1": train["fastq_1"],
         "train_fastq_2": train["fastq_2"],
         "platform": train["platform"],
+        **({"error_model": em["preset"]} if em.get("preset") else {}),
+        **({"error_model_components": em["components"]} if em.get("components") else {}),
         "genomes_csv": str(csv_path),
         "num_reads": reads["num_reads"],
         "mode": gm["mode"],

@@ -445,6 +445,32 @@ nextflow_pipeline {
         }
     }
 
+    test("generate with error_model arms - stub") {
+        tag "stub"
+        options "-stub"
+        when {
+            params {
+                input  = "${projectDir}/tests/samplesheets/error_model_arms.yaml"
+                outdir = "$outputDir"
+                step   = "generate"
+            }
+        }
+        then {
+            assertAll(
+                { assert workflow.success },
+                // Two train_ids train (natA.flat, natA); the `error_model: illumina` row
+                // trains nothing, so 2 x (SEQKIT_SUBSAMPLE_TRAIN + SKIVER_DUMP +
+                // SKIVER_TRAIN + SKIVER_REPORT) = 8, plus 3 x (NORMALISE_REFERENCES +
+                // GENOME_BLENDER_GENERATE + SEQKIT_SUBSAMPLE + GROUND_TRUTH) = 12.
+                { assert workflow.trace.succeeded().size() == 20 },
+                { assert workflow.trace.tasks().findAll { it.name.contains('SKIVER_TRAIN') }.size() == 2 },
+                { assert path("${params.outdir}/S1.naive/S1.naive_R1.fastq.gz").exists() },
+                { assert path("${params.outdir}/S1.flat/S1.flat_R1.fastq.gz").exists() },
+                { assert path("${params.outdir}/S1.trained/S1.trained_R1.fastq.gz").exists() }
+            )
+        }
+    }
+
     test("profile-only aap - stub") {
         tag "stub"
         options "-stub"
