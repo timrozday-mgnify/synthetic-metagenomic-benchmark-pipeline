@@ -610,7 +610,11 @@ over the community, which the pipeline builds for you with headers
   `<name>_{genome,ssu}.sr_refs.tax` (MAPseq `.tax`, headers as in the FASTA), and every
   run against that database gets it as `--taxonomy`. A `path:` dir may hold one too; for
   a SILVA-built generic database it is superresolution-amplicon's
-  `build_mapseq_database.py --silva-fasta` `.tax`. Use this to profile every sample against the *whole* panel
+  `build_mapseq_database.py --silva-fasta` `.tax`. For `sr_amplicon` a `path:` dir must
+  also hold the MAPseq database the nested run maps against, beside the FASTA as
+  `<FASTA stem>_amplicons/` (superresolution-amplicon's "Prebuilt MAPseq database"). It
+  is never rebuilt, and a run without it stops before launching anything; sets built
+  here have theirs built by the nested run. Use this to profile every sample against the *whole* panel
   (including genomes absent from a given sample) rather than only its own genomes.
 
 There is no `params.*_databases` fallback — an unknown `database` name is an error.

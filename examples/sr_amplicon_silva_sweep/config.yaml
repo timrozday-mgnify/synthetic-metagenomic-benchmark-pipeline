@@ -140,19 +140,21 @@ sr_sweep:
       # with the gate on, 40% of its replayed samples failed the fit check, 2% without.
       - {name: nogate, infer_presence: false}
 
-# The reference set under test. `path:` is a PRE-BUILT database directory, laid out the
-# way the pipeline publishes its own (`<outdir>/databases/<name>/`):
+# The reference set under test. `path:` is a PRE-BUILT database directory:
 #
 #   <path>/<name>_ssu.sr_refs.fasta      headers `{accession}|0|{accession}`
 #   <path>/<name>_ssu.sr_refs.tax        MAPseq taxonomy, one SILVA lineage per header
+#   <path>/<name>_ssu.sr_refs_amplicons/ the MAPseq database every nested run maps against
+#                                        (amplicons.fasta, .tax, .fasta.mscluster,
+#                                        translation_table.tsv, refseq_index.csv)
 #
-# Build both once, out of band, with superresolution-amplicon's
-# `bin/build_mapseq_database.py --silva-fasta SILVA_<ver>_SSURef[_NR99]_tax_silva.fasta.gz`
-# - any release, NR99 or the full Ref. The names above are a convention: a directory
-# holding only the FASTA and its `.tax` under the builder's own names resolves too, so
-# there is nothing to rename. Nothing is built during the run. The `.tax` is
-# what makes this example scoreable: every nested run gets it as `--taxonomy`, and it
-# names each V4 group's `lca`.
+# Build all three once, out of band, with superresolution-amplicon - the commands are in
+# README.md ("The database"). Any SILVA release, NR99 or the full Ref. The names above
+# are a convention: a lone FASTA + `.tax` under the builder's own names resolves too, with
+# the MAPseq database as `<FASTA stem>_amplicons/`. Nothing is built during the run, and
+# the MAPseq database is never rebuilt: without it the run stops before launching
+# anything. The `.tax` is what makes this example scoreable: every nested run gets it as
+# `--taxonomy`, and it names each V4 group's `lca`.
 #
 # SILVA is a label space here, not a set of genomes: its accessions are single rRNA
 # sequences, so the panel ids below are free and are never compared with them.
@@ -164,7 +166,7 @@ sr_sweep:
 database:
   name: silva_138_2_ssu_nr99
   profilers: [sr_amplicon]
-  path: /PATH/TO/silva_138_2_ssu_nr99   # dir holding the reference FASTA + its .tax (any release)
+  path: /PATH/TO/silva_138_2_ssu_nr99   # dir holding the reference FASTA, its .tax and its MAPseq database
   # sequences_from_panel: true          # build from `panel:` instead of using `path:`
 
 # The `custom` arm's reference set, and the `silva_panel` arm's `panel:`. One collection

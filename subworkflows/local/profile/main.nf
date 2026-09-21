@@ -49,6 +49,20 @@ def srSetKey(meta, base) {
     "${base}:${meta.profiler}${meta.primer ? ':' + meta.primer : ''}${mode}${panel}".toString()
 }
 
+// superresolution-amplicon maps against a MAPseq database (extracted amplicons + their
+// .mscluster) and builds one only under --build_mapseq_db. A pre-built reference FASTA
+// carries its database beside it as `<stem>_amplicons/`, the name the nested run looks
+// for; a reference set this pipeline builds ('self', a collection) has none, so the
+// nested run builds it. On `meta`, like every nested flag, so it is hashed.
+// Beside the FASTA's real path: RUN_SUPERRESOLUTION hands the nested run `realpath refs`.
+def srPrebuiltMapseqDb(refs) {
+    def real = refs.toRealPath()
+    real.parent.resolve(real.name.replaceFirst(/\.(fa|fasta|fna)(\.gz)?$/, '') + '_amplicons')
+}
+def srBuildDb(meta, build) {
+    meta.profiler == 'sr_amplicon' ? meta + [ sr_build_db: build ] : meta
+}
+
 // Nested superresolution command-line flags, composed here and stamped onto `meta` so
 // they reach the tasks as a hashed input. Composing them inside the process script
 // instead would leave the task hash unchanged when a setting changes, and `-resume`
@@ -134,7 +148,7 @@ workflow PROFILE {
     ch_aux           // [ id, genomes_csv, [ fasta ] ]       (empty in profile-only step)
     ch_sylph_dbs     // [ name, syldb ]                      built/prebuilt sylph DBs by name
     ch_mapseq_dbs    // [ name, fasta, tax, otu, mscluster ] built/prebuilt mapseq DBs by name
-    ch_sr_dbs        // [ "<name>:<genome|ssu>", refs_fasta|[], tax|[], panel_taxa|[] ] built/prebuilt superresolution refs
+    ch_sr_dbs        // [ "<name>:<genome|ssu>", refs_fasta|[], tax|[], panel_taxa|[], prebuilt ] built/prebuilt superresolution refs
     builtNames       // [ profiler: Set of collection names resolved for it ]
 
     main:
@@ -318,7 +332,9 @@ workflow PROFILE {
         .join(SR_BUILD_REFS.out.refs.map { meta, refs -> [ "${meta.id}:${meta.profiler}".toString(), refs ] }, by: 0)
         // A self reference set belongs to the source sample, so all of its
         // subsampling depths reuse one matrix while distinct samples remain isolated.
-        .map { key, meta, reads, refs -> [ srSetKey(meta, "self:${meta.sample ?: meta.id}"), meta, reads, refs ] }
+        // It is built here, so the nested amplicon run builds its MAPseq database too.
+        .map { key, meta, reads, refs ->
+            [ srSetKey(meta, "self:${meta.sample ?: meta.id}"), srBuildDb(meta, true), reads, refs ] }
 
     // Named collection: join by "<name>:<source>", the key BUILD_DATABASES emits.
     ch_sr_built_in = ch_sr.built
@@ -326,11 +342,24 @@ workflow PROFILE {
         .combine(ch_sr_dbs, by: 0)
         // Named collections are reference sets shared by every matching sample. Its
         // taxonomy goes as an absolute path string, like panel_refs below.
-        .map { key, meta, reads, refs, tax, taxa ->
+        .map { key, meta, reads, refs, tax, taxa, prebuilt ->
             if (!refs) {
                 error "Sample ${meta.id}: database '${meta.database}' has only taxon panel entries and no references; name it with an sr_settings 'panel:' instead"
             }
-            [ srSetKey(meta, meta.database), meta + (tax ? [ taxonomy: tax.toString() ] : [:]), reads, refs ]
+            // A `path:` reference set brings its own MAPseq database and is never rebuilt:
+            // the nested amplicon run finds it beside the FASTA. Checked here so a missing
+            // one fails before any nested pipeline is pulled.
+            if (prebuilt && meta.profiler == 'sr_amplicon') {
+                def db = srPrebuiltMapseqDb(refs)
+                if (!db.isDirectory()) {
+                    error "Sample ${meta.id}: database '${meta.database}' is pre-built, so its MAPseq " +
+                          "database must be too: expected ${db}/ holding amplicons.fasta, " +
+                          "amplicons.tax, amplicons.fasta.mscluster, translation_table.tsv and " +
+                          "refseq_index.csv (superresolution-amplicon README, 'Prebuilt MAPseq database')"
+                }
+            }
+            [ srSetKey(meta, meta.database),
+              srBuildDb(meta, !prebuilt) + (tax ? [ taxonomy: tax.toString() ] : [:]), reads, refs ]
         }
 
     ch_sr_all = ch_sr_self_in.mix(ch_sr_built_in)
@@ -351,7 +380,7 @@ workflow PROFILE {
             [ "${panel}:ssu".toString(), referenceSet, meta, reads, refs ]
         }
         .combine(ch_sr_dbs, by: 0)
-        .map { key, referenceSet, meta, reads, refs, panelRefs, panelTax, panelTaxa ->
+        .map { key, referenceSet, meta, reads, refs, panelRefs, panelTax, panelTaxa, panelPrebuilt ->
             if (panelTaxa && !meta.taxonomy) {
                 error "sr_settings '${meta.sr_setting}' (sample ${meta.id}): panel '${meta.sr_opts.panel}' has taxon entries, " +
                       "but database '${meta.database}' has no taxonomy to resolve them against (give every sequence a 'taxonomy:', or a prebuilt .sr_refs.tax)"

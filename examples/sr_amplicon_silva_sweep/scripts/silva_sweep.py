@@ -172,7 +172,8 @@ def database_block(cfg):
     """The samplesheet `databases:` block.
 
     A `path:` database is handed to the pipeline as a pre-built directory: nothing is
-    built, and BUILD_DATABASES resolves `<name>_ssu.sr_refs.{fasta,tax}` inside it.
+    built, BUILD_DATABASES resolves `<name>_ssu.sr_refs.{fasta,tax}` inside it, and the
+    nested runs map against the MAPseq database beside them (`<name>_ssu.sr_refs_amplicons/`).
     `sequences_from_panel: true` falls back to the sibling examples' in-pipeline build (a
     cheap control on the same code path), with each genome's SILVA lineage as its
     `taxonomy:`, so the control gets a `.tax` and scores the same way.

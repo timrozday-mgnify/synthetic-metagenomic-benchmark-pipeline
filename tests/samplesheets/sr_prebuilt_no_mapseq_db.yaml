@@ -1,0 +1,18 @@
+# A pre-built reference dir with no MAPseq database beside its FASTA: sr_amplicon must
+# refuse it before launching anything, never build one.
+databases:
+  silvaNoMapseq:
+    path: tests/data/prebuilt_db/silvaNoMapseq
+
+samples:
+  - sample: S5
+    train_id: natA
+    train_fastq_1: tests/data/natural_R1.fastq.gz
+    train_fastq_2: tests/data/natural_R2.fastq.gz
+    platform: hq-illumina
+    genomes_csv: tests/data/genomes_S2_ssu.csv
+    num_reads: 2000
+    mode: amplicon
+    read_length_mean: 200
+    profilers: [sr_amplicon]
+    database: silvaNoMapseq

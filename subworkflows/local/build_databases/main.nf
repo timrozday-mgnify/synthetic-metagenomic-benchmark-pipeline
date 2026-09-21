@@ -187,7 +187,7 @@ workflow BUILD_DATABASES {
         .groupTuple(by: 0)
         .map { key, kinds, fs ->
             def out = [kinds, fs].transpose().collectEntries()
-            [ key, out.refs ?: [], out.tax ?: [], out.taxa ?: [] ]
+            [ key, out.refs ?: [], out.tax ?: [], out.taxa ?: [], false ]
         }
 
     // Pre-built: the published layout is `<name>_<source>.sr_refs.fasta` (see
@@ -203,13 +203,13 @@ workflow BUILD_DATABASES {
                 def taxa = globOptional(spec.prebuilt_dir, taxaPats, spec.name)
                 def refs = taxa ? globOptional(spec.prebuilt_dir, refsPats, spec.name)
                                 : globOne(spec.prebuilt_dir, refsPats, spec.name)
-                [ "${spec.name}:${field}", refs, globOptional(spec.prebuilt_dir, taxPats, spec.name), taxa ]
+                [ "${spec.name}:${field}", refs, globOptional(spec.prebuilt_dir, taxPats, spec.name), taxa, true ]
             }
         }
 
     emit:
     sylph_dbs  = ch_built_sylph.mix(ch_pre_sylph)
     mapseq_dbs = ch_mapseq_dbs
-    sr_dbs     = ch_built_sr.mix(ch_pre_sr)   // [ "<name>:<genome|ssu>", refs_fasta|[], tax|[], panel_taxa|[] ]
+    sr_dbs     = ch_built_sr.mix(ch_pre_sr)   // [ "<name>:<genome|ssu>", refs_fasta|[], tax|[], panel_taxa|[], prebuilt ]
     versions   = ch_versions
 }

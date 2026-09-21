@@ -11,7 +11,9 @@ OUTDIR="$REPO/results/sr_amplicon_silva_sweep"
 # set named in config.yaml's `database.path:`. The error-model arms are the one axis that
 # cannot share work: different reads means a separate generation and a separate SILVA
 # mapping pass each. Only `custom_database` is built; the pipeline resolves
-# <path>/<name>_ssu.sr_refs.{fasta,tax} and hands them to the nested runs. That run publishes
+# <path>/<name>_ssu.sr_refs.{fasta,tax} and hands them to the nested runs, which map against
+# the pre-built MAPseq database beside them (<name>_ssu.sr_refs_amplicons/, never rebuilt;
+# the run stops up front if it is missing). That run publishes
 # each depth's mapseq classification to <benchmark_dir>/profiling/sr/<id>.obs.mseq.gz -
 # the expensive part, and the reason phase 2 is affordable.
 python "$HERE/generate_samplesheet.py"

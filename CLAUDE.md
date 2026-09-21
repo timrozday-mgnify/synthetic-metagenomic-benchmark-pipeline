@@ -118,7 +118,14 @@ null => bundled set. It's global (not per-sample) and passed as an absolute host
   (`v4_group` + `lca`), never over its own references. Its `.sr_refs.tax` (built from
   `taxonomy:` on every entry, or found beside a `path:` FASTA) rides to inference runs
   as `--taxonomy` via `meta.taxonomy` / `srTaxonomyArg`, and `ch_sr_dbs` is
-  `[ key, refs|[], tax|[], panel_taxa|[] ]`.
+  `[ key, refs|[], tax|[], panel_taxa|[], prebuilt ]`.
+- **sr_amplicon's MAPseq database is never rebuilt for a `path:` set.** superresolution-
+  amplicon maps against a MAPseq database (extracted amplicons + `.mscluster`) and builds
+  one only under `--build_mapseq_db`. A `path:` FASTA brings its own beside it as
+  `<stem>_amplicons/` (the nested run looks beside `realpath refs`); PROFILE refuses a
+  pre-built set without one before anything launches (`srPrebuiltMapseqDb`). Sets built
+  here (`self`, collections) carry `meta.sr_build_db`, and only they get the flag
+  (`srBuildDbArgs`).
 - **Taxon panel entries.** A `databases:` sequence with `taxon:` (no `ssu`) becomes a row of
   `<name>_ssu.panel_taxa.tsv` and reaches the nested run as `--panel_taxa`, resolved against
   the row database's `.tax`. Such a collection may have no FASTA, can only be named by
@@ -178,8 +185,8 @@ null => bundled set. It's global (not per-sample) and passed as an absolute host
   `sr_amplicon` launch also gets `--amplicon_cache <workDir>/nested/sr/amplicon_cache`
   (`srCacheArgs`): the nested pipeline's storeDir for the in-silico PCR and the mapseq
   `.mscluster`, keyed by reference set + primers + code. Without it each matrix and
-  inference run re-clusters SILVA. The nested pipeline also skips the clustering outright
-  when nothing maps with mapseq (align-mode M and every row supplying `mseq:`).
+  inference run re-clusters a built set. A `path:` set is never extracted or clustered at
+  all: its prebuilt MAPseq database is used as is.
 - **Stub tests run on the host** (no `--profile`, so no container engine); stub
   blocks must use only coreutils (no tool calls). Real/e2e tests use
   `--profile docker` + `--tag e2e`; stub selection is `--tag stub`.

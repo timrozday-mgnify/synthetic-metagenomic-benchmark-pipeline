@@ -40,11 +40,18 @@ def srPrimerArgs(meta) {
 }
 
 // One amplicon cache for every nested amplicon run: each has its own work dir, so without
-// it every matrix and inference run re-extracts the reference set and re-clusters it for
-// mapseq (tens of minutes at SILVA scale). The nested pipeline keys it by reference set,
-// primers and code. Lives beside the nested work dirs; `rm -rf <workDir>/nested` clears it.
+// it every matrix and inference run re-extracts a reference set this pipeline built and
+// re-clusters it for mapseq. The nested pipeline keys it by reference set, primers and
+// code. Lives beside the nested work dirs; `rm -rf <workDir>/nested` clears it.
 def srCacheArgs(meta) {
     meta.profiler == 'sr_amplicon' ? "--amplicon_cache '${workflow.workDir}/nested/sr/amplicon_cache'" : ''
+}
+
+// Let the nested amplicon run build its MAPseq database: only for a reference set this
+// pipeline built itself (meta.sr_build_db, set in PROFILE). A pre-built one (SILVA) brings
+// its database and is never rebuilt, which the nested pipeline refuses by default anyway.
+def srBuildDbArgs(meta) {
+    meta.sr_build_db ? '--build_mapseq_db' : ''
 }
 
 // Nested command-line flags composed by the PROFILE subworkflow and carried on `meta`.
@@ -173,7 +180,8 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     def extraCfg = (meta.sr_configs ?: []).collect { "-c ${file(it, checkIfExists: true)}" }.join(' ')
     def nestedDir = "${workflow.workDir}/nested/sr/${meta.id.replaceAll(/[^A-Za-z0-9._-]+/, '_')}${meta.matrix_key ?: ''}"
     def nestedArgs = [profArg, '--input sr_samplesheet.yml', '--outdir sr_out', extraCfg,
-                      srPrimerArgs(meta), srCacheArgs(meta), srNestedArgs(meta, 'matrix_args'),
+                      srPrimerArgs(meta), srCacheArgs(meta), srBuildDbArgs(meta),
+                      srNestedArgs(meta, 'matrix_args'),
                       "-w '${nestedDir}/work'", '-resume']
         .findAll { it }
         .join(' ')
@@ -360,7 +368,7 @@ process RUN_SUPERRESOLUTION {
     def nestedArgs = [prof_arg, '--input sr_samplesheet.yml', '--outdir sr_out', extra_cfg,
                       // [] for a panel batch, which measures its own kernel.
                       mismapping_matrix ? "--mismapping_matrix ${mismapping_matrix}" : '',
-                      presenceArg, srPrimerArgs(meta), srCacheArgs(meta),
+                      presenceArg, srPrimerArgs(meta), srCacheArgs(meta), srBuildDbArgs(meta),
                       "-w '${nestedDir}/work'", '-resume']
         .findAll { it }
         .join(' ')
@@ -415,7 +423,7 @@ process RUN_SUPERRESOLUTION {
         """mkdir -p sr_out/composition/${id}
     printf 'sample,genome_id,observed_rel_abundance,inferred_mean,inferred_lo,inferred_hi\\n' > sr_out/composition/${id}/${id}.inferred_composition.csv
     cp sr_samplesheet.yml sr_out/composition/${id}/${id}.nested_samplesheet.yml
-    printf '%s\\n' '${srNestedArgs(metas[0], 'inference_args')}' > sr_out/composition/${id}/${id}.nested_args.txt
+    printf '%s\\n' '${[srNestedArgs(metas[0], 'inference_args'), srBuildDbArgs(metas[0])].findAll { it }.join(' ')}' > sr_out/composition/${id}/${id}.nested_args.txt
     printf 'genome_id\\tpredicted_rel_abundance\\tpredicted_tax_rel_abundance\\n' > ${id}.sr_profile.tsv""" +
         // Only the amplicon sibling maps reads, and only when it wasn't handed a
         // classification already — same condition the live nested run applies.
