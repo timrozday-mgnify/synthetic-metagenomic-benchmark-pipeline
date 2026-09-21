@@ -83,22 +83,47 @@ one set of reads.
 
 ## The database (`path:`, no build step)
 
-A pre-built database is a directory laid out the way the pipeline publishes its own
-(`<outdir>/databases/<name>/`). For `sr_amplicon` that is two files:
+A pre-built database is a directory holding the reference FASTA, its `.tax`, and the
+**MAPseq database** every nested run maps against, beside the FASTA as
+`<FASTA stem>_amplicons/`:
 
 ```
 <database.path>/<database.name>_ssu.sr_refs.fasta      >{accession}|0|{accession}
 <database.path>/<database.name>_ssu.sr_refs.tax        {header}<TAB>{SILVA lineage}
+<database.path>/<database.name>_ssu.sr_refs_amplicons/ the MAPseq database:
+    amplicons.fasta  amplicons.tax  amplicons.fasta.mscluster
+    translation_table.tsv  refseq_index.csv
 ```
 
-Build them once, out of band, with superresolution-amplicon's
-`bin/build_mapseq_database.py --silva-fasta SILVA_<ver>_SSURef[_NR99]_tax_silva.fasta.gz`
-(it converts U to T, drops the organism name and pads lineages). Any release works, NR99
-or the full Ref, and the names above are only a convention: `BUILD_DATABASES` falls back
-to a lone `*.{fasta,fa,fna}` + `*.tax` in the directory, so there is nothing to rename.
-Only the FASTA and its `.tax` may live there. The `.tax` is optional to the
-pipeline but not to this example: it reaches every nested run as `--taxonomy`, which
-fills the `lca` column the scores are computed from.
+Nothing in it is built during the run. The MAPseq database in particular is **never
+rebuilt**: clustering SILVA NR99 V4 takes 12 minutes per build, and every mapping in the
+sweep (the phase-1 reads, the `silva_panel` kernel's panel sources) has to use the same
+database for the labels to mean the same thing. A pre-built `sr_amplicon` database
+without that directory stops the run before anything is launched, naming the path it
+expected. The nested runs find it by the FASTA's real path, so it has to sit beside the
+original file, not a copy.
+
+Build it all once, out of band, with superresolution-amplicon (`$SRA` its checkout; the
+primers are the run's, V4 515F/806R by default):
+
+```bash
+python $SRA/bin/build_mapseq_database.py \
+    --silva-fasta SILVA_138.2_SSURef_NR99_tax_silva.fasta.gz \
+    --output-prefix db/silva_138_2_ssu_nr99_ssu.sr_refs
+python $SRA/bin/subspecies_infer.py amplicons --db-fasta db/silva_138_2_ssu_nr99_ssu.sr_refs.fasta \
+    -o db/silva_138_2_ssu_nr99_ssu.sr_refs_amplicons --threads 8
+cd db/silva_138_2_ssu_nr99_ssu.sr_refs_amplicons
+awk '/^>/ { n++ } n <= 1' amplicons.fasta > probe.fasta     # mapseq clusters whatever the query
+mapseq probe.fasta amplicons.fasta amplicons.tax -nthreads 8 > /dev/null && rm probe.fasta
+```
+
+`build_mapseq_database.py` converts U to T, drops the organism name and pads lineages.
+Any release works, NR99 or the full Ref. The `_ssu.sr_refs` names are only a convention:
+`BUILD_DATABASES` falls back to a lone `*.{fasta,fa,fna}` + `*.tax` in the directory, and
+the MAPseq database then goes beside that FASTA under its own stem (`silva.fasta` →
+`silva_amplicons/`). The `.tax` is optional to the pipeline but not to this example: it
+reaches every nested run as `--taxonomy`, which fills the `lca` column the scores are
+computed from.
 
 ## Scoring (per genus)
 
@@ -144,7 +169,8 @@ Python scripts. Edit:
 - `train.fastq_1` / `train.fastq_2` — the real R1/R2 the error model is trained from.
   The `naive` arm never reads them; the other two do.
 - `database.path` — the pre-built reference set directory, and `database.name` to match
-  the `<name>_ssu.sr_refs.{fasta,tax}` inside it.
+  the `<name>_ssu.sr_refs.{fasta,tax}` and `<name>_ssu.sr_refs_amplicons/` inside it
+  (see [The database](#the-database-path-no-build-step)).
 - `aap_database` — the `aap` arm's **mapseq** database (a different thing from the
   superresolution reference set): a directory holding the four MAPseq files, plus the two
   Rfam paths the pipeline requires of any `aap` collection. MAPseq's own distributed
@@ -257,7 +283,8 @@ results/sr_amplicon_silva_sweep/
       mismapping_provenance.json                       <- how that matrix was built
 ```
 
-Only `custom_database` is built; SILVA and the mapseq DB are resolved from their `path:`.
+Only `custom_database` is built (its 20-reference MAPseq database by the nested run);
+SILVA, its MAPseq database and the `aap` mapseq DB are resolved from their `path:`.
 
 ## Reporting
 
@@ -289,8 +316,9 @@ which need no sweep pair.
   the existing points already did.
 - `sr_settings` is emitted **per row** here, because the arms sweep differently. A
   top-level list still works when every row wants the same grid.
-- The `custom` arm's collection publishes to `databases/community_panel/` in the exact
-  layout a `path:` entry expects, so a second run can consume it pre-built.
+- The `custom` arm's collection publishes to `databases/community_panel/` in the layout a
+  `path:` entry expects, except for the MAPseq database the nested run built for it. Add a
+  `community_panel_ssu.sr_refs_amplicons/` beside its FASTA before consuming it pre-built.
 - **`naive` is not a straw man.** It is what a benchmark that skips the training step
   does, so the honest reading of any sweep result is the gap between its `trained` and
   `naive` rows, not the `trained` row alone.

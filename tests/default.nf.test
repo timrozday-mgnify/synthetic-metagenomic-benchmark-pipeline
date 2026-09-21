@@ -99,6 +99,25 @@ nextflow_pipeline {
         }
     }
 
+    test("a pre-built sr_amplicon database without its MAPseq database is refused - stub") {
+        tag "stub"
+        options "-stub"
+        when {
+            params {
+                input  = "${projectDir}/tests/samplesheets/sr_prebuilt_no_mapseq_db.yaml"
+                outdir = "$outputDir"
+            }
+        }
+        then {
+            assertAll(
+                { assert workflow.failed },
+                { assert workflow.trace.tasks().every { !it.name.contains("SUPERRESOLUTION") } },
+                { assert workflow.stdout.any { it.contains("SILVA_138.1_SSURef_tax_silva_amplicons") }
+                         || workflow.errorReport.contains("SILVA_138.1_SSURef_tax_silva_amplicons") }
+            )
+        }
+    }
+
     test("superresolution profiling - stub") {
         tag "stub"
         options "-stub"
@@ -126,6 +145,11 @@ nextflow_pipeline {
                 // S5's pre-built dir uses SILVA's own filenames, not `<name>_ssu.sr_refs.*`:
                 // resolving it at all is what the loose glob fallback buys.
                 { assert path("${params.outdir}/S5/S5.sr_profile.tsv").exists() },
+
+                // A reference set built here ('self') has its MAPseq database built by the
+                // nested run; a pre-built one brings its own and is never rebuilt.
+                { assert path("${params.outdir}/S2/profiling/sr/S2.nested_args.txt").text.contains("--build_mapseq_db") },
+                { assert !path("${params.outdir}/S5/profiling/sr/S5.nested_args.txt").text.contains("--build_mapseq_db") },
 
                 // Raw composition CSV kept under profiling/sr/.
                 { assert path("${params.outdir}/S1/profiling/sr/S1.inferred_composition.csv").exists() },
