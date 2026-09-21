@@ -39,6 +39,14 @@ def srPrimerArgs(meta) {
     pair ? "--fwd_primer ${pair[1]} --rev_primer ${pair[2]}" : ''
 }
 
+// One amplicon cache for every nested amplicon run: each has its own work dir, so without
+// it every matrix and inference run re-extracts the reference set and re-clusters it for
+// mapseq (tens of minutes at SILVA scale). The nested pipeline keys it by reference set,
+// primers and code. Lives beside the nested work dirs; `rm -rf <workDir>/nested` clears it.
+def srCacheArgs(meta) {
+    meta.profiler == 'sr_amplicon' ? "--amplicon_cache '${workflow.workDir}/nested/sr/amplicon_cache'" : ''
+}
+
 // Nested command-line flags composed by the PROFILE subworkflow and carried on `meta`.
 //
 // They are on `meta` rather than read from `params` here for one reason: Nextflow hashes
@@ -165,7 +173,7 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     def extraCfg = (meta.sr_configs ?: []).collect { "-c ${file(it, checkIfExists: true)}" }.join(' ')
     def nestedDir = "${workflow.workDir}/nested/sr/${meta.id.replaceAll(/[^A-Za-z0-9._-]+/, '_')}${meta.matrix_key ?: ''}"
     def nestedArgs = [profArg, '--input sr_samplesheet.yml', '--outdir sr_out', extraCfg,
-                      srPrimerArgs(meta), srNestedArgs(meta, 'matrix_args'),
+                      srPrimerArgs(meta), srCacheArgs(meta), srNestedArgs(meta, 'matrix_args'),
                       "-w '${nestedDir}/work'", '-resume']
         .findAll { it }
         .join(' ')
@@ -352,7 +360,7 @@ process RUN_SUPERRESOLUTION {
     def nestedArgs = [prof_arg, '--input sr_samplesheet.yml', '--outdir sr_out', extra_cfg,
                       // [] for a panel batch, which measures its own kernel.
                       mismapping_matrix ? "--mismapping_matrix ${mismapping_matrix}" : '',
-                      presenceArg, srPrimerArgs(meta),
+                      presenceArg, srPrimerArgs(meta), srCacheArgs(meta),
                       "-w '${nestedDir}/work'", '-resume']
         .findAll { it }
         .join(' ')
