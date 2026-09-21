@@ -14,7 +14,7 @@ databases:
   # is valid for SR as supplied.
   silva_aap:
     path: /Users/timrozday/Downloads/silva-ssu-138.1/138.1
-    rfam_covariance_model: /Users/timrozday/Documents/Pipelines/assembly-analysis-pipeline/tests/reference_databases/rfam/ribo.cm
+    rfam_covariance_model: /Users/timrozday/Documents/Pipelines/assembly-analysis-pipeline/tests/reference_databases/rfam   # a DIRECTORY of *.cm (AAP globs it)
     rfam_claninfo: /Users/timrozday/Documents/Pipelines/assembly-analysis-pipeline/tests/reference_databases/rfam/ribo.clan_info
   # The panel every SR arm reinterprets the SILVA labels through: all 22 genomes,
   # including the 6 absent from the sample.
