@@ -12,10 +12,10 @@ Status: plan, revised 2026-09-21. It was first written 2026-09-17 and now absorb
 | R (reconcile) | done (#18) |
 | F (full-length MAPseq database) | done (#19) |
 | P.4 (`--panel_kernel`) | done (#20) |
-| P.5 (panel-only inference) | done on upstream `panel-only-inference` (`42067aa`) |
-| P.6 (delete square-only code) | done on upstream `panel-only-inference` (`f18b1d7`) |
-| P.7 (tests, parity) | done (upstream `b0f6d1e`); test at >= 10k reads |
-| P.8 (benchmark contract) | done on `panel-only-contract` (`7e352a2`, `e6d5a13`); needs the upstream push + `sr_revision` pins |
+| P.5 (panel-only inference) | done (#21) |
+| P.6 (delete square-only code) | done (#21) |
+| P.7 (tests, parity) | done (#21); test at >= 10k reads |
+| P.8 (benchmark contract) | done on `panel-only-contract` (#38); upstream #21 merged (`e29bf69`) |
 | everything else | not done |
 
 Order: R → F → P.4–P.8 → 1 → 2 → 3 → 4 → 5. See Decision 7.
@@ -582,9 +582,8 @@ extraction across two runs.
     - The SILVA sweep kept `custom`, `silva_panel` and `aap`, and its grid now fans over
       `silva_panel`. Folding into the panel sweep would have meant porting the `aap` and
       error-model arms.
-    - The three SR examples pin upstream `b0f6d1e5ff6d9b0646b441ca443cacdf07f23296`
-      (`panel-only-inference`). That only resolves once the branch is pushed; move the
-      pins to the merge commit after the upstream PR lands.
+    - The three SR examples pin upstream `e29bf693e5952c8584d26497f7c202227cb78d52`,
+      #21's merge commit on `main`.
     - Not run: the benchmark e2e, which pulls the nested pipeline from GitHub.
 
 **Acceptance (P):**
