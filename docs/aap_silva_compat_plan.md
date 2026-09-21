@@ -21,6 +21,7 @@ Status: plan, revised 2026-09-21. It was first written 2026-09-17 and now absorb
 | 2.2 (merged-read model) | done without `Position`, upstream #24 (stacked on #23), not merged |
 | 2.3 (`pairs`) | done without `raw_reads:`, upstream #25 (stacked on #24), not merged |
 | Phase 2 acceptance | deferred, to be run later |
+| 3 (align for merged reads) | done except the 3.1 test, upstream #26 (stacked on #25), not merged; acceptance deferred |
 | everything else | not done |
 
 Order: R → F → P.4–P.8 → 1 → 2 → 3 → 4 → 5. See Decision 7.
@@ -797,8 +798,25 @@ not exist), and the Phase 4 truth sample. Until it runs, `merged` is unvalidated
 - **3.5 `--infer_distance_decay`** fits `c_sub` only; `c_indel` stays at its built value.
   Document it.
 
-**Acceptance:** on the Phase 2 panel, align (tau 1, merged-read `auto` decay, indel decay)
-against simulate `merged`:
+As built (upstream #26):
+- **3.1:** only the README note was added. The test that `auto` on the 2.2 model lands within
+  2× of 0.2's rate needs a trained merged-read model. It is deferred with Phase 2's
+  acceptance.
+- **3.2:** `--align_indel_decay` (`--indel-decay`), null by default, which keeps the old
+  kernel.
+  - The sub/indel split comes from one optimal Edlib path (`kernel_align.indel_count`). Where
+    paths tie, Edlib's pick decides the split.
+  - `auto` measures the indel rate over 2,000 reads (10× the substitution sample), because
+    indels are ~100× rarer. With the split, `--align_distance_decay auto` measures
+    substitutions only.
+- **3.5:** with the split, the stored strata are the substitution count, so `DecayKernel`
+  refits `c_sub` unchanged and `c_indel` stays baked into the weights. It needed no
+  inference change.
+- **3.4:** `main.nf` refuses `align` on a `merged: true` row with `merge_rate < 0.8`.
+
+**Acceptance** (*deferred 2026-09-21 with Phase 2's: it needs the same trained merged-read
+model and the Nov2025 batch*): on the Phase 2 panel, align (tau 1, merged-read `auto` decay,
+indel decay) against simulate `merged`:
 - mean row L1 of `K` ≤ 0.08;
 - panel-entry TV ≤ 0.02 on every sample.
 
