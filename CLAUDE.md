@@ -174,6 +174,12 @@ null => bundled set. It's global (not per-sample) and passed as an absolute host
   for the matrix, the reference set + an order-independent digest of the batch's sample ids
   for SR inference, and DB name + the same digest for AAP. These dirs persist deliberately — `nextflow clean`
   won't touch them; `rm -rf <workDir>/nested` forces nested runs from scratch.
+  Separate work dirs mean `-resume` cannot share work *between* nested runs, so every
+  `sr_amplicon` launch also gets `--amplicon_cache <workDir>/nested/sr/amplicon_cache`
+  (`srCacheArgs`): the nested pipeline's storeDir for the in-silico PCR and the mapseq
+  `.mscluster`, keyed by reference set + primers + code. Without it each matrix and
+  inference run re-clusters SILVA. The nested pipeline also skips the clustering outright
+  when nothing maps with mapseq (align-mode M and every row supplying `mseq:`).
 - **Stub tests run on the host** (no `--profile`, so no container engine); stub
   blocks must use only coreutils (no tool calls). Real/e2e tests use
   `--profile docker` + `--tag e2e`; stub selection is `--tag stub`.

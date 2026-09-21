@@ -1,7 +1,5 @@
-// Cluster a mapseq reference FASTA against itself so mapseq builds & caches its
-// clustering file (<fasta>.mscluster). We only keep that side-effect; the search
-// results printed to stdout are discarded. Mirrors build_profiling_dbs.py's
-// `mapseq db.fasta db.fasta db.tax` self-search.
+// Have mapseq build & cache a reference FASTA's clustering file (<fasta>.mscluster).
+// We only keep that side-effect; the search results printed to stdout are discarded.
 process MAPSEQ_CLUSTER {
     tag "$meta.id"
     label 'process_medium'
@@ -23,7 +21,10 @@ process MAPSEQ_CLUSTER {
     script:
     def args = task.ext.args ?: ''
     """
-    mapseq ${fasta} ${fasta} ${tax} -nthreads ${task.cpus} $args > /dev/null
+    # mapseq clusters the whole reference set whatever the query, so a one-record query
+    # builds the same .mscluster without the self-search (~15% of the run on SILVA NR99).
+    awk '/^>/ { n++ } n <= 1' ${fasta} > probe.fasta
+    mapseq probe.fasta ${fasta} ${tax} -nthreads ${task.cpus} $args > /dev/null
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
