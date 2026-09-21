@@ -12,8 +12,8 @@
 #   S4 - as S3, sharing srA's reference set: two samples behind ONE mismapping
 #        matrix, which is what keeps the fan-out (combine, not join) honest.
 databases:
-  silvaLoose:
-    path: tests/data/prebuilt_db/silvaLoose   # SILVA-shaped filenames, not the convention
+  silvaAap:
+    path: tests/data/prebuilt_db/silvaAap     # AAP's layout: SILVA-SSU.fasta, -tax.txt, .mscluster
   srA:
     sequences:
       - id: genomeA
@@ -84,4 +84,4 @@ samples:
     mode: amplicon
     read_length_mean: 200
     profilers: [sr_amplicon]
-    database: silvaLoose
+    database: silvaAap

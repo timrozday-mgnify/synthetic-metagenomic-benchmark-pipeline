@@ -29,7 +29,12 @@ COLUMNS = ["sample", "depth", "method", "tv", "max_abs_error", "worst_genome",
 def read_shares(path, column):
     with open(path, newline="") as fh:
         reader = csv.DictReader(fh, delimiter="\t" if path.suffix == ".tsv" else ",")
-        return {row["genome_id"]: float(row[column]) for row in reader}
+        shares = {row["genome_id"]: float(row[column]) for row in reader}
+    # The profile is over genomes; the unexplained share sits in its sidecar.
+    sidecar = path.with_name(path.name.replace(".sr_profile.tsv", ".sr_background.tsv"))
+    if sidecar != path and sidecar.exists():
+        shares["background"] = float(sidecar.read_text().split()[1])
+    return shares
 
 
 def scores(pred, truth, pair):

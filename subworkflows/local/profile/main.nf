@@ -42,25 +42,11 @@ def srOpt(meta, kind, name) {
 // unchanged. Settings differing only in the inference knobs keep the same key on purpose
 // — they share the expensive matrix and split later, at the inference batch.
 // A `panel:` entry is a set of its own: its kernel runs from that panel's amplicons to the
-// row's database labels, and is not the row's square matrix.
+// row's database labels, not from the whole database's.
 def srSetKey(meta, base) {
     def mode = meta.sr_setting ? srMatrixKey(meta) : ''
     def panel = meta.sr_opts?.panel ? ":panel=${meta.sr_opts.panel}" : ''
     "${base}:${meta.profiler}${meta.primer ? ':' + meta.primer : ''}${mode}${panel}".toString()
-}
-
-// superresolution-amplicon maps against a MAPseq database (extracted amplicons + their
-// .mscluster) and builds one only under --build_mapseq_db. A pre-built reference FASTA
-// carries its database beside it as `<stem>_amplicons/`, the name the nested run looks
-// for; a reference set this pipeline builds ('self', a collection) has none, so the
-// nested run builds it. On `meta`, like every nested flag, so it is hashed.
-// Beside the FASTA's real path: RUN_SUPERRESOLUTION hands the nested run `realpath refs`.
-def srPrebuiltMapseqDb(refs) {
-    def real = refs.toRealPath()
-    real.parent.resolve(real.name.replaceFirst(/\.(fa|fasta|fna)(\.gz)?$/, '') + '_amplicons')
-}
-def srBuildDb(meta, build) {
-    meta.profiler == 'sr_amplicon' ? meta + [ sr_build_db: build ] : meta
 }
 
 // Nested superresolution command-line flags, composed here and stamped onto `meta` so
@@ -68,15 +54,15 @@ def srBuildDb(meta, build) {
 // instead would leave the task hash unchanged when a setting changes, and `-resume`
 // would hand a sweep the previous setting's result. See srNestedArgs in the module.
 
-// Mis-mapping *mode*, for the matrix build only: the per-sample inference runs get the
-// finished matrix through --mismapping_matrix and never build one. The named params
-// cover superresolution-amplicon's mode and decay knobs; sr_<kind>_matrix_args is the
-// escape hatch for the rest, and for the shotgun sibling, whose knobs differ.
+// Mis-mapping *mode*, for the kernel (matrix) build only: the per-sample inference runs
+// get the finished kernel through --panel_kernel (--mismapping_matrix for the shotgun
+// sibling) and never build one. The named params cover superresolution-amplicon's mode
+// and decay knobs; sr_<kind>_matrix_args is the escape hatch for the rest, and for the
+// shotgun sibling, whose knobs differ.
 def srMatrixArgs(meta) {
     def kind = meta.profiler == 'sr_amplicon' ? 'amplicon' : 'shotgun'
     def named = (kind == 'amplicon')
-        ? ['mismapping_method', 'align_backend', 'align_tau', 'align_distance_decay',
-           'align_decay_model']
+        ? ['mismapping_method', 'align_tau', 'align_distance_decay', 'align_decay_model']
         : []
     srArgs(meta, kind, named, 'matrix_args')
 }
@@ -91,29 +77,24 @@ def srInferenceArgs(meta) {
     def args = srArgs(meta, kind, named, 'inference_args')
     // superresolution-amplicon refuses --infer_distance_decay unless its own
     // --mismapping_method/--align_tau say align at tau >= 1, and it checks those params
-    // even when handed a finished --mismapping_matrix. Repeat the matrix's mode flags
-    // (all of them, so align_backend stays consistent with align_tau) or the inference
-    // run sees the nested defaults (simulate, tau 0) and errors.
+    // even when handed a finished --panel_kernel. Repeat the kernel's mode flags or the
+    // inference run sees the nested defaults (simulate, tau 0) and errors.
     def decay = srOpt(meta, kind, 'infer_distance_decay')
     (kind == 'amplicon' && decay != null && decay.toString() != 'false')
         ? [srMatrixArgs(meta), args].findAll { it }.join(' ')
         : args
 }
 
-// The row database's MAPseq taxonomy (meta.taxonomy, when it has one). The nested run only
-// uses it for the `lca` column, so it rides with the inference flags; the matrix needs none.
-def srTaxonomyArg(meta) {
-    meta.taxonomy ? "--taxonomy ${meta.taxonomy}" : ''
-}
-
-// Panel reinterpretation (a `panel:` entry). superresolution-amplicon measures the panel
-// kernel inside the inference run and refuses a supplied --mismapping_matrix, so that run
-// takes the matrix flags too, plus the panel's reference FASTA and/or taxon entries
-// (meta.panel_refs / meta.panel_taxa, resolved from the named collection below).
+// The panel a superresolution-amplicon run infers over (a `panel:` entry): the panel's
+// reference FASTA and/or taxon entries (meta.panel_refs / meta.panel_taxa, resolved from
+// the named collection below), resolved against the row database's taxonomy. None of
+// them => the whole-database panel. The kernel build and every inference run over it get
+// the same flags: --panel_kernel refuses a kernel whose panel or database differs, and
+// compares them as the absolute paths given here.
 def srPanelArgs(meta) {
-    [srMatrixArgs(meta), srInferenceArgs(meta),
-     meta.panel_refs ? "--panel_references ${meta.panel_refs}" : '',
-     meta.panel_taxa ? "--panel_taxa ${meta.panel_taxa}" : '']
+    [meta.panel_refs ? "--panel_references ${meta.panel_refs}" : '',
+     meta.panel_taxa ? "--panel_taxa ${meta.panel_taxa}" : '',
+     meta.taxonomy ? "--taxonomy ${meta.taxonomy}" : '']
         .findAll { it }.join(' ')
 }
 
@@ -148,7 +129,7 @@ workflow PROFILE {
     ch_aux           // [ id, genomes_csv, [ fasta ] ]       (empty in profile-only step)
     ch_sylph_dbs     // [ name, syldb ]                      built/prebuilt sylph DBs by name
     ch_mapseq_dbs    // [ name, fasta, tax, otu, mscluster ] built/prebuilt mapseq DBs by name
-    ch_sr_dbs        // [ "<name>:<genome|ssu>", refs_fasta|[], tax|[], panel_taxa|[], prebuilt ] built/prebuilt superresolution refs
+    ch_sr_dbs        // [ "<name>:<genome|ssu>", refs_fasta|[], tax|[], panel_taxa|[] ] built/prebuilt superresolution refs
     builtNames       // [ profiler: Set of collection names resolved for it ]
 
     main:
@@ -332,9 +313,8 @@ workflow PROFILE {
         .join(SR_BUILD_REFS.out.refs.map { meta, refs -> [ "${meta.id}:${meta.profiler}".toString(), refs ] }, by: 0)
         // A self reference set belongs to the source sample, so all of its
         // subsampling depths reuse one matrix while distinct samples remain isolated.
-        // It is built here, so the nested amplicon run builds its MAPseq database too.
         .map { key, meta, reads, refs ->
-            [ srSetKey(meta, "self:${meta.sample ?: meta.id}"), srBuildDb(meta, true), reads, refs ] }
+            [ srSetKey(meta, "self:${meta.sample ?: meta.id}"), meta, reads, refs ] }
 
     // Named collection: join by "<name>:<source>", the key BUILD_DATABASES emits.
     ch_sr_built_in = ch_sr.built
@@ -342,24 +322,13 @@ workflow PROFILE {
         .combine(ch_sr_dbs, by: 0)
         // Named collections are reference sets shared by every matching sample. Its
         // taxonomy goes as an absolute path string, like panel_refs below.
-        .map { key, meta, reads, refs, tax, taxa, prebuilt ->
+        // The reference FASTA is the MAPseq database: the nested run maps against it,
+        // with the .mscluster beside it when there is one.
+        .map { key, meta, reads, refs, tax, taxa ->
             if (!refs) {
                 error "Sample ${meta.id}: database '${meta.database}' has only taxon panel entries and no references; name it with an sr_settings 'panel:' instead"
             }
-            // A `path:` reference set brings its own MAPseq database and is never rebuilt:
-            // the nested amplicon run finds it beside the FASTA. Checked here so a missing
-            // one fails before any nested pipeline is pulled.
-            if (prebuilt && meta.profiler == 'sr_amplicon') {
-                def db = srPrebuiltMapseqDb(refs)
-                if (!db.isDirectory()) {
-                    error "Sample ${meta.id}: database '${meta.database}' is pre-built, so its MAPseq " +
-                          "database must be too: expected ${db}/ holding amplicons.fasta, " +
-                          "amplicons.tax, amplicons.fasta.mscluster, translation_table.tsv and " +
-                          "refseq_index.csv (superresolution-amplicon README, 'Prebuilt MAPseq database')"
-                }
-            }
-            [ srSetKey(meta, meta.database),
-              srBuildDb(meta, !prebuilt) + (tax ? [ taxonomy: tax.toString() ] : [:]), reads, refs ]
+            [ srSetKey(meta, meta.database), meta + (tax ? [ taxonomy: tax.toString() ] : [:]), reads, refs ]
         }
 
     ch_sr_all = ch_sr_self_in.mix(ch_sr_built_in)
@@ -380,7 +349,7 @@ workflow PROFILE {
             [ "${panel}:ssu".toString(), referenceSet, meta, reads, refs ]
         }
         .combine(ch_sr_dbs, by: 0)
-        .map { key, referenceSet, meta, reads, refs, panelRefs, panelTax, panelTaxa, panelPrebuilt ->
+        .map { key, referenceSet, meta, reads, refs, panelRefs, panelTax, panelTaxa ->
             if (panelTaxa && !meta.taxonomy) {
                 error "sr_settings '${meta.sr_setting}' (sample ${meta.id}): panel '${meta.sr_opts.panel}' has taxon entries, " +
                       "but database '${meta.database}' has no taxonomy to resolve them against (give every sequence a 'taxonomy:', or a prebuilt .sr_refs.tax)"
@@ -410,18 +379,19 @@ workflow PROFILE {
     // Stamp the set onto every meta: it names the batch's nested work dir and tag, and
     // without it two flavours of the same single sample would collide there.
     ch_sr_rows = ch_sr_runs.map { referenceSet, meta, reads, refs ->
+        // The shotgun sibling takes no panel; its row database's taxonomy (for the `lca`
+        // column) rides with the inference flags alone.
+        def panel = meta.profiler == 'sr_amplicon' ? srPanelArgs(meta)
+                  : (meta.taxonomy ? "--taxonomy ${meta.taxonomy}" : '')
         [ referenceSet, meta + [ reference_set: referenceSet,
-                                 inference_args: [ meta.sr_opts?.panel ? srPanelArgs(meta) : srInferenceArgs(meta),
-                                                   srTaxonomyArg(meta) ].findAll { it }.join(' ') ],
+                                 inference_args: [ srInferenceArgs(meta), panel ].findAll { it }.join(' ') ],
           reads, refs ]
     }
 
-    // Materialise exactly one matrix per reference set. The nested pipelines need a
-    // sample-shaped input to build the simulation matrix, so select one representative
-    // run; all subsequent sample runs reuse its matrix through --mismapping_matrix.
-    // Panel sets have none to build: their inference run measures the kernel.
+    // Materialise exactly one kernel (shotgun: matrix) per reference set. The nested
+    // pipelines need a sample-shaped input to build it, so select one representative run;
+    // all subsequent sample runs reuse it through --panel_kernel (--mismapping_matrix).
     ch_sr_mismapping_in = ch_sr_rows
-        .filter { referenceSet, meta, reads, refs -> !meta.sr_opts?.panel }
         .groupTuple(by: 0)
         .map { referenceSet, metas, readsList, refsList ->
             def rows = [metas, readsList, refsList].transpose().sort { a, b -> a[0].id <=> b[0].id }
@@ -432,7 +402,9 @@ workflow PROFILE {
                 id: "mismapping_${referenceSet.replaceAll(/[^A-Za-z0-9._-]+/, '_')}",
                 reference_set: referenceSet,
                 reference_set_dir: referenceSet.replaceAll(/[^A-Za-z0-9._-]+/, '_'),
-                matrix_args: srMatrixArgs(meta),
+                matrix_args: [ srMatrixArgs(meta),
+                               meta.profiler == 'sr_amplicon' ? srPanelArgs(meta) : '' ]
+                                 .findAll { it }.join(' '),
                 matrix_key: srMatrixKey(meta),
             ]
             [ representative, (reads instanceof List ? reads : [reads])*.toString(), refs ]
@@ -473,13 +445,8 @@ workflow PROFILE {
             }
             [ referenceSet, rows*.getAt(0), layout, rows[0][2] ]
         }
-    // A panel batch measures its own kernel, so it takes no matrix ([] = no file).
     ch_sr_batches_matrix = ch_sr_batches
-        .filter { referenceSet, metas, layout, refs -> !metas[0].sr_opts?.panel }
         .combine(BUILD_SUPERRESOLUTION_MISMAPPING.out.mismapping.map { meta, matrix -> [ meta.reference_set, matrix ] }, by: 0)
-        .mix(ch_sr_batches
-            .filter { referenceSet, metas, layout, refs -> metas[0].sr_opts?.panel }
-            .map { referenceSet, metas, layout, refs -> [ referenceSet, metas, layout, refs, [] ] })
 
     RUN_SUPERRESOLUTION(
         ch_sr_batches_matrix

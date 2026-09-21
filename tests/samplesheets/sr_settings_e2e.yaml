@@ -25,12 +25,10 @@ samples:
     sr_settings:
       - name: align.p01
         mismapping_method: align
-        align_backend: exact-hash
         align_tau: 0
         infer_presence_prior: 0.01
       - name: align.p001
         mismapping_method: align
-        align_backend: exact-hash
         align_tau: 0
         infer_presence_prior: 0.001
       - name: sim.p01
