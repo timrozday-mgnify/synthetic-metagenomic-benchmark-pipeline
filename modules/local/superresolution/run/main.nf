@@ -61,24 +61,38 @@ def srNestedArgs(meta, key) {
 }
 
 // Shell lines that write the nested multi-sample YAML samplesheet, one row per batched
-// sample. layout row: [ id, platform, [read paths], mseq, error_model ]. A non-empty mseq is a
+// sample. layout row: [ id, platform, [read paths], mseq, error_model, merged, merge_rate ].
+// A non-empty mseq is a
 // precomputed mapseq classification of those reads against this reference set — the
 // nested amplicon pipeline then skips its own read mapping, which is the expensive stage
 // and the whole point of a settings sweep over the cheap ones. A non-empty error_model is
 // a pre-trained skiver model.pt that the nested run simulates with instead of training
-// its own (read only under --sim_error_model trained). `references` must be
+// its own (read only under --sim_error_model trained). merged/merge_rate mark AAP's
+// fastp-merged reads (sr_amplicon aap_reads): never merged again, never primer-trimmed.
+// `references` must be
 // absolute (the nested pipeline resolves relative paths against its own projectDir) and
 // is shared by the whole reference set, so it comes from the \$refs_abs the caller sets.
 // At file scope because the stub writes the same sheet as the real script, and the two
 // blocks share no locals.
+// The same merged/merge_rate lines for the kernel build's single representative row,
+// which the nested run checks exactly like an inference row.
+def srMergedCmds(meta) {
+    if (!meta.merged) return 'true'
+    ["printf '  merged: true\\n' >> sr_samplesheet.yml",
+     meta.merge_rate != null ? "printf '  merge_rate: %s\\n' '${meta.merge_rate.round(4)}' >> sr_samplesheet.yml" : '']
+        .findAll { it }.join('\n    ')
+}
+
 def srSheetCmds(layout) {
-    layout.collect { id, platform, reads, mseq, errorModel ->
+    layout.collect { id, platform, reads, mseq, errorModel, merged, mergeRate ->
         ([ "printf -- '- id: %s\\n' '${id}' >> sr_samplesheet.yml",
            "printf '  reads:\\n' >> sr_samplesheet.yml" ] +
          reads.collect { "printf '    - %s\\n' '${it}' >> sr_samplesheet.yml" } +
          (platform ? [ "printf '  platform: %s\\n' '${platform}' >> sr_samplesheet.yml" ] : []) +
          (mseq ? [ "printf '  mseq: %s\\n' '${mseq}' >> sr_samplesheet.yml" ] : []) +
          (errorModel ? [ "printf '  error_model: %s\\n' '${errorModel}' >> sr_samplesheet.yml" ] : []) +
+         (merged ? [ "printf '  merged: true\\n' >> sr_samplesheet.yml" ] : []) +
+         (mergeRate ? [ "printf '  merge_rate: %s\\n' '${mergeRate}' >> sr_samplesheet.yml" ] : []) +
          [ "printf '  references: %s\\n' \"\$refs_abs\" >> sr_samplesheet.yml" ]).join('\n    ')
     }.join('\n    ')
 }
@@ -184,6 +198,7 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     // maps its reads to produce it. A supplied classification skips that; sr_amplicon only.
     def mseqPath = (meta.profiler == 'sr_amplicon' ? meta.mseq : null) ?: ''
     def mseq = mseqPath ? "printf '  mseq: %s\\n' '${mseqPath}' >> sr_samplesheet.yml" : 'true'
+    def merged = srMergedCmds(meta)
     def reads = (read_paths instanceof List ? read_paths : [read_paths]).collect { it.toString() }
     assert reads.every { it } : "BUILD_SUPERRESOLUTION_MISMAPPING: empty read path for ${meta.reference_set}"
     def readCmds = reads.collect { "printf '    - %s\\n' '${it}' >> sr_samplesheet.yml" }.join('\n    ')
@@ -193,6 +208,7 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     ${readCmds}
     ${platform}
     ${mseq}
+    ${merged}
     printf '  references: %s\\n' "\$(realpath ${refs})" >> sr_samplesheet.yml
 
     if [ '${remoteRepo}' = 'true' ]; then
@@ -319,7 +335,7 @@ process RUN_SUPERRESOLUTION {
     input:
     // One batch per reference set — the nested samplesheet is a multi-row YAML list, and
     // everything the command line fixes (matrix, primer pair, repo, presence params) is
-    // constant across the set. layout is one [id, platform, [read paths], mseq] per sample.
+    // constant across the set. layout is one row per sample, as srSheetCmds reads it.
     // Reads are NOT staged: they're passed as absolute host paths (val), matching
     // RUN_AAP — this process is executor 'local' so the nested run reads them
     // directly, and the superresolution main.nf resolves relative paths against its

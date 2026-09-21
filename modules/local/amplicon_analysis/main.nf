@@ -106,10 +106,14 @@ process RUN_AAP {
     """
 
     stub:
-    // Mirror AAP's per-sample namespacing (aap_out/<id>/...) for every batched sample.
+    // Mirror AAP's per-sample namespacing (aap_out/<id>/...) for every batched sample,
+    // with the merged reads, fastp report and .mseq that sr_amplicon aap_reads picks up.
     def stub_cmds = metas.collect { m ->
-        "mkdir -p aap_out/${m.id}/taxonomy-summary && touch aap_out/${m.id}/taxonomy-summary/${m.id}.krona.txt"
-    }.join('\n    ')
+        def label = m.database ?: 'community'
+        ["mkdir -p aap_out/${m.id}/taxonomy-summary/${label} aap_out/${m.id}/qc",
+         "touch aap_out/${m.id}/taxonomy-summary/${m.id}.krona.txt aap_out/${m.id}/qc/${m.id}.merged.fastq.gz aap_out/${m.id}/taxonomy-summary/${label}/${m.id}.mseq.gz",
+         "printf '{\"read1_before_filtering\": {\"total_reads\": 100}, \"merged_and_filtered\": {\"total_reads\": 95}}\\n' > aap_out/${m.id}/qc/${m.id}.fastp.json"]
+    }.flatten().join('\n    ')
     """
     ${stub_cmds}
 

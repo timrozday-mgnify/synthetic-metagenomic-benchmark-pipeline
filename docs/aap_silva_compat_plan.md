@@ -22,7 +22,8 @@ Status: plan, revised 2026-09-21. It was first written 2026-09-17 and now absorb
 | 2.3 (`pairs`) | done without `raw_reads:`, upstream #25 |
 | Phase 2 acceptance | deferred, to be run later |
 | 3 (align for merged reads) | done except the 3.1 test, upstream #26; acceptance deferred |
-| 2.2–3 on upstream `main` | #24–#26 were merged into their stacked base branches, not `main`; upstream #27 (`align-merged` → `main`) lands them, not merged |
+| 2.2–3 on upstream `main` | #24–#26 were merged into their stacked base branches, not `main`; upstream #27 landed them (`941db22`) |
+| 4.2 (sr_amplicon reads RUN_AAP's output) | done on `aap-phase1-plan`, stub-tested; the worked example is left for 4.1 |
 | everything else | not done |
 
 Order: R → F → P.4–P.8 → 1 → 2 → 3 → 4 → 5. See Decision 7.
@@ -833,6 +834,18 @@ indel decay) against simulate `merged`:
   - The DB is a `databases:` `path:` entry pointing at the unpacked AAP SILVA directory,
     unmodified.
   - Worked example: `examples/sr_amplicon_aap/`.
+  - As built: an `sr_settings` knob, `aap_reads: true` (param `sr_amplicon_aap_reads`),
+    so the arms that read AAP's output (2–4) and the raw-read arm (5) can run in one run.
+    - PROFILE waits for the row's RUN_AAP and swaps in `qc/<id>.merged.fastq.gz`,
+      `merge_rate` from `qc/<id>.fastp.json`, and `taxonomy-summary/<database>/<id>.mseq.gz`
+      when there is exactly one. This happens before the kernel build, so a trained
+      model's representative trains on the merged reads too.
+    - The entry adds `--trim_primers false` as a matrix flag. Under a fan-out that gives
+      it its own kernel, apart from arm 5's.
+    - `main.nf` refuses `aap_reads` on a row that doesn't also run `aap`.
+    - A `path:` mapseq DB now also finds AAP's `SILVA-SSU-tax.txt`. The benchmark's aap
+      branch still needs an `.otu` beside it, which AAP's directory ships.
+    - `examples/sr_amplicon_aap/` waits for 4.1: it needs the truth sample.
 - **4.3 Score** panel-entry (genome and species) TV to truth, one arm each:
   1. raw AAP labels;
   2. simulate `merged`;

@@ -64,7 +64,21 @@ def srMatrixArgs(meta) {
     def named = (kind == 'amplicon')
         ? ['mismapping_method', 'align_tau', 'align_distance_decay', 'align_decay_model']
         : []
-    srArgs(meta, kind, named, 'matrix_args')
+    [srArgs(meta, kind, named, 'matrix_args'), srAapArgs(meta)].findAll { it }.join(' ')
+}
+
+// Whether this sr_amplicon entry profiles its row's AAP output (merged reads + .mseq)
+// instead of the raw reads. See the swap before the superresolution branch below.
+def srAapReads(meta) {
+    meta.profiler == 'sr_amplicon' && srOpt(meta, 'amplicon', 'aap_reads')?.toString() == 'true'
+}
+
+// AAP's merged reads keep their primers (its OTU path never trims them), and the nested
+// run refuses a `merged: true` row unless the simulated reads are left untrimmed too.
+// A matrix flag, so it also keys the reference set under an sr_settings fan-out: a raw
+// arm and an AAP arm off one panel need different kernels.
+def srAapArgs(meta) {
+    srAapReads(meta) ? '--trim_primers false' : ''
 }
 
 // Presence/absence gate and the latent distance decay, for the inference runs. The decay
@@ -82,7 +96,7 @@ def srInferenceArgs(meta) {
     def decay = srOpt(meta, kind, 'infer_distance_decay')
     (kind == 'amplicon' && decay != null && decay.toString() != 'false')
         ? [srMatrixArgs(meta), args].findAll { it }.join(' ')
-        : args
+        : [srAapArgs(meta), args].findAll { it }.join(' ')
 }
 
 // The panel a superresolution-amplicon run infers over (a `panel:` entry): the panel's
@@ -275,13 +289,54 @@ workflow PROFILE {
             metas.collect { m -> [ m, fl.findAll { it.toString().contains("/aap_out/${m.id}/") } ] }
         }
 
+    // What an `aap_reads` superresolution entry reads instead of its raw reads, per AAP
+    // sample id: fastp's merged reads, the fraction of pairs merged (the nested run refuses
+    // align below 0.8), and AAP's MAPseq classification against the row database, which
+    // the nested run reuses instead of mapping again. The .mseq is optional there, so a
+    // missing one only costs the mapping; missing merged reads (single-end, or the sample
+    // failed AAP's QC) leave nothing to profile.
+    ch_aap_reads = ch_aap_out.map { m, files ->
+        def dir = "/aap_out/${m.id}/"
+        def merged = files.find { it.toString().endsWith("${dir}qc/${m.id}.merged.fastq.gz") }
+        if (!merged) {
+            error "Sample ${m.id}: AAP wrote no qc/${m.id}.merged.fastq.gz for sr_amplicon aap_reads (single-end reads, or the sample failed AAP QC)"
+        }
+        def json = files.find { it.toString().endsWith("${dir}qc/${m.id}.fastp.json") }
+        def rate = null
+        if (json) {
+            def fp = new groovy.json.JsonSlurper().parseText(json.text)
+            def pairs = fp.read1_before_filtering.total_reads as double
+            rate = pairs ? fp.merged_and_filtered.total_reads / pairs : 0.0
+        }
+        def mseq = files.findAll { it.toString().contains("${dir}taxonomy-summary/${m.database}/") && it.name.endsWith('.mseq.gz') }
+        [ m.id, merged.toString(), rate, mseq.size() == 1 ? mseq[0].toString() : null ]
+    }
+
+    // Swap them in before anything reads `reads`: the kernel's representative trains its
+    // error model (--sim_error_model trained) on these reads too. Keyed by the run id the
+    // AAP entry carries, i.e. this entry's id without its sr_settings suffix.
+    ch_by_prof.sr
+        .branch { meta, reads ->
+            aap: srAapReads(meta)
+            raw: true
+        }
+        .set { ch_sr_src }
+    ch_sr_aap = ch_sr_src.aap
+        .map { meta, reads ->
+            [ meta.sr_setting ? meta.id.substring(0, meta.id.size() - meta.sr_setting.size() - 1) : meta.id, meta ]
+        }
+        .combine(ch_aap_reads, by: 0)
+        .map { id, meta, merged, rate, mseq ->
+            [ meta + [ merged: true, merge_rate: rate ] + (mseq ? [ mseq: mseq ] : [:]), merged ]
+        }
+
     //
     // superresolution (nested nextflow run). Its only "database" is a combined
     // reference FASTA: either built from the sample's own genomes ('self', needs
     // ch_aux) or from a named collection built by BUILD_DATABASES. There is no
     // params-configured fallback — an unknown name is an error.
     //
-    ch_by_prof.sr
+    ch_sr_src.raw.mix(ch_sr_aap)
         .branch { meta, reads ->
             self:  meta.database == 'self' || !meta.database
             built: meta.database in builtNames[meta.profiler]
@@ -441,7 +496,8 @@ workflow PROFILE {
                 // nested run should map, or train, for itself.
                 def amplicon = meta.profiler == 'sr_amplicon'
                 [ meta.id, meta.platform ?: '', (reads instanceof List ? reads : [reads])*.toString(),
-                  (amplicon ? meta.mseq : null) ?: '', (amplicon ? meta.sr_error_model : null) ?: '' ]
+                  (amplicon ? meta.mseq : null) ?: '', (amplicon ? meta.sr_error_model : null) ?: '',
+                  meta.merged ? 'true' : '', meta.merge_rate != null ? meta.merge_rate.round(4).toString() : '' ]
             }
             [ referenceSet, rows*.getAt(0), layout, rows[0][2] ]
         }
