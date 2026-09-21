@@ -16,6 +16,7 @@ Status: plan, revised 2026-09-21. It was first written 2026-09-17 and now absorb
 | P.6 (delete square-only code) | done (#21) |
 | P.7 (tests, parity) | done (#21); test at >= 10k reads |
 | P.8 (benchmark contract) | done on `panel-only-contract` (#38); upstream #21 merged (`e29bf69`) |
+| 1.5–1.6 (AAP samplesheet, `merged:`) | built (upstream #22); acceptance run not done |
 | everything else | not done |
 
 Order: R → F → P.4–P.8 → 1 → 2 → 3 → 4 → 5. See Decision 7.
@@ -619,6 +620,24 @@ extraction across two runs.
 
 Tests: a stub nf-test on a miniature AAP outdir fixture (two runs, one with `.mseq`), and
 pytest for `aap_samplesheet.py`.
+
+As built (upstream #22, `34effd7`), three changes from the above:
+- **Primers are checked for compatibility, not equality.** The 20 Nov2025 runs report four
+  primer pairs: fwd `GTGYCAGCMGCCGCGGTAA` or `CCAGCAGCCGCGGTAATACG` (the same site, shifted
+  3 bases), rev with `N` or `H` at one position. Equality would refuse 18 of 20. A run is
+  refused only if its primer cannot overlap SR's by ≥ 15 IUPAC-compatible positions within a
+  4-base shift. A differing but compatible primer is logged. The ends of those reads differ
+  by a few bases, which is Phase 2.1's primer-flank work.
+- **The `.mseq` is found by glob.** AAP writes `taxonomy-summary/<label>/<id>.mseq`, not
+  `<id>_<label>.mseq`. The script takes the single `*.mseq*` under the label directory.
+- **Every `merged: true` row needs `--trim_primers false`, not only rows with `mseq:`.**
+  `--trim_primers` also trims the simulated reads, run-wide. An untrimmed merged row
+  against trimmed simulated reads is the same mismatch with or without a supplied `.mseq`.
+  With that enforced, READS_TO_FASTA needs no per-row switch. `merge_rate` is written to
+  the row but not read yet (3.4 will).
+
+All 20 Nov2025 runs pass the script. Stub nf-tests (21) and pytest (43) pass.
+The acceptance run below has not been done.
 
 **Acceptance:** on one Nov2025 sample, an SR run from `aap_samplesheet.py` output with a
 20HM genome panel completes, and it reuses AAP's `.mseq` without re-mapping.
