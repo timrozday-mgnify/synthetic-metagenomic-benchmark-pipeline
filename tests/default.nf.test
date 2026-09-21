@@ -284,6 +284,8 @@ nextflow_pipeline {
                 { assert workflow.trace.succeeded().findAll { it.name.contains("RUN_SUPERRESOLUTION") }.size() == 5 },
                 { assert builds.size() == 5 && builds.every { path("${it}/panel_kernel").exists() } },
                 { assert trainedBuild.contains("--mismapping_method simulate --sim_error_model trained") },
+                // The kernel build gets the row's model too: pairs refuses to run without it.
+                { assert trainedBuild.contains("natA.model.pt") },
                 { assert !trained.contains("--mismapping_method") },
 
                 // panelA is named only by `panel:`, and is built all the same. The build

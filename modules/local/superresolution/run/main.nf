@@ -199,6 +199,11 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     def mseqPath = (meta.profiler == 'sr_amplicon' ? meta.mseq : null) ?: ''
     def mseq = mseqPath ? "printf '  mseq: %s\\n' '${mseqPath}' >> sr_samplesheet.yml" : 'true'
     def merged = srMergedCmds(meta)
+    // The row's pre-trained model, as the inference sheet carries it: under
+    // --sim_error_model trained the kernel simulates with it instead of training one, and
+    // --sim_read_structure pairs refuses to run without it.
+    def errorModelPath = (meta.profiler == 'sr_amplicon' ? meta.sr_error_model : null) ?: ''
+    def errorModel = errorModelPath ? "printf '  error_model: %s\\n' '${errorModelPath}' >> sr_samplesheet.yml" : 'true'
     def reads = (read_paths instanceof List ? read_paths : [read_paths]).collect { it.toString() }
     assert reads.every { it } : "BUILD_SUPERRESOLUTION_MISMAPPING: empty read path for ${meta.reference_set}"
     def readCmds = reads.collect { "printf '    - %s\\n' '${it}' >> sr_samplesheet.yml" }.join('\n    ')
@@ -208,6 +213,7 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     ${readCmds}
     ${platform}
     ${mseq}
+    ${errorModel}
     ${merged}
     printf '  references: %s\\n' "\$(realpath ${refs})" >> sr_samplesheet.yml
 
@@ -316,7 +322,7 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     # sweep params reached its command line — a silent empty string here would make
     # every mode in a sweep produce the same matrix.
     cat <<-EOF > ${meta.id}.mismapping_provenance.json
-    {"stub": true, "matrix_args": "${srNestedArgs(meta, 'matrix_args')}"}
+    {"stub": true, "matrix_args": "${srNestedArgs(meta, 'matrix_args')}", "error_model": "${meta.sr_error_model ?: ''}"}
     EOF
 
     cat <<-END_VERSIONS > versions.yml
