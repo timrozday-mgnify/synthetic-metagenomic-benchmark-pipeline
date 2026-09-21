@@ -16,7 +16,7 @@ Status: plan, revised 2026-09-21. It was first written 2026-09-17 and now absorb
 | P.6 (delete square-only code) | done (#21) |
 | P.7 (tests, parity) | done (#21); test at >= 10k reads |
 | P.8 (benchmark contract) | done on `panel-only-contract` (#38); upstream #21 merged (`e29bf69`) |
-| 1.5–1.6 (AAP samplesheet, `merged:`) | built (upstream #22); acceptance run not done |
+| 1.5–1.6 (AAP samplesheet, `merged:`) | done (upstream #22, `462603b`); acceptance run passed |
 | everything else | not done |
 
 Order: R → F → P.4–P.8 → 1 → 2 → 3 → 4 → 5. See Decision 7.
@@ -637,7 +637,29 @@ As built (upstream #22, `34effd7`), three changes from the above:
   the row but not read yet (3.4 will).
 
 All 20 Nov2025 runs pass the script. Stub nf-tests (21) and pytest (43) pass.
-The acceptance run below has not been done.
+
+Acceptance run (2026-09-21, upstream `main` at `462603b`, in upstream
+`work/phase1_acceptance/`). It passed.
+- **Input.** Sample `SC2189280-SC3-1-26s000344`. The rendered AAP results have no `.mseq`, so
+  a one-run AAP outdir was staged with Phase 0.4's `work/aap_clip/clipped.mseq` as
+  `taxonomy-summary/SILVA-SSU/<id>.mseq`. That file is AAP's MAPseq build and arguments on
+  the cmsearch-clipped reads against SILVA-SSU/138.1, i.e. what AAP would write. The panel was
+  the 20HM `community_20hm_ssu.sr_refs.fasta` (95 SSU copies, 22 genomes).
+- **Run.** `-profile docker`, `--references` AAP's `SILVA-SSU.fasta` unmodified,
+  `--trim_primers false`, flat model at 0.2's rates (sub 3.4×10⁻⁴, ins/del 4×10⁻⁶),
+  `--amplicon_cache`.
+  - It needs `process.resourceLimits = [memory: 18.GB]` on a 24 GB machine, because
+    EXTRACT_AMPLICONS asks for 36 GB.
+  - EXTRACT_AMPLICONS took 1 min 21 s on the 2.1M sequences, not hours. Its peak RSS was
+    24.6 GB, summed over its worker processes.
+  - The whole run took 5 min 24 s.
+- **Result.** READS_TO_FASTA and MAPSEQ_OBS did not run, so AAP's `.mseq` was reused without
+  re-mapping. Inference used 514,626 reads with fit `ok` and 16 of 22 genomes present.
+  - `obs_max_reads` does not cap a supplied `.mseq`: all of its reads were used.
+  - `background` is 0.79 of the profile. 225 of 295 observed labels are reached by no
+    panel source. This sample is mostly reads outside the 20HM panel (Phase 0.4's top
+    label changes are within Clostridiaceae). It is a property of the sample, not of the
+    Phase 1 plumbing, and Phase 2's fit check is the place to judge it.
 
 **Acceptance:** on one Nov2025 sample, an SR run from `aap_samplesheet.py` output with a
 20HM genome panel completes, and it reuses AAP's `.mseq` without re-mapping.
