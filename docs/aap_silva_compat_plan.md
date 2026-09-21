@@ -19,6 +19,7 @@ Status: plan, revised 2026-09-21. It was first written 2026-09-17 and now absorb
 | 1.5–1.6 (AAP samplesheet, `merged:`) | done (upstream #22, `462603b`); acceptance run passed |
 | 2.1 (primer mix) | done, upstream #23, not merged |
 | 2.2 (merged-read model) | done without `Position`, upstream #24 (stacked on #23), not merged |
+| 2.3 (`pairs`) | done without `raw_reads:`, upstream #25 (stacked on #24), not merged |
 | everything else | not done |
 
 Order: R → F → P.4–P.8 → 1 → 2 → 3 → 4 → 5. See Decision 7.
@@ -725,6 +726,26 @@ Acceptance run (2026-09-21, upstream `main` at `462603b`, in upstream
     key.
   - SR's own `--paired` merge stays for non-AAP inputs. Its divergence from fastp is
     documented, not fixed.
+  - As built (upstream #25):
+    - `simulate_amplicon_reads.py --mate-len` instead of a new script: it already holds the
+      flank, the primer mix and both samplers. R2 is read off rc(fragment) with
+      `is_forward=False`, and each mate runs into its TruSeq adapter, as in
+      `dev/aap_merge_effects.py`. Flat mates are Q38 throughout.
+    - FASTP_MERGE writes the merged reads as FASTA named by their first token, which drops
+      the ` merged_x_y` suffix, so `iter_mseq` sees the source name. It also writes
+      `yield.tsv` (`source simulated merged yield`), which PANEL_KERNEL copies into the
+      bundle. Nothing reads it yet (3.4).
+    - `pairs` needs `--trim_primers false`. Under `trained`, every row needs `error_model`,
+      because a model trained on merged reads is not a mate model. **`raw_reads:` was not
+      added**, and the plan's mate model can't have `Position` (2.2).
+    - No cmsearch clip: the mates carry no spacer or overhang (2.1), so a merged read
+      already spans primer to primer.
+    - Without skiver's Phred calibration, trained qualities come from the context error
+      rate, so fastp's Q ≤ 14 against Q ≥ 30 correction rarely fires. It was 9×10⁻⁵ per
+      base in the real run.
+    - The read structure and mate length join the kernel key and `provenance.json`.
+    - A docker run on the upstream AAP fixture completes. At the default flat rates,
+      90–94% of simulated pairs merge.
 - **2.4 Labels outside the amplifiable set.** Not needed: 0.6 is below its 1% trigger.
   - Under F such hits are dropped as off-target.
   - If a later batch exceeds 1%, each such reference becomes its own `nonamp_<acc>` label
