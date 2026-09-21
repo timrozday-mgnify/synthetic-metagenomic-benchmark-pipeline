@@ -17,7 +17,8 @@ Status: plan, revised 2026-09-21. It was first written 2026-09-17 and now absorb
 | P.7 (tests, parity) | done (#21); test at >= 10k reads |
 | P.8 (benchmark contract) | done on `panel-only-contract` (#38); upstream #21 merged (`e29bf69`) |
 | 1.5–1.6 (AAP samplesheet, `merged:`) | done (upstream #22, `462603b`); acceptance run passed |
-| 2.1 (primer mix) | done on upstream branch `primer-mix` (`50b86e6`), not merged |
+| 2.1 (primer mix) | done, upstream #23, not merged |
+| 2.2 (merged-read model) | done without `Position`, upstream #24 (stacked on #23), not merged |
 | everything else | not done |
 
 Order: R → F → P.4–P.8 → 1 → 2 → 3 → 4 → 5. See Decision 7.
@@ -691,6 +692,21 @@ Acceptance run (2026-09-21, upstream `main` at `462603b`, in upstream
   - Default to `--trained_error_model_scope pooled` for AAP batches.
   - Under `flat`, the README gives 0.2's pooled sub/ins/del rates as the AAP starting
     point, marked as per-run numbers.
+  - As built (upstream #24):
+    - Training on merged reads needed no change: `merged: true` rows reach
+      TRAIN_ERROR_MODEL like any single-end reads.
+    - `--trained_error_model_scope` defaults to null. `main.nf` resolves it to `pooled`
+      when any row is `merged: true`, else `per-sample`.
+    - `--sim_error_model` stays `flat` by default. The acceptance comparison below decides
+      whether `trained` should be the default for merged rows.
+    - **The `Position(2)` candidates were not added.** skiver's `Position(N)` is not a
+      per-base term: training sums `read_pos`/`dist_to_end` per context and fits
+      `mean_pos(context) @ position_weights`. The pinned `apply_batch` also refuses any
+      model carrying `position_weights`, so an AIC win would crash SIMULATE_PANEL_READS.
+      0.2 put interior variation at ≤ 2.1× (under 3.3's 3× trigger), and the end pile-ups
+      were primer degeneracy (2.1) and overhang (clipped). Add a per-base generative
+      position term to skiver only if the fit check or 2.3's `merged`-vs-`pairs`
+      comparison shows a 3′ bias.
 - **2.3 `--sim_read_structure merged|pairs`,** with `pairs` for validation and for runs
   where yield binds.
   - A new `bin/simulate_amplicon_pairs.py`:
