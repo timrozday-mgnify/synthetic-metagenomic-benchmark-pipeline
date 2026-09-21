@@ -17,6 +17,7 @@ Status: plan, revised 2026-09-21. It was first written 2026-09-17 and now absorb
 | P.7 (tests, parity) | done (#21); test at >= 10k reads |
 | P.8 (benchmark contract) | done on `panel-only-contract` (#38); upstream #21 merged (`e29bf69`) |
 | 1.5–1.6 (AAP samplesheet, `merged:`) | done (upstream #22, `462603b`); acceptance run passed |
+| 2.1 (primer mix) | done on upstream branch `primer-mix` (`50b86e6`), not merged |
 | everything else | not done |
 
 Order: R → F → P.4–P.8 → 1 → 2 → 3 → 4 → 5. See Decision 7.
@@ -671,6 +672,18 @@ Acceptance run (2026-09-21, upstream `main` at `462603b`, in upstream
     position from the 0.3 frequencies, sampling the joint `ends.tsv` for the reverse end.
   - Without the file it draws uniformly over the code's options, never the first option.
   - For `merged: true` samples the primers are not trimmed after errors are applied.
+  - As built (upstream `50b86e6`):
+    - Before this, untrimmed simulated reads were bare amplicons: no primers at all, while
+      the observed merged reads keep both.
+    - The table is `--primer_mix` (`fwd rev reads`, concrete oligos, rev on its own
+      strand), not `ends.tsv`. `assets/primer_mix_emp_v4.tsv` is `ends.tsv`'s pooled
+      rows summed over spacer and overhang, which keeps the joint reverse triple. The
+      0.15% of reads with an off-code base were dropped: the error model supplies those.
+    - Each oligo must be an instance of `--fwd_primer`/`--rev_primer`, else refused.
+    - Spacers and the overhang are not simulated. The clip removes most of both (0.4).
+    - Without a table, untrimmed reads draw uniformly over each code, with a warning.
+      Trimmed runs are unchanged unless a table is given.
+    - `primer_mix` joins the kernel key as a path.
 - **2.2 Merged-read error model** (default for `merged: true`).
   - `--sim_error_model trained` trains on the merged reads.
   - Add `AdditiveContext(7)+Position(2)` and `AdditiveContext(9)+Position(2)` to the
