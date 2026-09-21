@@ -69,104 +69,89 @@ generation_modes:
     primers:
       - {pair_id: 515-YF-806BR, forward: GTGYCAGCMGCCGCGGTAA, reverse: GGACTACNVGGGTWTCTAAT}
 
-# The parameter grid, expanded into the samplesheet's `sr_settings:` list. Each axis is
-# a list of named knob maps and the sweep is their cartesian product; a point's name
+# The parameter grid, expanded into the `silva_panel` arm's `sr_settings:` list. Each axis
+# is a list of named knob maps and the sweep is their cartesian product; a point's name
 # (axis names joined with '.') becomes part of its output filename. Knob names are the
 # pipeline's sr_settings keys:
-#   matrix : mismapping_method, align_backend, align_tau, matrix_args
+#   matrix : mismapping_method, align_tau, align_distance_decay, matrix_args
 #   infer  : infer_presence, infer_presence_prior, infer_presence_temp, inference_args
-#
-# Every point infers in V4-group space (`--infer_space v4_group`, set once in
-# benchmark.config as `sr_amplicon_inference_args`). A point that sets its own
-# `inference_args` replaces that, so it must repeat the flag.
 #
 # Every `align_tau >= 1` point carries `align_distance_decay: 0.007`: without it a
 # reference one edit away shares a row equally with an exact duplicate, which on the
-# two-strain B. uniformis set is 2.5x worse than exact-hash on mean row L1. ~ the
+# two-strain B. uniformis set is 2.5x worse than align_tau 0 on mean row L1. ~ the
 # per-base error rate is the right order. No-op (and unset) at align_tau 0.
 #
 # `kmer1` and `kmer1_latent` differ only in `infer_distance_decay`: one takes the decay
-# the matrix was built with, the other fits it per sample. Their matrix knobs are
-# identical, so they share one matrix and the comparison costs one inference run. The
+# the kernel was built with, the other fits it per sample. Their kernel knobs are
+# identical, so they share one kernel and the comparison costs one inference run. The
 # latent needs `align_tau >= 1` (at tau 0 every distance is 0 and the decay cancels),
 # which is why it rides on the kmer point rather than being an axis of its own.
 
-# The matrix knobs are what cost: one mis-mapping matrix is built per DISTINCT
-# COMBINATION OF THEM, over the WHOLE reference set - SILVA, here, not the 20 genomes in
-# the panel. The inference knobs are free by comparison, which is why the presence prior
-# is swept in the same run rather than in two.
+# The kernel knobs are what cost: one panel kernel is built per DISTINCT COMBINATION OF
+# THEM, from the panel's sources to SILVA's labels. The inference knobs are free by
+# comparison, which is why the presence prior is swept in the same run rather than in two.
 #
-# `mismapping_method: simulate` is deliberately absent: it simulates and maps
-# `sim_n_per_ref` reads for every reference in the set, which is fine for a 20-genome
-# collection and not fine for SILVA. Uncomment it only if you know the reference set is
-# small - and expect it to dominate the run.
-# Profiling arms. Four ways to turn ONE set of reads into abundances, all scored in the
+# Profiling arms. Three ways to turn ONE set of reads into abundances, all scored in the
 # same genus space by scripts/score_sweep.py:
-#   silva        sr_amplicon against `database:` in V4-group space - the sweep proper,
-#                fanned over the whole grid below.
-#   custom       sr_amplicon against `custom_database:`, a collection the pipeline builds
-#                from `panel:` itself. The upper bound: a reference set that IS the
-#                community. It maps its own reads (cheap against 20 references), so it
-#                does not reuse phase 1's SILVA classification.
-#   silva_panel  sr_amplicon against `database:` again, but with its labels reinterpreted
-#                through that same panel collection (an sr_settings `panel:`). What
-#                knowing the community buys when the reads can only be mapped to SILVA.
+#   silva_panel  sr_amplicon against `database:` (SILVA), its labels reinterpreted
+#                through the panel collection (an sr_settings `panel:`) - the sweep
+#                proper, fanned over the whole grid below. What knowing the community
+#                buys when the reads can only be mapped to SILVA.
+#   custom       sr_amplicon against `custom_database:`, that panel collection itself.
+#                The upper bound: a reference set that IS the community. It maps its own
+#                reads (cheap against 20 references), so it does not reuse phase 1's
+#                SILVA classification.
 #   aap          no superresolution at all: the EBI amplicon-analysis-pipeline's own
-#                MAPseq labels against `aap_database:`. The baseline the other three
-#                have to beat to be worth running.
-# The three non-sweep arms run at ONE grid point so the arm comparison is not multiplied
-# by the sweep. Name it here; it must be a point of the grid below.
+#                MAPseq labels against `aap_database:`. The baseline the other two have
+#                to beat to be worth running.
+# `custom`, and phase 1's mapping run, use ONE grid point, so the arm comparison is not
+# multiplied by the sweep. Name it here; it must be a point of the grid below.
 arm_point: exact.nogate
 
 sr_sweep:
   grid:
     matrix:
-      - {name: exact, mismapping_method: align, align_backend: exact-hash, align_tau: 0,
+      - {name: exact, mismapping_method: align, align_tau: 0,
          matrix_args: --align_ambiguity_weight 0.3}
-      - {name: kmer1, mismapping_method: align, align_backend: kmer, align_tau: 1,
+      - {name: kmer1, mismapping_method: align, align_tau: 1,
          align_distance_decay: 0.007,
          matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096}
-      - {name: kmer1_latent, mismapping_method: align, align_backend: kmer, align_tau: 1,
+      - {name: kmer1_latent, mismapping_method: align, align_tau: 1,
          align_distance_decay: 0.007, infer_distance_decay: true,
          matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096}
-      - {name: kmer2, mismapping_method: align, align_backend: kmer, align_tau: 2,
+      - {name: kmer2, mismapping_method: align, align_tau: 2,
          align_distance_decay: 0.007,
          matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096}
-      # - {name: simulate, mismapping_method: simulate}   # see the note above
+      # - {name: simulate, mismapping_method: simulate}   # ~30 panel sources x 5,000 reads
     infer:
       - {name: p01, infer_presence: true, infer_presence_prior: 0.01, infer_presence_temp: 1.0}
       - {name: p001, infer_presence: true, infer_presence_prior: 0.001, infer_presence_temp: 1.0}
-      # superresolution-amplicon recommends no gate at database scale in V4-group space:
-      # with the gate on, 40% of its replayed samples failed the fit check, 2% without.
       - {name: nogate, infer_presence: false}
 
-# The reference set under test. `path:` is a PRE-BUILT database directory:
+# The reference set under test. `path:` is a PRE-BUILT database directory holding one
+# reference FASTA, its MAPseq taxonomy and, optionally, its `.mscluster`:
 #
 #   <path>/<name>_ssu.sr_refs.fasta      headers `{accession}|0|{accession}`
 #   <path>/<name>_ssu.sr_refs.tax        MAPseq taxonomy, one SILVA lineage per header
-#   <path>/<name>_ssu.sr_refs_amplicons/ the MAPseq database every nested run maps against
-#                                        (amplicons.fasta, .tax, .fasta.mscluster,
-#                                        translation_table.tsv, refseq_index.csv)
 #
-# Build all three once, out of band, with superresolution-amplicon - the commands are in
-# README.md ("The database"). Any SILVA release, NR99 or the full Ref. The names above
-# are a convention: a lone FASTA + `.tax` under the builder's own names resolves too, with
-# the MAPseq database as `<FASTA stem>_amplicons/`. Nothing is built during the run, and
-# the MAPseq database is never rebuilt: without it the run stops before launching
-# anything. The `.tax` is what makes this example scoreable: every nested run gets it as
-# `--taxonomy`, and it names each V4 group's `lca`.
+# The FASTA is the MAPseq database every nested run maps against; a `.mscluster` beside it
+# is used, and one is clustered (and cached) otherwise. The names above are a convention: a
+# lone FASTA + `.tax` under the builder's own names resolves too, and so does the
+# amplicon-analysis-pipeline's own directory as shipped (SILVA-SSU.fasta,
+# SILVA-SSU-tax.txt, SILVA-SSU.fasta.mscluster). Nothing is built during the run. The
+# `.tax` resolves the panel's entries and gives every nested run its `--taxonomy`.
 #
 # SILVA is a label space here, not a set of genomes: its accessions are single rRNA
 # sequences, so the panel ids below are free and are never compared with them.
 #
 # To run the same sweep against a small collection the pipeline builds itself (a useful
-# control - a matrix over 20 references costs nothing), delete `path:` and set
+# control - a kernel over 20 references costs nothing), delete `path:` and set
 # `sequences_from_panel: true` instead. The panel's `taxonomy:` gives that collection a
 # `.tax` too.
 database:
   name: silva_138_2_ssu_nr99
   profilers: [sr_amplicon]
-  path: /PATH/TO/silva_138_2_ssu_nr99   # dir holding the reference FASTA, its .tax and its MAPseq database
+  path: /PATH/TO/silva_138_2_ssu_nr99   # dir holding the reference FASTA, its .tax (+ .mscluster)
   # sequences_from_panel: true          # build from `panel:` instead of using `path:`
 
 # The `custom` arm's reference set, and the `silva_panel` arm's `panel:`. One collection

@@ -187,29 +187,32 @@ workflow BUILD_DATABASES {
         .groupTuple(by: 0)
         .map { key, kinds, fs ->
             def out = [kinds, fs].transpose().collectEntries()
-            [ key, out.refs ?: [], out.tax ?: [], out.taxa ?: [], false ]
+            [ key, out.refs ?: [], out.tax ?: [], out.taxa ?: [] ]
         }
 
     // Pre-built: the published layout is `<name>_<source>.sr_refs.fasta` (see
     // conf/modules.config), so each flavour resolves its own file. The `.tax` beside it
     // is optional: a generic database (SILVA SSU) ships one, a genome panel need not. So is
-    // `<name>_ssu.panel_taxa.tsv`, and a panel that has one may have no FASTA.
+    // `<name>_ssu.panel_taxa.tsv`, and a panel that has one may have no FASTA. AAP's
+    // database directory (SILVA-SSU.fasta, SILVA-SSU-tax.txt, SILVA-SSU.fasta.mscluster)
+    // is used as is: the nested run maps against the FASTA, and finds the .mscluster
+    // beside its real path itself.
     ch_pre_sr = ch_b.prebuilt
         .flatMap { spec ->
             srSources().findAll { prof, field -> prof in spec.profilers }.collect { prof, field ->
                 def refsPats = [ "*_${field}.sr_refs.fasta", '*.sr_refs.fasta', '*.{fasta,fa,fna}' ]
-                def taxPats  = [ "*_${field}.sr_refs.tax", '*.sr_refs.tax', '*.tax' ]
+                def taxPats  = [ "*_${field}.sr_refs.tax", '*.sr_refs.tax', '*.tax', '*-tax.txt' ]
                 def taxaPats = [ "*_${field}.panel_taxa.tsv", '*.panel_taxa.tsv' ]
                 def taxa = globOptional(spec.prebuilt_dir, taxaPats, spec.name)
                 def refs = taxa ? globOptional(spec.prebuilt_dir, refsPats, spec.name)
                                 : globOne(spec.prebuilt_dir, refsPats, spec.name)
-                [ "${spec.name}:${field}", refs, globOptional(spec.prebuilt_dir, taxPats, spec.name), taxa, true ]
+                [ "${spec.name}:${field}", refs, globOptional(spec.prebuilt_dir, taxPats, spec.name), taxa ]
             }
         }
 
     emit:
     sylph_dbs  = ch_built_sylph.mix(ch_pre_sylph)
     mapseq_dbs = ch_mapseq_dbs
-    sr_dbs     = ch_built_sr.mix(ch_pre_sr)   // [ "<name>:<genome|ssu>", refs_fasta|[], tax|[], panel_taxa|[], prebuilt ]
+    sr_dbs     = ch_built_sr.mix(ch_pre_sr)   // [ "<name>:<genome|ssu>", refs_fasta|[], tax|[], panel_taxa|[] ]
     versions   = ch_versions
 }

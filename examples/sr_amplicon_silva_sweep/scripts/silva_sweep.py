@@ -8,21 +8,21 @@ Two sibling examples already do most of this, so they are imported rather than c
   unchanged: every panel genome presence-gated then NB-drawn, independently per sample.
 * ``sr_amplicon_param_sweep/scripts/sr_sweep.py`` — expansion of ``sr_sweep.grid`` into
   the flat ``sr_settings:`` list the pipeline fans each row out over, and the count of
-  distinct mis-mapping matrices that grid actually costs.
+  distinct kernels that grid actually costs.
 
 What is new is the database: this example profiles against a **pre-built** generic
 reference set (a `path:` entry, SILVA SSU) instead of a collection the pipeline builds
-from the samplesheet. SILVA is a label space, not a set of genomes, so inference runs in
-V4-group space and is scored per genus (`scripts/score_sweep.py`): every panel genome
-carries its SILVA lineage in `config.yaml`.
+from the samplesheet. SILVA is a label space, not a set of genomes, so every run against
+it infers over a panel, and everything is scored per genus (`scripts/score_sweep.py`):
+every panel genome carries its SILVA lineage in `config.yaml`.
 
 Two comparison axes sit on top of that one reference set, and both are scored in the same
 genus space:
 
-* **profiling arms** (`arms`) — the SILVA sweep itself, the same reads against a
-  collection built from the panel (`custom_database`), SILVA reinterpreted through that
-  panel (an `sr_settings` `panel:`), and no superresolution at all (the EBI
-  amplicon-analysis-pipeline against `aap_database`).
+* **profiling arms** (`arms`) — SILVA reinterpreted through the panel (an `sr_settings`
+  `panel:`; the sweep itself), the same reads against a collection built from the panel
+  (`custom_database`), and no superresolution at all (the EBI amplicon-analysis-pipeline
+  against `aap_database`).
 * **error-model arms** (`error_models`) — the reads are *generated* three times, once per
   error model: the AIC-selected trained model, a context-free one, and skiver's bundled
   preset with no training. Each arm needs its own `train_id`, which is what the pipeline
@@ -62,16 +62,16 @@ def genus(lineage):
     return ";".join(ranks)
 
 
-# The four ways this example turns one set of reads into a genus profile. `silva` is the
-# sweep proper (fanned over the whole grid); the other three run at one grid point each,
-# so the arm comparison is not multiplied by the sweep.
-#   custom      : sr_amplicon against a collection built from the panel - the upper bound
-#                 a reference set that *is* the community gives.
-#   silva_panel : sr_amplicon against SILVA, its labels reinterpreted through that same
-#                 panel collection (an sr_settings `panel:`).
+# The three ways this example turns one set of reads into a genus profile. `silva_panel`
+# is the sweep proper (fanned over the whole grid); the other two run at one grid point
+# each, so the arm comparison is not multiplied by the sweep.
+#   silva_panel : sr_amplicon against SILVA, its labels reinterpreted through the panel
+#                 collection (an sr_settings `panel:`).
+#   custom      : sr_amplicon against that panel collection itself - the upper bound a
+#                 reference set that *is* the community gives.
 #   aap         : no superresolution - the EBI amplicon-analysis-pipeline's own MAPseq
 #                 labels against a pre-built mapseq SILVA database.
-SR_ARMS = ("silva", "custom", "silva_panel")
+SR_ARMS = ("silva_panel", "custom")
 ARMS = SR_ARMS + ("aap",)
 
 
@@ -103,7 +103,8 @@ def error_models(cfg):
 
 
 def arm_point(cfg):
-    """The grid point the non-sweep arms run at, as a settings entry."""
+    """The grid point the non-sweep arms (and phase 1's mapping run) use, as a settings
+    entry."""
     name = str(cfg.get("arm_point") or settings(cfg)[0]["name"])
     for entry in settings(cfg):
         if entry["name"] == name:
@@ -115,25 +116,31 @@ def arm_point(cfg):
 def arm_settings(cfg, arm):
     """The `sr_settings:` list a row of `arm` carries.
 
-    `silva` takes the whole grid. `custom` and `silva_panel` take `arm_point` alone,
-    renamed so their profiles do not collide with the sweep's in the shared benchmark
-    dir - `<id>.<setting>.sr_profile.tsv` is keyed by the setting name.
+    `silva_panel` takes the whole grid, each point with `panel:`; `custom` takes
+    `arm_point` alone. Every name gets the arm as a prefix so the arms' profiles do not
+    collide in the shared benchmark dir - `<id>.<setting>.sr_profile.tsv` is keyed by the
+    setting name.
     """
-    if arm == "silva":
-        return settings(cfg)
-    point = dict(arm_point(cfg))
-    point["name"] = f"{arm}.{point['name']}"
-    if arm == "silva_panel":
-        # A panel kernel is measured inside the inference run and records no distances.
-        point.pop("infer_distance_decay", None)
-        point["panel"] = cfg["custom_database"]["name"]
-    return [point]
+    points = settings(cfg) if arm == "silva_panel" else [arm_point(cfg)]
+    out = []
+    for point in points:
+        point = {**point, "name": f"{arm}.{point['name']}"}
+        if arm == "silva_panel":
+            point["panel"] = cfg["custom_database"]["name"]
+        out.append(point)
+    return out
+
+
+def map_setting(cfg):
+    """Phase 1's one `sr_settings:` entry: `arm_point`'s knobs, named `map`, over the
+    panel. It exists to map the reads against SILVA once; a panel-less run against SILVA
+    would build its kernel over every SILVA V4 group."""
+    return {**arm_point(cfg), "name": "map", "panel": cfg["custom_database"]["name"]}
 
 
 def arm_database(cfg, arm):
     """The `database:` name a row of `arm` profiles against."""
-    return {"silva": cfg["database"]["name"],
-            "silva_panel": cfg["database"]["name"],
+    return {"silva_panel": cfg["database"]["name"],
             "custom": cfg["custom_database"]["name"],
             "aap": cfg["aap_database"]["name"]}[arm]
 
@@ -172,8 +179,9 @@ def database_block(cfg):
     """The samplesheet `databases:` block.
 
     A `path:` database is handed to the pipeline as a pre-built directory: nothing is
-    built, BUILD_DATABASES resolves `<name>_ssu.sr_refs.{fasta,tax}` inside it, and the
-    nested runs map against the MAPseq database beside them (`<name>_ssu.sr_refs_amplicons/`).
+    built, BUILD_DATABASES resolves its FASTA and `.tax` (AAP's `SILVA-SSU.fasta` +
+    `SILVA-SSU-tax.txt` included), and the nested runs map against that FASTA, with the
+    `.mscluster` beside it when there is one.
     `sequences_from_panel: true` falls back to the sibling examples' in-pipeline build (a
     cheap control on the same code path), with each genome's SILVA lineage as its
     `taxonomy:`, so the control gets a `.tax` and scores the same way.
@@ -187,7 +195,7 @@ def database_block(cfg):
         for seq in block[db["name"]]["sequences"]:
             seq["taxonomy"] = lineage[seq["id"]]
     # The panel collection: profiled against directly by the `custom` arm, and named as
-    # the `panel:` of the `silva_panel` arm. One collection serves both.
+    # the `panel:` of the `silva_panel` arm and of phase 1. One collection serves all.
     block[cfg["custom_database"]["name"]] = {
         "profilers": ["sr_amplicon"],
         "sequences": [{"id": m["id"], "ssu": m["ssu"], "taxonomy": m["taxonomy"]}
@@ -275,13 +283,11 @@ def _selfcheck():
     assert sample_id(cfg, arms[0], gm, 3) == "S03.trained.amplicon_16s"
     assert sample_id(cfg, {"name": None}, gm, 3) == "S03.amplicon_16s"
 
-    # The grid expansion and matrix accounting are sr_sweep's, exercised here so a
+    # The grid expansion and kernel accounting are sr_sweep's, exercised here so a
     # change in the sibling example fails this example's selfcheck too.
     grid = {"sr_sweep": {"grid": {
-        "matrix": [{"name": "exact", "mismapping_method": "align",
-                    "align_backend": "exact-hash", "align_tau": 0},
-                   {"name": "kmer1", "mismapping_method": "align",
-                    "align_backend": "kmer", "align_tau": 1}],
+        "matrix": [{"name": "exact", "mismapping_method": "align", "align_tau": 0},
+                   {"name": "kmer1", "mismapping_method": "align", "align_tau": 1}],
         "infer": [{"name": "p01", "infer_presence_prior": 0.01},
                   {"name": "p001", "infer_presence_prior": 0.001}]}}}
     expanded = settings(grid)
@@ -289,16 +295,19 @@ def _selfcheck():
                                              "kmer1.p01", "kmer1.p001"], expanded
     assert n_matrices(expanded) == 2, n_matrices(expanded)
 
-    # Profiling arms. Only `silva` takes the whole grid; the others take one point,
-    # renamed so their profiles do not collide with the sweep's in the same dir.
+    # Profiling arms. Only `silva_panel` takes the whole grid; `custom` takes one point.
+    # Both prefix their names so their profiles do not collide in the same dir.
     grid["arm_point"] = "kmer1.p001"
     grid["custom_database"] = {"name": "ctl"}
     grid["database"] = {"name": "silva"}
     grid["aap_database"] = {"name": "silva_ms"}
-    assert [e["name"] for e in arm_settings(grid, "silva")] == [e["name"] for e in expanded]
+    swept = arm_settings(grid, "silva_panel")
+    assert [e["name"] for e in swept] == [f"silva_panel.{e['name']}" for e in expanded]
+    assert all(e["panel"] == "ctl" for e in swept), swept
     assert [e["name"] for e in arm_settings(grid, "custom")] == ["custom.kmer1.p001"]
-    panel_pt = arm_settings(grid, "silva_panel")[0]
-    assert panel_pt["name"] == "silva_panel.kmer1.p001" and panel_pt["panel"] == "ctl", panel_pt
+    assert "panel" not in arm_settings(grid, "custom")[0]
+    mapping = map_setting(grid)
+    assert mapping["name"] == "map" and mapping["panel"] == "ctl" and mapping["align_tau"] == 1
     assert arm_database(grid, "aap") == "silva_ms"
     assert arm_database(grid, "silva_panel") == "silva"
     print("silva_sweep selfcheck OK")

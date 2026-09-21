@@ -2,17 +2,17 @@
 
 Asks whether a **large external reference set is fit for purpose**: the synthetic
 community is 20 known genomes, the reference set the reads are profiled against is
-SILVA SSU Ref NR99 (or any other pre-built SSU set with a taxonomy), and the
-superresolution-amplicon parameters are swept over the same reads so the settings can be
-compared against one ground truth.
+SILVA SSU Ref NR99 (or any other pre-built SSU set with a taxonomy, AAP's included), and
+the superresolution-amplicon parameters are swept over the same reads so the settings can
+be compared against one ground truth.
 
 Two comparison axes sit on top of that, and everything is scored in one genus space:
 
-- **four profiling arms** over the same reads — `silva` (the sweep proper), `custom` (a
-  collection built from the community itself), `silva_panel` (SILVA reinterpreted through
-  that collection) and `aap` (**no superresolution at all**: the EBI
-  amplicon-analysis-pipeline's own MAPseq labels). The last is the baseline the other
-  three have to beat to be worth running;
+- **three profiling arms** over the same reads — `silva_panel` (SILVA's labels
+  reinterpreted through the community's genomes; the sweep proper), `custom` (a
+  collection built from the community itself) and `aap` (**no superresolution at all**:
+  the EBI amplicon-analysis-pipeline's own MAPseq labels). The last is the baseline the
+  other two have to beat to be worth running;
 - **three error-model arms** — the reads are *generated* three times, from the trained
   model, from a context-free one and from skiver's untrained preset, so any conclusion
   can be checked against how much of it the error model is responsible for.
@@ -28,9 +28,11 @@ copy them:
   into the samplesheet's `sr_settings:` list, two phases so the reads are mapped once.
 
 What is new is the two comparison axes, and the database: `database.path:` is a
-**pre-built** reference set, so nothing is built during the run. It is a **label space**, not a set of genomes: a SILVA
-accession is one rRNA sequence, so every run infers in V4-group space
-(`--infer_space v4_group`) and is scored **per genus**, through the SILVA taxonomy.
+**pre-built** reference set, so nothing is built during the run. It is a **label space**,
+not a set of genomes: a SILVA accession is one rRNA sequence, so every run against it
+infers over the community's genomes (a `panel:`), and everything is scored **per genus**,
+through the SILVA taxonomy. `examples/sr_amplicon_panel_sweep` asks the neighbouring
+question over the 20HM panel, with the kernel's error model swept instead of its mode.
 
 ## Why this community rather than a sub-species sweep
 
@@ -41,26 +43,28 @@ absent from every sample, and a setting is only usable if it says so. The NB
 community's own absent genomes (about 7 of 20 per sample, differing per sample) give the
 same measurement inside the panel, where the truth is unambiguous.
 
-## The four profiling arms
+## The three profiling arms
 
-All four turn the same reads into abundances, and `scripts/score_sweep.py` scores them in
-the same genus space — the only space they share, since two report panel genomes, one
-reports SILVA V4 groups and one reports SILVA lineages.
+All three turn the same reads into abundances, and `scripts/score_sweep.py` scores them in
+the same genus space — the only space they share, since two report panel genomes and one
+reports SILVA lineages.
 
 | Arm | Database | What it is | Scored from |
 |---|---|---|---|
-| `silva` | `database` (SILVA) | superresolution in V4-group space, **fanned over the whole grid** | `inferred_v4_groups.csv`, each group's `lca` |
-| `custom` | `custom_database` | superresolution against a collection the pipeline builds from `panel:` itself — the upper bound a reference set that *is* the community gives | `inferred_composition.csv`, panel genomes |
-| `silva_panel` | `database` (SILVA) | the same SILVA labels reinterpreted through that panel collection (an `sr_settings` `panel:`) — what knowing the community buys when the reads can only be mapped to SILVA | `inferred_composition.csv`, plus a `background` bucket |
+| `silva_panel` | `database` (SILVA) | SILVA's labels reinterpreted through the panel collection (an `sr_settings` `panel:`), **fanned over the whole grid** — what knowing the community buys when the reads can only be mapped to SILVA | `inferred_composition.csv`, plus a `background` bucket |
+| `custom` | `custom_database` | superresolution against that panel collection itself — the upper bound a reference set that *is* the community gives | `inferred_composition.csv`, panel genomes |
 | `aap` | `aap_database` | no superresolution: the amplicon-analysis-pipeline classifies with MAPseq against a pre-built mapseq SILVA DB | its krona table, a count per lineage |
 
-Only `silva` runs the grid. The other three run at **one** point, `arm_point:` in
+Only `silva_panel` runs the grid. `custom` runs at **one** point, `arm_point:` in
 `config.yaml` (shipped as `exact.nogate`), so the arm comparison is not multiplied by the
 sweep. `custom` maps its own reads — cheap against 20 references, and phase 1's SILVA
-classification is not its classification — while `silva` and `silva_panel` reuse it.
+classification is not its classification — while `silva_panel` reuses it.
 
-`custom` and `silva_panel` name their settings `<arm>.<point>`, because a profile file is
-`<id>.<setting>.sr_profile.tsv` and all four arms publish into the one benchmark dir.
+Both superresolution arms name their settings `<arm>.<point>`, because a profile file is
+`<id>.<setting>.sr_profile.tsv` and all three arms publish into the one benchmark dir.
+There is no panel-less SILVA arm: without a `panel:` the nested run infers over every
+SILVA V4 group, which names sequences rather than genomes and builds a kernel over the
+whole database.
 
 ## The three error-model arms
 
@@ -83,47 +87,35 @@ one set of reads.
 
 ## The database (`path:`, no build step)
 
-A pre-built database is a directory holding the reference FASTA, its `.tax`, and the
-**MAPseq database** every nested run maps against, beside the FASTA as
-`<FASTA stem>_amplicons/`:
+A pre-built database is a directory holding the reference FASTA, its `.tax` and,
+optionally, the FASTA's `.mscluster`:
 
 ```
 <database.path>/<database.name>_ssu.sr_refs.fasta      >{accession}|0|{accession}
 <database.path>/<database.name>_ssu.sr_refs.tax        {header}<TAB>{SILVA lineage}
-<database.path>/<database.name>_ssu.sr_refs_amplicons/ the MAPseq database:
-    amplicons.fasta  amplicons.tax  amplicons.fasta.mscluster
-    translation_table.tsv  refseq_index.csv
+<database.path>/<database.name>_ssu.sr_refs.fasta.mscluster   optional
 ```
 
-Nothing in it is built during the run. The MAPseq database in particular is **never
-rebuilt**: clustering SILVA NR99 V4 takes 12 minutes per build, and every mapping in the
-sweep (the phase-1 reads, the `silva_panel` kernel's panel sources) has to use the same
-database for the labels to mean the same thing. A pre-built `sr_amplicon` database
-without that directory stops the run before anything is launched, naming the path it
-expected. The nested runs find it by the FASTA's real path, so it has to sit beside the
-original file, not a copy.
+The FASTA **is** the MAPseq database every nested run maps against: the phase-1 reads
+and the `silva_panel` kernels' panel sources alike, so the labels mean the same thing
+everywhere. A `.mscluster` beside the FASTA's real path is used; without one the nested
+run clusters it once and caches it (`--amplicon_cache`). Nothing is built during the run.
 
-Build it all once, out of band, with superresolution-amplicon (`$SRA` its checkout; the
-primers are the run's, V4 515F/806R by default):
+The amplicon-analysis-pipeline's own database directory works as shipped:
+`BUILD_DATABASES` falls back to a lone `*.{fasta,fa,fna}` + `*.tax` / `*-tax.txt`, so
+`SILVA-SSU.fasta`, `SILVA-SSU-tax.txt` and `SILVA-SSU.fasta.mscluster` need no renaming.
+The nested run folds its RNA alphabet to DNA and reads its `sk__…;s__Genus_species`
+lineages. Otherwise build one with superresolution-amplicon (`$SRA` its checkout):
 
 ```bash
 python $SRA/bin/build_mapseq_database.py \
     --silva-fasta SILVA_138.2_SSURef_NR99_tax_silva.fasta.gz \
     --output-prefix db/silva_138_2_ssu_nr99_ssu.sr_refs
-python $SRA/bin/subspecies_infer.py amplicons --db-fasta db/silva_138_2_ssu_nr99_ssu.sr_refs.fasta \
-    -o db/silva_138_2_ssu_nr99_ssu.sr_refs_amplicons --threads 8
-cd db/silva_138_2_ssu_nr99_ssu.sr_refs_amplicons
-awk '/^>/ { n++ } n <= 1' amplicons.fasta > probe.fasta     # mapseq clusters whatever the query
-mapseq probe.fasta amplicons.fasta amplicons.tax -nthreads 8 > /dev/null && rm probe.fasta
 ```
 
 `build_mapseq_database.py` converts U to T, drops the organism name and pads lineages.
-Any release works, NR99 or the full Ref. The `_ssu.sr_refs` names are only a convention:
-`BUILD_DATABASES` falls back to a lone `*.{fasta,fa,fna}` + `*.tax` in the directory, and
-the MAPseq database then goes beside that FASTA under its own stem (`silva.fasta` →
-`silva_amplicons/`). The `.tax` is optional to the pipeline but not to this example: it
-reaches every nested run as `--taxonomy`, which fills the `lca` column the scores are
-computed from.
+Any release works, NR99 or the full Ref. The `.tax` is optional to the pipeline but not to
+this example: every nested run gets it as `--taxonomy`.
 
 ## Scoring (per genus)
 
@@ -132,17 +124,14 @@ computed from.
 through `panel[].taxonomy` (the genome's SILVA lineage down to genus, in `config.yaml`).
 **Predictions** come from each arm's own output:
 
-- `silva`: each V4 group's `inferred_mean` goes to the genus of its `lca` (the longest
-  common lineage of the group's SILVA members). A group whose `lca` stops above genus,
-  because its V4 sequence is shared across genera, goes to `unresolved`.
-- `custom` / `silva_panel`: each panel genome's `inferred_mean` goes to its own lineage's
+- `silva_panel` / `custom`: each panel genome's `inferred_mean` goes to its own lineage's
   genus. `silva_panel`'s `background` — reads the panel cannot explain — goes to
   `unresolved`, where the truth has no mass, so it is charged as error.
 - `aap`: the krona table's count per lineage, summed per genus.
 
 | Column | Meaning |
 |---|---|
-| `arm`, `method` | the profiling arm, and the grid point (or `aap` / `mapseq_only`) within it |
+| `arm`, `method` | the profiling arm, and the grid point (or `aap`) within it |
 | `error_model` | the arm the **reads** came from: `trained`, `flat` or `naive` |
 | `tv` | total variation over genera plus `unresolved`, both sides renormalised |
 | `max_abs_error`, `worst_genus` | the largest single-genus error |
@@ -150,16 +139,12 @@ through `panel[].taxonomy` (the genome's SILVA lineage down to genus, in `config
 | `unresolved` | predicted share that arm cannot place at genus |
 
 Rows are only comparable **within one `error_model`**: different arms there are different
-reads. `mapseq_only` is MAPseq's own label share against SILVA (`observed_rel_abundance`),
-no inference. Genus is SILVA's 6th rank, which holds for bacteria and archaea only.
+reads. Genus is SILVA's 6th rank, which holds for bacteria and archaea only.
 
-The *B. uniformis* strain question of the other examples cannot be asked here: SILVA
-has no species rank, and NR99 collapses near-identical sequences.
-
-The `custom` arm is that control, run alongside rather than instead: a collection the
-pipeline builds from the panel, on the same code path. To run the **whole grid** against
-it instead of against SILVA, delete `database.path:` and set `sequences_from_panel: true`
-— the panel's `taxonomy:` gives that collection a `.tax` too, so it scores the same way.
+The `custom` arm is the control, run alongside: a collection the pipeline builds from the
+panel, on the same code path. To point `database:` itself at it instead of at SILVA,
+delete `database.path:` and set `sequences_from_panel: true` — the panel's `taxonomy:`
+gives that collection a `.tax` too, so it scores the same way.
 
 ## Fill in before running
 
@@ -168,9 +153,9 @@ Python scripts. Edit:
 
 - `train.fastq_1` / `train.fastq_2` — the real R1/R2 the error model is trained from.
   The `naive` arm never reads them; the other two do.
-- `database.path` — the pre-built reference set directory, and `database.name` to match
-  the `<name>_ssu.sr_refs.{fasta,tax}` and `<name>_ssu.sr_refs_amplicons/` inside it
-  (see [The database](#the-database-path-no-build-step)).
+- `database.path` — the pre-built reference set directory (AAP's `SILVA-SSU/138.1` works
+  as is), and `database.name` to name it (see
+  [The database](#the-database-path-no-build-step)).
 - `aap_database` — the `aap` arm's **mapseq** database (a different thing from the
   superresolution reference set): a directory holding the four MAPseq files, plus the two
   Rfam paths the pipeline requires of any `aap` collection. MAPseq's own distributed
@@ -178,13 +163,14 @@ Python scripts. Edit:
 - `custom_database.name` — nothing to fill in: it is built from `panel[]` and publishes
   to `<outdir>/databases/<name>/`, ready to be another run's `path:`.
 - `error_models` — the three read-generation arms. Cut it to one entry for one set of reads.
-- `arm_point` — which grid point the non-sweep arms run at. Must name a point of the grid.
+- `arm_point` — which grid point `custom` and phase 1's mapping run use. Must name a point of the grid.
 - `panel` — one entry per community genome: `id`, `species`, `ssu` (a full-length 16S
   FASTA, which the V4 amplicons are cut from) and `taxonomy` (its SILVA lineage down to
   genus). The shipped lineages are SILVA 138.2's.
 - `sampling` — `n_samples`, `seed`, `presence`, `negative_binomial: {mean, dispersion}`.
-- `sr_sweep.grid` — the sweep itself, each axis a list of named knob maps, the grid their
-  cartesian product. Valid knobs are the pipeline's `sr_settings` keys.
+- `sr_sweep.grid` — the sweep itself (the `silva_panel` arm), each axis a list of named
+  knob maps, the grid their cartesian product. Valid knobs are the pipeline's
+  `sr_settings` keys.
 - `primers` (under `generation_modes`) — superresolution-amplicon cuts its own reference
   amplicons with the same pair, so a mismatch means not one read hits a reference.
 
@@ -204,23 +190,22 @@ Two runs, back to back:
    per community), then `--step all`. Trains the error models (one per arm that needs
    one), generates the amplicon reads **once per error-model arm** at every
    `reads.subsample` depth, and profiles each depth **once** against the pre-built
-   reference set. This is the run that publishes each depth's
-   `profiling/sr/<id>.obs.mseq.gz`.
+   reference set under a `map` setting (`arm_point`'s knobs, over the panel). This is the
+   run that publishes each depth's `profiling/sr/<id>.map.obs.mseq.gz`.
 2. `generate_sweep_samplesheet.py` → `sweep_samplesheet.yaml`, then `--step profile`.
-   Four rows per benchmark dir, one per profiling arm, each with its own `database:`,
-   `profilers:` and `sr_settings:`. The `silva` and `silva_panel` rows carry that dir's
-   `mseq:`; `custom` and `aap` map their own reads.
+   Three rows per benchmark dir, one per profiling arm, each with its own `database:`,
+   `profilers:` and `sr_settings:`. The `silva_panel` row carries that dir's `mseq:`;
+   `custom` and `aap` map their own reads.
 3. `scripts/score_sweep.py` → `results/sr_amplicon_silva_sweep/silva_sweep_scores.csv`.
 
 ## What it costs
 
 **The shipped config is large.** 20 communities × 3 error-model arms × 2 depths = **120
-benchmark dirs**; each runs 12 `silva` grid points + 1 `custom` + 1 `silva_panel` + 1
-`aap` = **1800 profiles**. Three knobs cut it, in descending order of effect, and each is
-one edit: drop `error_models:` to one entry (÷3, and it also cuts read generation and
-SILVA mapping by the same factor — that is the expensive third), shrink `sr_sweep.grid`
-(the `silva` arm only), or drop a `reads.subsample` depth. The arm comparison alone —
-one error model, one grid point — is 40 dirs × 4 arms.
+benchmark dirs**; each runs 12 `silva_panel` grid points + 1 `custom` + 1 `aap` =
+**1680 profiles**. Three knobs cut it, in descending order of effect, and each is one
+edit: drop `error_models:` to one entry (÷3, and it also cuts read generation and SILVA
+mapping by the same factor — that is the expensive third), shrink `sr_sweep.grid`, or
+drop a `reads.subsample` depth.
 
 The error-model arms are the one axis that cannot share work: different reads means a
 separate generation *and* a separate SILVA mapping pass per arm. Each also costs its own
@@ -228,33 +213,22 @@ separate generation *and* a separate SILVA mapping pass per arm. Each also costs
 extra dump, not one extra sweep.
 
 Within one error-model arm, the sweep proper is 40 benchmark dirs × 12 grid points = 480
-profiles, off **3** mis-mapping matrices — `kmer1` and `kmer1_latent` differ only in
-whether the distance decay is fitted per sample (`infer_distance_decay`), so they share
-the matrix and that comparison costs inference runs only. Three things keep that affordable, and all
-three are about the size of the reference set rather than the size of the grid:
+profiles, off **3** panel kernels — `kmer1` and `kmer1_latent` differ only in whether the
+distance decay is fitted per sample (`infer_distance_decay`), so they share the kernel and
+that comparison costs inference runs only. What keeps that affordable:
 
 - **The reads are mapped once.** mapseq against a SILVA-scale set is by far the most
   expensive stage and no swept knob changes it. Phase 1 maps; phase 2 hands the
   classification back through `mseq:` and every grid point skips straight to the parts
   that differ. A dir with no phase-1 mseq is not an error — the nested run maps it
   itself, and the generator warns.
-- **The matrix is shared where it can be.** Grid points agreeing on every matrix knob
-  (`mismapping_method`, `align_backend`, `align_tau`, `align_distance_decay`,
-  `matrix_args`) build one matrix between them and split only at the inference run —
-  which is why the presence prior (including no gate, which superresolution-amplicon
-  recommends at database scale in V4-group space), and whether the decay is fitted, are
-  swept here rather than in separate runs.
-- **`mismapping_method: simulate` is left out of the grid.** It simulates and maps
-  `sim_n_per_ref` reads for *every reference in the set*: fine for a 20-genome
-  collection, not for SILVA. The grid sweeps the alignment backends instead
-  (`exact-hash`, and `kmer` at τ=1 and τ=2). `benchmark.config` pins phase 1 to the
-  `exact` point for the same reason — phase 1 has no `sr_settings` to fan out over, so
-  it would otherwise use the nested pipeline's `simulate` default.
-
-Phase 1's matrix is built separately from phase 2's even when the knobs match: the
-reference-set key mixes in the matrix mode only when `sr_settings` is in play, so the two
-runs do not share a nested cache. That is one extra `exact` matrix, not one extra
-mapping pass.
+- **The kernel is shared where it can be,** and it is small. Grid points agreeing on every
+  kernel knob (`mismapping_method`, `align_tau`, `align_distance_decay`, `matrix_args`,
+  `panel`) build one kernel between them and split only at the inference run. A kernel
+  runs from the panel's ~20 V4 sources to SILVA's labels, not over SILVA.
+- **`mismapping_method: simulate` is commented out of the grid.** Over this panel it
+  would simulate and map 5,000 reads per source against SILVA per kernel: affordable, but
+  the grid sweeps the alignment modes (τ=0, 1, 2) instead.
 
 ## Output
 
@@ -265,26 +239,24 @@ results/sr_amplicon_silva_sweep/
   databases/community_panel/                           <- the `custom` arm's collection
   S01.trained.amplicon_16s.515-YF-806BR/               <- one per community x error model
     truth.tsv
-    <id>.exact.p01.sr_profile.tsv                      <- `silva` arm, one per grid point
-    <id>.kmer1.p01.sr_profile.tsv
+    <id>.silva_panel.exact.p01.sr_profile.tsv          <- `silva_panel` arm, one per grid point
+    <id>.silva_panel.exact.p01.sr_background.tsv       <- ... and its unexplained share
     ...
     <id>.custom.exact.nogate.sr_profile.tsv            <- `custom` arm
-    <id>.silva_panel.exact.nogate.sr_profile.tsv       <- `silva_panel` arm
-    profiling/sr/<id>.obs.mseq.gz                      <- phase 1; reused by phase 2
-    profiling/sr/<id>.<point>.inferred_v4_groups.csv   <- what the `silva` arm is scored from
-    profiling/sr/<id>.<arm>.<point>.inferred_composition.csv   <- ... and the genome arms
+    profiling/sr/<id>.map.obs.mseq.gz                  <- phase 1; reused by phase 2
+    profiling/sr/<id>.<arm>.<point>.inferred_composition.csv   <- what both arms are scored from
     profiling/aap/<id>/taxonomy-summary/               <- `aap` arm; krona table is scored
     subsample_100000/...                               <- same, per depth
   S01.flat.amplicon_16s.515-YF-806BR/ ...              <- same community, flat model
   S01.naive.amplicon_16s.515-YF-806BR/ ...
   mismapping/
-    silva_138_2_ssu_nr99_sr_amplicon_515-YF-806BR-<digest>/   <- one per matrix knob combo
-      mismapping_matrix.npz
-      mismapping_provenance.json                       <- how that matrix was built
+    <reference set>-<digest>/                          <- one per kernel knob combo
+      panel_kernel/                                    <- reusable as --panel_kernel
+      mismapping_provenance.json                       <- how that kernel was built
 ```
 
-Only `custom_database` is built (its 20-reference MAPseq database by the nested run);
-SILVA, its MAPseq database and the `aap` mapseq DB are resolved from their `path:`.
+Only `custom_database` is built; SILVA and the `aap` mapseq DB are resolved from their
+`path:`.
 
 ## Reporting
 
@@ -296,29 +268,26 @@ task sr-settings RUN_DIR=<run> PIPELINE_DIR=results/sr_amplicon_silva_sweep \
     RUN_LABEL="SILVA sr_amplicon parameter sweep"
 ```
 
-That report scores the genome-level `sr_profile.tsv`, which against SILVA names
-accessions rather than panel genomes; read `silva_sweep_scores.csv` for accuracy and the
-report for the mis-mapping matrices. Its sub-species sections auto-detect genomes whose target abundance varies across the
+That report scores the genome-level `sr_profile.tsv` of every arm; read
+`silva_sweep_scores.csv` for the per-genus accuracy the arms are compared on. Its sub-species sections auto-detect genomes whose target abundance varies across the
 sweep; there are none here (every genome varies, independently), so pass `SUBSPECIES=`
 a pair of ids to focus them, or read the per-setting scores and the mis-mapping matrices,
 which need no sweep pair.
 
 ## Notes
 
-- Only the **matrix** knobs split the reference set. Adding an `infer:` point costs one
-  extra inference run per benchmark dir and no extra matrix.
-- A knob set both in `benchmark.config` (as `sr_amplicon_<knob>`) and in a grid point
-  takes the grid point's value — which is why phase 2 ignores the pins phase 1 needs.
-  `inference_args` (`--infer_space v4_group`) is the exception that is kept, because no
-  grid point sets it; a point that does must repeat the flag.
+- Only the **kernel** knobs split the reference set. Adding an `infer:` point costs one
+  extra inference run per benchmark dir and no extra kernel.
+- `benchmark.config` sets no kernel knob: phase 1's `map` setting and phase 2's grid are
+  row-level `sr_settings:`, and a knob pinned there would leak into every entry that
+  leaves it out.
 - Re-running phase 2 alone is fine and cheap: `python generate_sweep_samplesheet.py
   <outdir>` then `--step profile`. Widen the grid and the nested runs `-resume` the work
   the existing points already did.
 - `sr_settings` is emitted **per row** here, because the arms sweep differently. A
   top-level list still works when every row wants the same grid.
 - The `custom` arm's collection publishes to `databases/community_panel/` in the layout a
-  `path:` entry expects, except for the MAPseq database the nested run built for it. Add a
-  `community_panel_ssu.sr_refs_amplicons/` beside its FASTA before consuming it pre-built.
+  `path:` entry expects.
 - **`naive` is not a straw man.** It is what a benchmark that skips the training step
   does, so the honest reading of any sweep result is the gap between its `trained` and
   `naive` rows, not the `trained` row alone.

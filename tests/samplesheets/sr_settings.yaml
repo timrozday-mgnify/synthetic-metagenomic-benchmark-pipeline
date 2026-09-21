@@ -31,12 +31,10 @@ samples:
     sr_settings:
       - name: fast
         mismapping_method: align
-        align_backend: exact-hash
         align_tau: 0
         infer_presence_prior: 0.01
       - name: fast_strict
         mismapping_method: align
-        align_backend: exact-hash
         align_tau: 0
         infer_presence_prior: 0.001
       - name: simulated
@@ -44,13 +42,11 @@ samples:
         infer_presence_prior: 0.01
       - name: kmer_fixed
         mismapping_method: align
-        align_backend: kmer
         align_tau: 1
         align_distance_decay: 0.007
         infer_presence_prior: 0.01
       - name: kmer_latent
         mismapping_method: align
-        align_backend: kmer
         align_tau: 1
         align_distance_decay: 0.007
         infer_presence_prior: 0.01

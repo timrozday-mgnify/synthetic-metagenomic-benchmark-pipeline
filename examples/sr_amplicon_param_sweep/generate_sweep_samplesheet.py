@@ -69,7 +69,7 @@ def main():
 
     print(f"Wrote sweep_samplesheet.yaml: {len(rows)} benchmark dir(s) x "
           f"{len(settings)} grid point(s) = {len(rows) * len(settings)} profiles, "
-          f"from {sw.n_matrices(settings)} mis-mapping matrix/matrices")
+          f"from {sw.n_matrices(settings)} kernel(s)")
     if missing:
         print(f"NOTE: {len(missing)} benchmark dir(s) have no phase-1 mapseq output "
               f"(e.g. {missing[0]}); those rows omit `mseq:` and the nested run will map "

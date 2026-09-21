@@ -58,7 +58,7 @@ def main():
     print(f"Wrote sweep_samplesheet.yaml: {n_dirs} benchmark dir(s) x ({len(custom)} custom "
           f"+ {len(panel)} generic_panel + {len(taxa)} generic_taxa) setting(s) = "
           f"{n_dirs * n_settings} profiles, from {ps.n_matrices(custom)} custom "
-          f"matrix/matrices and {len(panel) + len(taxa)} panel kernel(s)")
+          f"kernel(s) and {ps.n_matrices(panel) + ps.n_matrices(taxa)} panel kernel(s)")
     if missing:
         print(f"NOTE: {len(missing)} benchmark dir(s) have no phase-1 SILVA mapping "
               f"(e.g. {missing[0]}); their generic_panel rows omit `mseq:` and every panel "

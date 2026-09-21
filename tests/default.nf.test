@@ -99,25 +99,6 @@ nextflow_pipeline {
         }
     }
 
-    test("a pre-built sr_amplicon database without its MAPseq database is refused - stub") {
-        tag "stub"
-        options "-stub"
-        when {
-            params {
-                input  = "${projectDir}/tests/samplesheets/sr_prebuilt_no_mapseq_db.yaml"
-                outdir = "$outputDir"
-            }
-        }
-        then {
-            assertAll(
-                { assert workflow.failed },
-                { assert workflow.trace.tasks().every { !it.name.contains("SUPERRESOLUTION") } },
-                { assert workflow.stdout.any { it.contains("SILVA_138.1_SSURef_tax_silva_amplicons") }
-                         || workflow.errorReport.contains("SILVA_138.1_SSURef_tax_silva_amplicons") }
-            )
-        }
-    }
-
     test("superresolution profiling - stub") {
         tag "stub"
         options "-stub"
@@ -142,14 +123,14 @@ nextflow_pipeline {
                 { assert path("${params.outdir}/S3/S3.sr_profile.tsv").exists() },
                 { assert path("${params.outdir}/S4/S4.sr_profile.tsv").exists() },
 
-                // S5's pre-built dir uses SILVA's own filenames, not `<name>_ssu.sr_refs.*`:
-                // resolving it at all is what the loose glob fallback buys.
+                // S5's pre-built dir is AAP's database directory as shipped (SILVA-SSU.fasta,
+                // SILVA-SSU-tax.txt, .mscluster), not `<name>_ssu.sr_refs.*`: resolving it at
+                // all is what the loose glob fallback buys, and its -tax.txt is the taxonomy.
                 { assert path("${params.outdir}/S5/S5.sr_profile.tsv").exists() },
+                { assert path("${params.outdir}/S5/profiling/sr/S5.nested_args.txt").text.contains("SILVA-SSU-tax.txt") },
 
-                // A reference set built here ('self') has its MAPseq database built by the
-                // nested run; a pre-built one brings its own and is never rebuilt.
-                { assert path("${params.outdir}/S2/profiling/sr/S2.nested_args.txt").text.contains("--build_mapseq_db") },
-                { assert !path("${params.outdir}/S5/profiling/sr/S5.nested_args.txt").text.contains("--build_mapseq_db") },
+                // The unexplained share leaves the profile for its sidecar.
+                { assert path("${params.outdir}/S2/S2.sr_background.tsv").exists() },
 
                 // Raw composition CSV kept under profiling/sr/.
                 { assert path("${params.outdir}/S1/profiling/sr/S1.inferred_composition.csv").exists() },
@@ -159,10 +140,11 @@ nextflow_pipeline {
                 { assert path("${params.outdir}/S2/profiling/sr/S2.obs.mseq.gz").exists() },
                 { assert !path("${params.outdir}/S1/profiling/sr/S1.obs.mseq.gz").exists() },
 
-                // A reusable matrix is published per reference set, rather than once
-                // inside every sample's profiling directory.
+                // A reusable kernel (shotgun: matrix) is published per reference set, rather
+                // than once inside every sample's profiling directory. sr_amplicon's is the
+                // whole bundle, reusable as --panel_kernel.
                 { assert path("${params.outdir}/mismapping/self_S1_sr_shotgun/mismapping_matrix.csv").exists() },
-                { assert path("${params.outdir}/mismapping/self_S2_sr_amplicon/mismapping_matrix.npz").exists() },
+                { assert path("${params.outdir}/mismapping/self_S2_sr_amplicon/panel_kernel/provenance.json").exists() },
                 { assert path("${params.outdir}/mismapping/srA_sr_shotgun/mismapping_matrix.csv").exists() },
                 { assert !path("${params.outdir}/S1/profiling/sr/S1.mismapping_matrix.csv").exists() },
                 { assert !path("${params.outdir}/S2/profiling/sr/S2.mismapping_matrix.npz").exists() },
@@ -223,16 +205,16 @@ nextflow_pipeline {
                 { assert path("${params.outdir}/mismapping").list().size() == 3 },
 
                 // The knobs really reach the matrix builds, differently.
-                { assert provenance.any { it.contains("--align_backend exact-hash") } },
+                { assert provenance.any { it.contains("--align_tau 0") } },
                 { assert provenance.any { it.contains("--mismapping_method simulate") } },
                 { assert provenance.any { it.contains("--align_distance_decay 0.007") } },
 
                 // The nested pipeline refuses --infer_distance_decay unless its own
                 // --mismapping_method/--align_tau say align at tau >= 1, even with a
-                // supplied matrix, so the latent inference run repeats the matrix mode.
+                // supplied kernel, so the latent inference run repeats the kernel mode.
                 // The fixed one doesn't need it and keeps its old command line.
                 { assert path("${params.outdir}/S2/profiling/sr/S2.kmer_latent.nested_args.txt").text
-                      .contains("--mismapping_method align --align_backend kmer --align_tau 1") },
+                      .contains("--mismapping_method align --align_tau 1") },
                 { assert !path("${params.outdir}/S2/profiling/sr/S2.kmer_fixed.nested_args.txt").text
                       .contains("--mismapping_method") },
 
@@ -256,26 +238,34 @@ nextflow_pipeline {
         then {
             def sr = "${params.outdir}/S2/profiling/sr"
             def trained = path("${sr}/S2.panel_trained.nested_args.txt").text
+            def builds = path("${params.outdir}/mismapping").list()
+            def trainedBuild = builds.collect { path("${it}/mismapping_provenance.json").text }
+                .find { it.contains("--sim_error_model trained") }
             assertAll(
                 { assert workflow.success },
-                { assert path("${params.outdir}/S2/S2.square.sr_profile.tsv").exists() },
+                { assert path("${params.outdir}/S2/S2.whole_db.sr_profile.tsv").exists() },
                 { assert path("${params.outdir}/S2/S2.panel_trained.sr_profile.tsv").exists() },
                 { assert path("${params.outdir}/S2/S2.panel_flat.sr_profile.tsv").exists() },
 
-                // Only the square entry builds a shared matrix; a panel run measures its
-                // own kernel, so it is handed the matrix flags instead of a matrix.
-                { assert workflow.trace.succeeded().findAll { it.name.contains("BUILD_SUPERRESOLUTION_MISMAPPING") }.size() == 1 },
+                // Every entry is a reference set of its own and builds its kernel first;
+                // the inference run is handed that kernel, and the build the mode flags.
+                { assert workflow.trace.succeeded().findAll { it.name.contains("BUILD_SUPERRESOLUTION_MISMAPPING") }.size() == 5 },
                 { assert workflow.trace.succeeded().findAll { it.name.contains("RUN_SUPERRESOLUTION") }.size() == 5 },
-                { assert trained.contains("--mismapping_method simulate --sim_error_model trained") },
+                { assert builds.size() == 5 && builds.every { path("${it}/panel_kernel").exists() } },
+                { assert trainedBuild.contains("--mismapping_method simulate --sim_error_model trained") },
+                { assert !trained.contains("--mismapping_method") },
 
-                // panelA is named only by `panel:`, and is built all the same.
+                // panelA is named only by `panel:`, and is built all the same. The build
+                // and the inference run get the same panel flags: --panel_kernel refuses a
+                // kernel whose panel differs.
                 { assert trained.contains("--panel_references ") && trained.contains("panelA") },
-                { assert !path("${sr}/S2.square.nested_args.txt").text.contains("--panel_references") },
+                { assert trainedBuild.contains("--panel_references ") && trainedBuild.contains("panelA") },
+                { assert !path("${sr}/S2.whole_db.nested_args.txt").text.contains("--panel_references") },
 
-                // The generic collection's taxonomy reaches square and panel runs alike;
+                // The generic collection's taxonomy reaches every run;
                 // panelA has none and publishes none.
                 { assert trained.contains("--taxonomy ") && trained.contains("generic_ssu.sr_refs.tax") },
-                { assert path("${sr}/S2.square.nested_args.txt").text.contains("generic_ssu.sr_refs.tax") },
+                { assert path("${sr}/S2.whole_db.nested_args.txt").text.contains("generic_ssu.sr_refs.tax") },
                 { assert path("${params.outdir}/databases/generic/generic_ssu.sr_refs.tax").exists() },
                 { assert !path("${params.outdir}/databases/panelA/panelA_ssu.sr_refs.tax").exists() },
 
@@ -293,12 +283,7 @@ nextflow_pipeline {
                 { assert path("${sr}/S2.panel_mixed.nested_args.txt").text.contains("--panel_references ") },
                 { assert !path("${sr}/S2.panel_flat.nested_args.txt").text.contains("--panel_taxa") },
                 { assert path("${params.outdir}/databases/panelMixed/panelMixed_ssu.panel_taxa.tsv").exists() },
-                { assert path("${params.outdir}/databases/panelMixed/panelMixed_ssu.sr_refs.fasta").exists() },
-
-                // A panel run's kernel is measured inside the nested run; it publishes to
-                // the run-level mismapping dir, not into a sample's profiling dir.
-                { assert path("${params.outdir}/mismapping/panel_panelA/mismapping_matrix.npz").exists() },
-                { assert path("${params.outdir}/mismapping/panel_panelA/provenance.json").text.contains("panelA") }
+                { assert path("${params.outdir}/databases/panelMixed/panelMixed_ssu.sr_refs.fasta").exists() }
             )
         }
     }
@@ -364,7 +349,6 @@ nextflow_pipeline {
                 input  = "${projectDir}/tests/samplesheets/superresolution.yaml"
                 outdir = "$outputDir"
                 sr_amplicon_mismapping_method = "align"
-                sr_amplicon_align_backend     = "kmer"
                 sr_amplicon_align_tau         = 1
                 sr_amplicon_matrix_args       = "--align_ambiguity_weight 0.3"
                 sr_shotgun_matrix_args        = "--sim_n_per_chunk 25"
@@ -377,12 +361,11 @@ nextflow_pipeline {
                 { assert workflow.success },
                 // Every amplicon knob, named and free-form, on the build command line.
                 { assert amplicon.contains("--mismapping_method align") },
-                { assert amplicon.contains("--align_backend kmer") },
                 { assert amplicon.contains("--align_tau 1") },
                 { assert amplicon.contains("--align_ambiguity_weight 0.3") },
                 // The shotgun sibling has different knobs and must not inherit these.
                 { assert shotgun.contains("--sim_n_per_chunk 25") },
-                { assert !shotgun.contains("align_backend") }
+                { assert !shotgun.contains("align_tau") }
             )
         }
     }

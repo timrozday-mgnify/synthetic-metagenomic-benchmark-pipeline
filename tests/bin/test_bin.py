@@ -135,8 +135,9 @@ def test_normalize_sr_profile_renormalises(tmp_path):
     assert lines[2] == ["genomeB", "0.250000", "0.250000"], lines
 
 
-def test_normalize_sr_profile_passes_panel_entries_through(tmp_path):
-    """A taxon panel entry and `background` keep their ids, as genome ids do."""
+def test_normalize_sr_profile_drops_background_into_a_sidecar(tmp_path):
+    """A taxon panel entry keeps its id; `background` leaves the profile, the genomes
+    renormalise without it, and its share goes to the sidecar."""
     comp = tmp_path / "S1.inferred_composition.csv"
     comp.write_text(
         "sample,genome_id,observed_rel_abundance,inferred_mean,inferred_lo,inferred_hi\n"
@@ -144,11 +145,14 @@ def test_normalize_sr_profile_passes_panel_entries_through(tmp_path):
         "S1,bacteroides_fragilis,0.4,0.5,0.4,0.6\n"
         "S1,background,0.1,0.2,0.1,0.3\n"
     )
-    dst = tmp_path / "S1.sr_profile.tsv"
-    out = run("normalize_sr_profile.py", "--composition", str(comp), "--output", str(dst))
+    dst, bg = tmp_path / "S1.sr_profile.tsv", tmp_path / "S1.sr_background.tsv"
+    out = run("normalize_sr_profile.py", "--composition", str(comp), "--output", str(dst),
+              "--background-output", str(bg))
     assert out.returncode == 0, out.stderr
-    ids = [ln.split("\t")[0] for ln in dst.read_text().splitlines()[1:]]
-    assert ids == ["background", "bacteroides_fragilis", "bacteroides_uniformis"], ids
+    rows = [ln.split("\t") for ln in dst.read_text().splitlines()[1:]]
+    assert [r[0] for r in rows] == ["bacteroides_fragilis", "bacteroides_uniformis"], rows
+    assert rows[0][1] == "0.625000", rows
+    assert bg.read_text().splitlines() == ["background_fraction", "0.200000"]
 
 
 def test_preprocess_reads_superresolution_presence(tmp_path):

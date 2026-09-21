@@ -44,7 +44,6 @@ sr_settings:
   infer_presence_temp: 1.0
 - name: exact.p01
   mismapping_method: align
-  align_backend: exact-hash
   align_tau: 0
   matrix_args: --align_ambiguity_weight 0.3
   infer_presence: true
@@ -52,7 +51,6 @@ sr_settings:
   infer_presence_temp: 1.0
 - name: exact.p001
   mismapping_method: align
-  align_backend: exact-hash
   align_tau: 0
   matrix_args: --align_ambiguity_weight 0.3
   infer_presence: true
@@ -60,7 +58,6 @@ sr_settings:
   infer_presence_temp: 1.0
 - name: kmer1.p01
   mismapping_method: align
-  align_backend: kmer
   align_tau: 1
   align_distance_decay: 0.007
   matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
@@ -69,7 +66,6 @@ sr_settings:
   infer_presence_temp: 1.0
 - name: kmer1.p001
   mismapping_method: align
-  align_backend: kmer
   align_tau: 1
   align_distance_decay: 0.007
   matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
@@ -78,7 +74,6 @@ sr_settings:
   infer_presence_temp: 1.0
 - name: kmer1_latent.p01
   mismapping_method: align
-  align_backend: kmer
   align_tau: 1
   align_distance_decay: 0.007
   infer_distance_decay: true
@@ -88,7 +83,6 @@ sr_settings:
   infer_presence_temp: 1.0
 - name: kmer1_latent.p001
   mismapping_method: align
-  align_backend: kmer
   align_tau: 1
   align_distance_decay: 0.007
   infer_distance_decay: true

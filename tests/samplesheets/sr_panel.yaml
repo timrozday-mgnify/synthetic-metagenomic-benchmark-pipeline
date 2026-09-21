@@ -3,9 +3,9 @@
 # `database: generic` stands in for the generic database (SILVA SSU) the reads are mapped
 # against; its `taxonomy:` lineages give it a .tax sidecar, which every run of the row
 # takes as --taxonomy. `panel: panelA` reinterprets those labels through the panelA collection. No row profiles
-# against panelA directly; it is built because a setting names it. Panel entries build no
-# shared matrix (the nested run measures their kernel itself), so this is 1 matrix and 5
-# inference runs. panelTaxa is a pre-built taxa-only dir (no FASTA) and panelMixed a built
+# against panelA directly; it is built because a setting names it. Every entry is its own
+# reference set (`whole_db` is the whole-database panel), so this is 5 kernel builds and 5
+# inference runs, each handed its build's kernel. panelTaxa is a pre-built taxa-only dir (no FASTA) and panelMixed a built
 # collection mixing a genome with a taxon; taxon
 # entries resolve against generic's taxonomy, and are species (the only rank tested). `sr_error_model` reaches the nested samplesheet for the trained kernel.
 databases:
@@ -40,7 +40,7 @@ samples:
     database: generic
     sr_error_model: tests/data/pretrained_natA/natA.model.pt
     sr_settings:
-      - {name: square, mismapping_method: align, align_backend: exact-hash, align_tau: 0}
+      - {name: whole_db, mismapping_method: align, align_tau: 0}
       - {name: panel_trained, mismapping_method: simulate, matrix_args: --sim_error_model trained,
          panel: panelA, infer_presence: false}
       - {name: panel_flat, mismapping_method: simulate, panel: panelA, infer_presence: false}

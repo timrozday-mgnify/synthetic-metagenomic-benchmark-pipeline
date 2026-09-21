@@ -8,18 +8,34 @@ Both superresolution pipelines emit one row per genome with `genome_id`,
 posterior mean of the Bayesian inversion), plus `inferred_lo`/`inferred_hi`.
 We take `inferred_mean` — the pipelines' actual estimate — and renormalise it to
 sum to 1 over the reported genomes.
+
+superresolution-amplicon also reports a `background` row: the reads no panel entry
+explains. It is not a genome, so it leaves the profile, and its share of the total goes
+to a sidecar (`--background-output`) so the unexplained fraction is still reported.
 """
 
 import argparse
 import csv
 
 
+BACKGROUND = "background"
+
+
+def background_share(rows: list[dict[str, str]]) -> float:
+    """The `background` row's share of the summed inferred_mean (0 without one)."""
+    total = sum(float(r.get("inferred_mean") or 0) for r in rows)
+    bg = sum(float(r.get("inferred_mean") or 0) for r in rows
+             if (r.get("genome_id") or "").strip() == BACKGROUND)
+    return bg / total if total else 0.0
+
+
 def normalize(rows: list[dict[str, str]]) -> list[tuple[str, float]]:
-    """[(genome_id, rel_abundance)] from inferred_mean, renormalised to sum to 1."""
+    """[(genome_id, rel_abundance)] from inferred_mean over genomes (not `background`),
+    renormalised to sum to 1."""
     abund: dict[str, float] = {}
     for row in rows:
         gid = (row.get("genome_id") or "").strip()
-        if not gid:
+        if not gid or gid == BACKGROUND:
             continue
         value = row.get("inferred_mean")
         if value is None or str(value).strip() == "":
@@ -33,6 +49,8 @@ def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--composition", required=True, help="<id>.inferred_composition.csv")
     p.add_argument("--output", required=True, help="Output normalised profile TSV.")
+    p.add_argument("--background-output",
+                   help="Optional TSV: the sample's background (unexplained) share.")
     args = p.parse_args()
 
     with open(args.composition, newline="") as fh:
@@ -47,6 +65,9 @@ def main() -> int:
             # the column). The naive `observed_rel_abundance` baseline stays available
             # in the raw CSV published under profiling/sr/.
             writer.writerow([gid, f"{rel:.6f}", f"{rel:.6f}"])
+    if args.background_output:
+        with open(args.background_output, "w") as fh:
+            fh.write(f"background_fraction\n{background_share(rows):.6f}\n")
     return 0
 
 
@@ -66,6 +87,12 @@ def _selfcheck() -> None:
                       {"genome_id": "a", "inferred_mean": "0.75"}])
     assert [g for g, _ in same] == ["a", "z"], same
     assert abs(same[0][1] - 0.75) < 1e-9, same
+    # `background` leaves the profile; the genomes renormalise without it.
+    bg = [{"genome_id": "a", "inferred_mean": "0.6"}, {"genome_id": "b", "inferred_mean": "0.2"},
+          {"genome_id": BACKGROUND, "inferred_mean": "0.2"}]
+    got = dict(normalize(bg))
+    assert set(got) == {"a", "b"} and abs(got["a"] - 0.75) < 1e-9, got
+    assert abs(background_share(bg) - 0.2) < 1e-9
     print("normalize_sr_profile self-check ok")
 
 

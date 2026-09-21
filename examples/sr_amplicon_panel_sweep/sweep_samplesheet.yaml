@@ -139,7 +139,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -149,7 +148,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -248,7 +246,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -258,7 +255,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -357,7 +353,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -367,7 +362,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -466,7 +460,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -476,7 +469,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -575,7 +567,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -585,7 +576,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -684,7 +674,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -694,7 +683,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -793,7 +781,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -803,7 +790,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -902,7 +888,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -912,7 +897,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -1011,7 +995,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -1021,7 +1004,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -1120,7 +1102,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -1130,7 +1111,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -1229,7 +1209,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -1239,7 +1218,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -1338,7 +1316,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -1348,7 +1325,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -1447,7 +1423,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -1457,7 +1432,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -1556,7 +1530,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -1566,7 +1539,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -1665,7 +1637,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -1675,7 +1646,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -1774,7 +1744,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -1784,7 +1753,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -1883,7 +1851,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -1893,7 +1860,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -1992,7 +1958,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -2002,7 +1967,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -2101,7 +2065,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -2111,7 +2074,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -2210,7 +2172,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -2220,7 +2181,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -2319,7 +2279,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -2329,7 +2288,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -2428,7 +2386,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -2438,7 +2395,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -2537,7 +2493,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -2547,7 +2502,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -2646,7 +2600,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -2656,7 +2609,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -2755,7 +2707,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -2765,7 +2716,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -2864,7 +2814,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -2874,7 +2823,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -2973,7 +2921,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -2983,7 +2930,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -3082,7 +3028,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -3092,7 +3037,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -3191,7 +3135,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -3201,7 +3144,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -3300,7 +3242,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -3310,7 +3251,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -3409,7 +3349,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -3419,7 +3358,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -3518,7 +3456,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -3528,7 +3465,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -3627,7 +3563,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -3637,7 +3572,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -3736,7 +3670,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -3746,7 +3679,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -3845,7 +3777,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -3855,7 +3786,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -3954,7 +3884,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -3964,7 +3893,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -4063,7 +3991,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -4073,7 +4000,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -4172,7 +4098,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -4182,7 +4107,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -4281,7 +4205,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -4291,7 +4214,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -4390,7 +4312,6 @@ samples:
     infer_presence: false
   - name: custom.kmer1_latent.gate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true
@@ -4400,7 +4321,6 @@ samples:
     infer_presence_temp: 1.0
   - name: custom.kmer1_latent.nogate
     mismapping_method: align
-    align_backend: kmer
     align_tau: 1
     align_distance_decay: 0.007
     infer_distance_decay: true

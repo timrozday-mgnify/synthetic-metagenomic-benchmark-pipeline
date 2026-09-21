@@ -107,10 +107,10 @@ def parseErrorModel(row) {
 //
 // `panel` (sr_amplicon only) names a `databases:` collection to reinterpret the row's own
 // database labels with: superresolution-amplicon's panel_references, plus panel_taxa for the
-// collection's `taxon:` entries (tested at species level only). The nested run measures
-// that kernel itself, inside the inference run, so a panel entry shares no matrix.
+// collection's `taxon:` entries (tested at species level only). Its kernel runs from that
+// panel's sources, so a panel entry is a reference set, and a kernel, of its own.
 def srSettingKeys() {
-    ['mismapping_method', 'align_backend', 'align_tau', 'align_distance_decay',
+    ['mismapping_method', 'align_tau', 'align_distance_decay',
      'align_decay_model', 'matrix_args', 'panel',
      'infer_presence', 'infer_presence_prior', 'infer_presence_temp',
      'infer_distance_decay', 'infer_decay_sigma', 'inference_args']
@@ -137,9 +137,6 @@ def parseSrSettings(row, defaultSettings) {
         }
         def unknown = e.keySet().findAll { !(it in known) && !(it in ['name', 'id']) }
         if (unknown) error "sr_settings '${name}': unknown key(s) ${unknown} (expected ${known})"
-        if (e.panel && e.infer_distance_decay?.toString() == 'true') {
-            error "sr_settings '${name}': a panel kernel records no distances; drop infer_distance_decay"
-        }
         [ name: name, opts: known.collectEntries { k -> [ (k): e[k] ] }.findAll { k, val -> val != null } ]
     }
     if (out*.name.unique().size() != out.size()) {
@@ -164,16 +161,6 @@ workflow {
         && !(params.sr_amplicon_mismapping_method in ['simulate', 'align'])) {
         error "sr_amplicon_mismapping_method must be 'simulate' or 'align' " +
               "(got '${params.sr_amplicon_mismapping_method}')"
-    }
-    if (params.sr_amplicon_align_backend != null) {
-        if (!(params.sr_amplicon_align_backend in ['minimap2', 'exact-hash', 'kmer'])) {
-            error "sr_amplicon_align_backend must be 'minimap2', 'exact-hash' or 'kmer' " +
-                  "(got '${params.sr_amplicon_align_backend}')"
-        }
-        if (params.sr_amplicon_mismapping_method == 'simulate') {
-            error "sr_amplicon_align_backend only applies to " +
-                  "sr_amplicon_mismapping_method = 'align'"
-        }
     }
     if (params.sr_amplicon_align_tau != null && (params.sr_amplicon_align_tau as int) < 0) {
         error "sr_amplicon_align_tau must be >= 0 (got '${params.sr_amplicon_align_tau}')"

@@ -40,18 +40,12 @@ def srPrimerArgs(meta) {
 }
 
 // One amplicon cache for every nested amplicon run: each has its own work dir, so without
-// it every matrix and inference run re-extracts a reference set this pipeline built and
-// re-clusters it for mapseq. The nested pipeline keys it by reference set, primers and
-// code. Lives beside the nested work dirs; `rm -rf <workDir>/nested` clears it.
+// it every kernel and inference run re-extracts a reference set's amplicons, the costly
+// per-set step, and re-clusters a FASTA that ships no .mscluster. The nested pipeline keys
+// it by reference set, primers and code. Lives beside the nested work dirs;
+// `rm -rf <workDir>/nested` clears it.
 def srCacheArgs(meta) {
     meta.profiler == 'sr_amplicon' ? "--amplicon_cache '${workflow.workDir}/nested/sr/amplicon_cache'" : ''
-}
-
-// Let the nested amplicon run build its MAPseq database: only for a reference set this
-// pipeline built itself (meta.sr_build_db, set in PROFILE). A pre-built one (SILVA) brings
-// its database and is never rebuilt, which the nested pipeline refuses by default anyway.
-def srBuildDbArgs(meta) {
-    meta.sr_build_db ? '--build_mapseq_db' : ''
 }
 
 // Nested command-line flags composed by the PROFILE subworkflow and carried on `meta`.
@@ -153,10 +147,10 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     tuple val(meta), val(read_paths), path(refs), path(sr_assets)
 
     output:
-    // The nested pipelines have moved from a dense CSV to a compressed .npz (labelled
-    // CSR, or the grouped form for database-scale reference sets). Accept either: this
-    // module only carries the file to --mismapping_matrix, which reads all of them.
-    tuple val(meta), path("${meta.id}.mismapping_matrix.{csv,npz}"), emit: mismapping
+    // superresolution-amplicon publishes its kernel as a mismapping/panel_<key>/ bundle,
+    // which inference takes whole through --panel_kernel; the shotgun sibling publishes a
+    // matrix file (.csv or .npz) for --mismapping_matrix.
+    tuple val(meta), path("${meta.id}.{mismapping_matrix.csv,mismapping_matrix.npz,panel_kernel}"), emit: mismapping
     // How the matrix was actually built, lifted out of the nested bundle so a mode sweep
     // can be attributed without re-deriving it from the benchmark's own params.
     tuple val(meta), path("${meta.id}.mismapping_provenance.json"), optional: true, emit: provenance
@@ -180,7 +174,7 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     def extraCfg = (meta.sr_configs ?: []).collect { "-c ${file(it, checkIfExists: true)}" }.join(' ')
     def nestedDir = "${workflow.workDir}/nested/sr/${meta.id.replaceAll(/[^A-Za-z0-9._-]+/, '_')}${meta.matrix_key ?: ''}"
     def nestedArgs = [profArg, '--input sr_samplesheet.yml', '--outdir sr_out', extraCfg,
-                      srPrimerArgs(meta), srCacheArgs(meta), srBuildDbArgs(meta),
+                      srPrimerArgs(meta), srCacheArgs(meta),
                       srNestedArgs(meta, 'matrix_args'),
                       "-w '${nestedDir}/work'", '-resume']
         .findAll { it }
@@ -225,9 +219,24 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     nested_status=\$?
     set -e
 
-    # Current superresolution-amplicon and superresolution-shotgun revisions publish
-    # generated matrices in an opaque-key bundle under mismapping/, rather than next
-    # to a sample's composition. The representative nested run must yield one bundle.
+    if [ '${meta.profiler}' = 'sr_amplicon' ]; then
+        # The kernel bundle, lifted whole: --panel_kernel checks its provenance.json.
+        # The representative nested run must publish exactly one.
+        find sr_out/mismapping -mindepth 1 -maxdepth 1 -type d -name 'panel_*' -print 2>/dev/null | sort > kernel_dirs.txt
+        kernel_count=\$(wc -l < kernel_dirs.txt | tr -d ' ')
+        if [ "\$kernel_count" -ne 1 ]; then
+            echo "Expected exactly one nested panel kernel bundle under sr_out/mismapping/, found \$kernel_count (nested exit status \$nested_status)." >&2
+            sed 's/^/Discovered bundle: /' kernel_dirs.txt >&2
+            exit 1
+        fi
+        kernel_dir=\$(sed -n '1p' kernel_dirs.txt)
+        cp -R "\$kernel_dir" ${meta.id}.panel_kernel
+        cp "\$kernel_dir/provenance.json" ${meta.id}.mismapping_provenance.json
+        [ "\$nested_status" -eq 0 ] || echo "WARN: nested superresolution run exited \$nested_status but produced the panel kernel; continuing." >&2
+    else
+    # The shotgun sibling publishes its matrix in an opaque-key bundle under
+    # mismapping/, rather than next to a sample's composition. The representative
+    # nested run must yield one bundle.
     find sr_out/mismapping -type f \\( -name mismapping_matrix.npz -o -name mismapping_matrix.csv \\) -print 2>/dev/null | sort > matrix_paths.txt
     matrix_count=\$(wc -l < matrix_paths.txt | tr -d ' ')
 
@@ -266,6 +275,7 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     if [ "\$nested_status" -ne 0 ]; then
         echo "WARN: nested superresolution run exited \$nested_status but produced the mismapping matrix; continuing." >&2
     fi
+    fi
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -280,7 +290,7 @@ process BUILD_SUPERRESOLUTION_MISMAPPING {
     // glob and publishing paths as a live run. Nothing downstream of a stub reads the
     // contents, so an empty .npz is enough — its name is the part under test.
     def stubMatrix = meta.profiler == 'sr_amplicon'
-        ? "touch ${meta.id}.mismapping_matrix.npz"
+        ? "mkdir ${meta.id}.panel_kernel && touch ${meta.id}.panel_kernel/{mismapping_matrix.npz,panel_translation.tsv,sources.tsv,provenance.json}"
         : "echo 'src,dst,prob' > ${meta.id}.mismapping_matrix.csv"
     """
     ${stubMatrix}
@@ -318,17 +328,14 @@ process RUN_SUPERRESOLUTION {
 
     output:
     tuple val(metas), path("*.sr_profile.tsv"),      emit: profile
+    // The share of each sample's reads no panel entry explains (0 for the shotgun sibling).
+    tuple val(metas), path("*.sr_background.tsv"),   emit: background
     tuple val(metas), path("sr_out/composition/**"), emit: composition
     // sr_amplicon's mapseq classification of each sample's reads. Published so it can be
     // handed straight back as a `mseq:` samplesheet column: re-profiling the same reads
     // under different settings then skips the run's one genuinely expensive stage.
     // Optional — the shotgun sibling has no mapseq step.
     tuple val(metas), path("sr_out/mapseq/**"), optional: true, emit: obs_mseq
-    // The panel kernel K the nested run measured inside itself (panel settings only).
-    // It is keyed by content (panel + database + model + method), not by sample, so one
-    // copy covers every sample and setting that shared it — which is why it publishes to
-    // the run-level mismapping/ dir rather than into each sample's profiling/sr/.
-    tuple val(metas), path("sr_out/mismapping/**"), optional: true, emit: panel_kernel
     path "versions.yml",                             emit: versions
 
     when:
@@ -366,9 +373,9 @@ process RUN_SUPERRESOLUTION {
     def set_dir    = (meta.reference_set ?: meta.id).replaceAll(/[^A-Za-z0-9._-]+/, '_')
     def nestedDir  = "${workflow.workDir}/nested/sr/${set_dir}-${batch_id}"
     def nestedArgs = [prof_arg, '--input sr_samplesheet.yml', '--outdir sr_out', extra_cfg,
-                      // [] for a panel batch, which measures its own kernel.
-                      mismapping_matrix ? "--mismapping_matrix ${mismapping_matrix}" : '',
-                      presenceArg, srPrimerArgs(meta), srCacheArgs(meta), srBuildDbArgs(meta),
+                      meta.profiler == 'sr_amplicon' ? "--panel_kernel ${mismapping_matrix}"
+                                                     : "--mismapping_matrix ${mismapping_matrix}",
+                      presenceArg, srPrimerArgs(meta), srCacheArgs(meta),
                       "-w '${nestedDir}/work'", '-resume']
         .findAll { it }
         .join(' ')
@@ -377,7 +384,7 @@ process RUN_SUPERRESOLUTION {
     def norm_cmds = metas*.id.collect { id ->
         """comp=sr_out/composition/${id}/${id}.inferred_composition.csv
     [ -f "\$comp" ] || { echo "RUN_SUPERRESOLUTION: nested run produced no composition for ${id}" >&2; exit 1; }
-    python "\$(command -v normalize_sr_profile.py)" --composition "\$comp" --output ${id}.sr_profile.tsv"""
+    python "\$(command -v normalize_sr_profile.py)" --composition "\$comp" --output ${id}.sr_profile.tsv --background-output ${id}.sr_background.tsv"""
     }.join('\n    ')
     """
     # Multi-sample YAML samplesheet, one entry per batched sample — see srSheetCmds.
@@ -423,8 +430,9 @@ process RUN_SUPERRESOLUTION {
         """mkdir -p sr_out/composition/${id}
     printf 'sample,genome_id,observed_rel_abundance,inferred_mean,inferred_lo,inferred_hi\\n' > sr_out/composition/${id}/${id}.inferred_composition.csv
     cp sr_samplesheet.yml sr_out/composition/${id}/${id}.nested_samplesheet.yml
-    printf '%s\\n' '${[srNestedArgs(metas[0], 'inference_args'), srBuildDbArgs(metas[0])].findAll { it }.join(' ')}' > sr_out/composition/${id}/${id}.nested_args.txt
-    printf 'genome_id\\tpredicted_rel_abundance\\tpredicted_tax_rel_abundance\\n' > ${id}.sr_profile.tsv""" +
+    printf '%s\\n' '${srNestedArgs(metas[0], 'inference_args')}' > sr_out/composition/${id}/${id}.nested_args.txt
+    printf 'genome_id\\tpredicted_rel_abundance\\tpredicted_tax_rel_abundance\\n' > ${id}.sr_profile.tsv
+    printf 'background_fraction\\n0\\n' > ${id}.sr_background.tsv""" +
         // Only the amplicon sibling maps reads, and only when it wasn't handed a
         // classification already — same condition the live nested run applies.
         ((metas[0].profiler == 'sr_amplicon' && !layout.find { it[0] == id }[3])
@@ -433,14 +441,6 @@ process RUN_SUPERRESOLUTION {
     printf '#stub\\n' | gzip > sr_out/mapseq/${id}/${id}.obs.mseq.gz""" : '')
     }.join('\n    ')
     def sheet_cmds = srSheetCmds(layout)
-    // A panel run measures its kernel inside the inference run and publishes it under
-    // mismapping/. One per batch, as the live run does, so the publishing path is stubbed too.
-    def stub_kernel = metas[0].sr_opts?.panel
-        ? """
-    mkdir -p sr_out/mismapping/panel_${metas[0].sr_opts.panel}
-    touch sr_out/mismapping/panel_${metas[0].sr_opts.panel}/mismapping_matrix.npz
-    printf '{"stub": true, "panel": "%s"}\\n' '${metas[0].sr_opts.panel}' > sr_out/mismapping/panel_${metas[0].sr_opts.panel}/provenance.json"""
-        : ''
     """
     # Same samplesheet the live script writes, published beside each sample's stub
     # composition. A stub cannot run the nested pipeline, but it can prove what the
@@ -451,7 +451,6 @@ process RUN_SUPERRESOLUTION {
     ${sheet_cmds}
 
     ${stub_cmds}
-    ${stub_kernel}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
