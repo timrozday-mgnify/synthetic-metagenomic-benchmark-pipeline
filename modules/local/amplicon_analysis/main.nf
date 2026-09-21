@@ -32,7 +32,10 @@ process RUN_AAP {
     // correct because those paths embed the upstream workdir hash.
     // Optional path slots are stageAs'd to distinct fixed names so the shared NO_FILE
     // placeholder doesn't collide across slots. `use_built` selects the DB source.
-    tuple val(metas), val(layout), val(use_built), path(aap_config, stageAs: 'aap_config_in'), path(mapseq_fasta, stageAs: 'mapseq_db.fasta'), path(mapseq_tax, stageAs: 'mapseq_db.tax'), path(mapseq_otu, stageAs: 'mapseq_db.otu'), path(mapseq_mscluster, stageAs: 'mapseq_db.mscluster'), val(rfam_cm), val(rfam_claninfo)
+    // The .mscluster must be named <fasta>.mscluster: mapseq finds it only beside the
+    // FASTA under that name, and otherwise re-clusters the whole database itself (hours
+    // on SILVA) and labels with that clustering instead of the shipped one.
+    tuple val(metas), val(layout), val(use_built), path(aap_config, stageAs: 'aap_config_in'), path(mapseq_fasta, stageAs: 'mapseq_db.fasta'), path(mapseq_tax, stageAs: 'mapseq_db.tax'), path(mapseq_otu, stageAs: 'mapseq_db.otu'), path(mapseq_mscluster, stageAs: 'mapseq_db.fasta.mscluster'), val(rfam_cm), val(rfam_claninfo)
 
     output:
     // Glob (not the bare dir) so publishDir's saveAs sees each file as aap_out/<id>/...
