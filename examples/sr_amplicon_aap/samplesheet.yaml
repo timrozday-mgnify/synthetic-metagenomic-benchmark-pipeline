@@ -1,0 +1,80 @@
+# Phase 4 truth sample (docs/aap_silva_compat_plan.md): one synthetic V4 community from
+# the 20HM panel, profiled by AAP and by superresolution-amplicon five ways.
+#
+#   arm 1  aap          AAP's own SILVA labels (the aap profiler; scored at species level)
+#   arm 2  sim_merged   AAP's merged reads + .mseq, kernel simulated as merged reads
+#   arm 3  sim_pairs    same, kernel simulated as mate pairs run through AAP's fastp merge
+#   arm 4  align        same, align kernel (tau 1) with separate substitution/indel decays
+#   arm 5  raw          the raw pairs, SR's own merge and primer trim, same SILVA database
+#
+# Paths under results/ are written by run.sh's first (train) step. Relative paths resolve
+# against the pipeline directory.
+databases:
+  # AAP's SILVA-SSU directory, unmodified. Both profilers map against it, so AAP's .mseq
+  # is valid for SR as supplied.
+  silva_aap:
+    path: /Users/timrozday/Downloads/silva-ssu-138.1/138.1
+    rfam_covariance_model: /Users/timrozday/Documents/Pipelines/assembly-analysis-pipeline/tests/reference_databases/rfam/ribo.cm
+    rfam_claninfo: /Users/timrozday/Documents/Pipelines/assembly-analysis-pipeline/tests/reference_databases/rfam/ribo.clan_info
+  # The panel every SR arm reinterprets the SILVA labels through: all 22 genomes,
+  # including the 6 absent from the sample.
+  community_20hm:
+    sequences:
+      - {id: bacteroides_fragilis, ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/CR626927.1_SSU.fasta}
+      - {id: bacteroides_thetaiotaomicron, ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/CP040530.1_SSU.fasta}
+      - {id: bacteroides_uniformis, ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/FNPN01_SSU.fasta}
+      - {id: bacteroides_vulgatus, ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/CP000139.1_SSU.fasta}
+      - {id: clostridium_bolteae, ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/ABCC02_SSU.fasta}
+      - {id: clostridium_perfringens, ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/DACTBY01_SSU.fasta}
+      - {id: clostridium_ramosum, ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/ABFX02_SSU.fasta}
+      - {id: clostridium_saccharolyticum, ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/CP002109.1_SSU.fasta}
+      - {id: collinsella_aerofaciens, ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/CP048433.1_SSU.fasta}
+      - {id: coprococcus_comes, ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/CP070062.1_SSU.fasta}
+      - {id: dorea_formicigenerans, ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/GCA_000169235.1_SSU.fasta}
+      - {id: eggerthella_lenta, ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/CP001726.1_SSU.fasta}
+      - {id: eubacterium_rectale, ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/GCA_000209935.1_SSU.fasta}
+      - {id: fusobacterium_nucleatum, ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/GCA_000007325.1_SSU.fasta}
+      - {id: methanobrevibacter_smithii, ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/GCA_000151225.1_SSU.fasta}
+      - {id: parabacteroides_merdae, ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/AAXE02_SSU.fasta}
+      - {id: roseburia_intestinalis, ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/ABYJ02_SSU.fasta}
+      - {id: ruminococcus_gnavus, ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/CP027002.1_SSU.fasta}
+      - {id: salinibacter_ruber, ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/CP000159.1_SSU.fasta}
+      - {id: streptococcus_parasanguinis, ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/GCA_000164675.2_SSU.fasta}
+      - {id: streptococcus_salivarius, ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/CP009913.1_SSU.fasta}
+      - {id: veillonella_parvula, ssu: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/HM007566.1.fasta}
+
+samples:
+  - sample: T1
+    train_id: sc2200627
+    # A raw fermentor run (2x310, Finn). No raw Nov2025 FASTQs were at hand.
+    train_fastq_1: /Users/timrozday/Downloads/SC2200627-SC3/SC2200627-SC3_Batch_54_samples_26s000943-1-1_Finn_lane1C1_1_sequence.fq.gz
+    train_fastq_2: /Users/timrozday/Downloads/SC2200627-SC3/SC2200627-SC3_Batch_54_samples_26s000943-1-1_Finn_lane1C1_2_sequence.fq.gz
+    platform: hq-illumina
+    # Generate from the model run.sh's train step published, not a second training.
+    error_model_dir: results/sr_amplicon_aap/error_models/sc2200627
+    # The same model, handed to the pairs arm: it is a per-mate model trained on raw
+    # R1/R2, which is what --sim_read_structure pairs needs. An oracle, so optimistic.
+    sr_error_model: results/sr_amplicon_aap/error_models/sc2200627/sc2200627.model.pt
+    genomes_csv: examples/sr_amplicon_aap/genomes.csv
+    num_reads: 400000            # 200k pairs
+    mode: amplicon
+    paired_end: true
+    read_length_mean: 310
+    read_length_variance: 0
+    primers:
+      - {pair_id: 515-YF-806BR, forward: GTGYCAGCMGCCGCGGTAA, reverse: GGACTACNVGGGTWTCTAAT}
+    profilers: [aap, sr_amplicon]
+    database: silva_aap
+    sr_settings:
+      # 0.2's measured merged-read rates (sub 3.4e-4, indels 4e-6).
+      - {name: sim_merged, aap_reads: true, panel: community_20hm, mismapping_method: simulate,
+         matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate 0.000004}
+      - {name: sim_pairs, aap_reads: true, panel: community_20hm, mismapping_method: simulate,
+         matrix_args: --sim_read_structure pairs --sim_mate_len 310 --sim_error_model trained}
+      # auto measures both decays off the same flat merged-read rates.
+      - {name: align, aap_reads: true, panel: community_20hm, mismapping_method: align,
+         align_tau: 1, align_distance_decay: auto,
+         matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate 0.000004}
+      # SC2200627's calibrated raw substitution rate (superresolution-amplicon dev/error_rate_calibration.md).
+      - {name: raw, panel: community_20hm, mismapping_method: simulate,
+         matrix_args: --flat_sub_rate 0.0031}

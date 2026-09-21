@@ -23,7 +23,8 @@ Status: plan, revised 2026-09-21. It was first written 2026-09-17 and now absorb
 | Phase 2 acceptance | deferred, to be run later |
 | 3 (align for merged reads) | done except the 3.1 test, upstream #26; acceptance deferred |
 | 2.2–3 on upstream `main` | #24–#26 were merged into their stacked base branches, not `main`; upstream #27 landed them (`941db22`) |
-| 4.2 (sr_amplicon reads RUN_AAP's output) | done on `aap-phase1-plan`, stub-tested; the worked example is left for 4.1 |
+| 4.2 (sr_amplicon reads RUN_AAP's output) | done on `aap-phase1-plan`, stub-tested |
+| 4.1, 4.3 (truth sample, arms, scoring) | built as `examples/sr_amplicon_aap/`, stub-run; not run for real |
 | everything else | not done |
 
 Order: R → F → P.4–P.8 → 1 → 2 → 3 → 4 → 5. See Decision 7.
@@ -845,7 +846,6 @@ indel decay) against simulate `merged`:
     - `main.nf` refuses `aap_reads` on a row that doesn't also run `aap`.
     - A `path:` mapseq DB now also finds AAP's `SILVA-SSU-tax.txt`. The benchmark's aap
       branch still needs an `.otu` beside it, which AAP's directory ships.
-    - `examples/sr_amplicon_aap/` waits for 4.1: it needs the truth sample.
 - **4.3 Score** panel-entry (genome and species) TV to truth, one arm each:
   1. raw AAP labels;
   2. simulate `merged`;
@@ -853,6 +853,22 @@ indel decay) against simulate `merged`:
   4. align (Phase 3);
   5. SR from raw reads with its own merge and read prep, against the same full-length
      database. This measures what Decision 3 buys.
+
+As built (`examples/sr_amplicon_aap/`, stub-run only):
+- **4.1:** 16 of the 22 20HM genomes present, abundances 400 down to 1. The other 6 are in
+  the panel only. 200k pairs, 2x310.
+  - The model is trained on raw SC2200627 lane C1, not a Nov2025 run: no raw Nov2025
+    FASTQs were at hand, and SC2200627 is the same Finn 2x310 set-up.
+  - No chimeras: genome-blender doesn't make them.
+  - The primers on the reads are the template's bases (AmpliconHunter keeps the primer
+    site), not the oligo mix.
+- **Arms:** arm 3 simulates with the generating model, so it is an oracle. Arms 2 and 4 are
+  flat at 0.2's rates. Arm 5 is flat at SC2200627's calibrated 3.1e-3.
+- **Score:** 6 of the 22 species have no SILVA 138.1 species label, among them *R. gnavus*,
+  *E. rectale*, *B. vulgatus* and *C. bolteae* (`species.tsv`). Arm 1 cannot reach them.
+  Every genome is its own species, so genome and species TV coincide.
+- AMPLICONHUNTER asks for 36 GB too, so the example caps outer tasks at 18 GB as well as
+  nested ones.
 
 **Acceptance:**
 - Arm 2 beats arm 1 on species TV.

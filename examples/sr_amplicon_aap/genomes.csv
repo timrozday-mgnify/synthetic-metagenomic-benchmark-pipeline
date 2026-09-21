@@ -1,0 +1,17 @@
+genome_id,fasta_path,abundance
+bacteroides_fragilis,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/CR626927.1_SSU.fasta,400
+bacteroides_thetaiotaomicron,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/CP040530.1_SSU.fasta,250
+bacteroides_uniformis,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/FNPN01_SSU.fasta,160
+bacteroides_vulgatus,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/CP000139.1_SSU.fasta,100
+clostridium_bolteae,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/ABCC02_SSU.fasta,80
+clostridium_perfringens,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/DACTBY01_SSU.fasta,60
+clostridium_ramosum,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/ABFX02_SSU.fasta,40
+collinsella_aerofaciens,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/CP048433.1_SSU.fasta,30
+dorea_formicigenerans,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/GCA_000169235.1_SSU.fasta,20
+eggerthella_lenta,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/CP001726.1_SSU.fasta,15
+eubacterium_rectale,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/GCA_000209935.1_SSU.fasta,10
+fusobacterium_nucleatum,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/GCA_000007325.1_SSU.fasta,8
+parabacteroides_merdae,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/AAXE02_SSU.fasta,5
+roseburia_intestinalis,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/ABYJ02_SSU.fasta,3
+ruminococcus_gnavus,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/CP027002.1_SSU.fasta,2
+streptococcus_parasanguinis,/Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline_runs/sr_amp_panel_sweep/export/references/16S/GCA_000164675.2_SSU.fasta,1
