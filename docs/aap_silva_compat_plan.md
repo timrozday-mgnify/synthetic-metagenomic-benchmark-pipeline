@@ -20,6 +20,7 @@ Status: plan, revised 2026-09-21. It was first written 2026-09-17 and now absorb
 | 2.1 (primer mix) | done, upstream #23, not merged |
 | 2.2 (merged-read model) | done without `Position`, upstream #24 (stacked on #23), not merged |
 | 2.3 (`pairs`) | done without `raw_reads:`, upstream #25 (stacked on #24), not merged |
+| Phase 2 acceptance | deferred, to be run later |
 | everything else | not done |
 
 Order: R → F → P.4–P.8 → 1 → 2 → 3 → 4 → 5. See Decision 7.
@@ -757,7 +758,11 @@ Acceptance run (2026-09-21, upstream `main` at `462603b`, in upstream
     sources, i.e. the MAPseq work of 1–5 AAP samples.
   - One kernel serves every sample on the same panel, database and model.
 
-**Acceptance** (Nov2025 batch plus the Phase 4 truth sample):
+**Acceptance** (Nov2025 batch plus the Phase 4 truth sample). *Deferred 2026-09-21: not run
+yet, to be done later. Phase 3 went ahead without it. It needs the full SILVA-SSU database,
+a trained mate model per run for `pairs` (supplied as `error_model:`, since `raw_reads:` does
+not exist), and the Phase 4 truth sample. Until it runs, `merged` is unvalidated against
+`pairs` and `--sim_error_model` stays `flat` by default.*
 - `merged` against `pairs` on the same panel: median row L1 of `K` ≤ 0.05. If not,
   `pairs` becomes the default and 2.2 is documented as insufficient.
 - Predicted mass on labels that drew no observed reads ≤ 0.3% (GTDB calibration reached
