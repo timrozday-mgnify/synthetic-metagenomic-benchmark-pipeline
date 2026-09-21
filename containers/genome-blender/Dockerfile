@@ -19,6 +19,12 @@ RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/wh
 # skiver-generate (the generative error-model CLI genome-blender invokes).
 COPY vendor/skiver/scripts/ /opt/skiver/scripts/
 RUN pip install --no-cache-dir /opt/skiver/scripts
+# The platform presets (`--error-model illumina|pacbio|nanopore`, a samplesheet
+# `error_model:`). lib/presets.py looks two levels above its own file, which once
+# pip-installed is the interpreter's lib dir, not the skiver checkout.
+# ponytail: tied to python3.11's layout; ship the presets as package data if the base
+# image's python moves.
+COPY vendor/skiver/context_error_models/ /usr/local/lib/python3.11/context_error_models/
 
 # genome-blender itself (pure-python; provides `generate-reads`).
 # cli.py imports `click` directly, so pin typer + click explicitly.
@@ -28,4 +34,5 @@ RUN pip install --no-cache-dir "typer>=0.9" click \
 
 RUN generate-reads --help >/dev/null && skiver-generate --help >/dev/null \
     && normalise-fasta --help >/dev/null \
+    && python -c "from lib.presets import available_presets as a, resolve_preset as r; [r(p) for p in a()]" \
     && python -c "import pysam; print('pysam', pysam.__version__)"
