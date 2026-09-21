@@ -6,9 +6,9 @@ the 20HM mock plus a second *B. uniformis* strain (23 genomes). There are three 
 panel-genome abundances:
 
 - **`custom`**: map the reads against a database built from the panel itself, and infer
-  through a square mis-mapping matrix over those 23 references.
+  through a kernel over those 23 references (the whole-database panel).
 - **`generic_panel`**: keep the SILVA labels and reinterpret them through the panel.
-  superresolution-amplicon measures a rectangular kernel (panel V4 amplicons x SILVA
+  superresolution-amplicon measures a kernel (panel V4 amplicons x SILVA
   labels) by simulating reads from the panel and mapping them against SILVA. It then
   infers the 23 genomes plus a `background` bucket for reads the panel cannot explain.
 - **`generic_taxa`**: the same, but only the *B. uniformis* pair is known as genomes. Every
@@ -39,7 +39,7 @@ shipped grids:
 
 | Arm | Axis | Points |
 |---|---|---|
-| `custom` | `matrix` | `simulate` (flat error), `kmer1_latent` (align kmer τ=1, decay fitted per sample) |
+| `custom` | `matrix` | `simulate` (flat error), `kmer1_latent` (align τ=1, decay fitted per sample) |
 | | `prior` | `gate` (presence prior 0.01), `nogate` |
 | `generic_panel` | `kernel` | `trained` (simulates with the model the reads were made with), `flat` |
 | | `prior` | `gate`, `nogate`, `horseshoe` |
@@ -50,7 +50,7 @@ shipped grids:
 Add an axis or a point by editing `config.yaml`. Knobs are the pipeline's `sr_settings`
 keys. Any other superresolution-amplicon param goes through `matrix_args` or
 `inference_args` (`--sim_error_model`, `--infer_horseshoe`, `--infer_steps`,
-`--infer_alpha`, `--panel_sim_n_per_ref`, ...). When two axes of one point both set one
+`--infer_alpha`, `--sim_n_per_ref`, ...). When two axes of one point both set one
 of those two keys, their flags are joined rather than overwritten, which is what lets
 `prior` and `steps` both add inference flags.
 
@@ -98,11 +98,8 @@ Two samplesheet features exist for it:
   later), and is required for `generic_taxa`. The sequences must
   still carry the primer sites, because superresolution-amplicon cuts its amplicons by
   in-silico PCR.
-- `benchmark.config` pins `sr_revision` to a superresolution-amplicon commit, on purpose:
-  that project's `main` has since migrated to panel-only kernels and rejects
-  `--mismapping_matrix`, which is how this pipeline measures one matrix per reference set
-  and reuses it across the batch. Do not move the pin to `main` until upstream's
-  panel-kernel input (P.4) lands and this pipeline is wired to it. A local checkout goes in
+- `benchmark.config` pins `sr_revision` to the superresolution-amplicon commit this
+  pipeline's `--panel_kernel` wiring was tested against. A local checkout goes in
   `sr_amplicon_repo` instead, and then the revision is ignored.
 
 The scripts need **PyYAML + numpy**. `python scripts/panel_sweep.py --selfcheck` and
@@ -117,8 +114,8 @@ and scoring without touching the pipeline.
 
 1. `generate_samplesheet.py` → `samplesheet.yaml` (+ `genomes/sample_NN.amplicon_16s.csv`),
    then `--step all`. This trains the error model, generates the reads at every depth, and
-   maps each depth against SILVA **once** under `generic.map_setting` (align exact-hash, cheap
-   at SILVA scale). It publishes `profiling/sr/<id>.map.obs.mseq.gz` per dir, and
+   maps each depth against SILVA **once** under `generic.map_setting` (align τ=0 over the
+   panel, cheap at SILVA scale). It publishes `profiling/sr/<id>.map.obs.mseq.gz` per dir, and
    `error_models/<train_id>/<train_id>.model.pt`.
 2. `generate_sweep_samplesheet.py` → `sweep_samplesheet.yaml`, then `--step profile`. There
    are two rows per benchmark dir. The `custom` row has `database: community_20hm` and the
@@ -135,16 +132,15 @@ depth axis doubles all of that, and only earns it below the nested run's
 expensive parts:
 
 - **SILVA read mapping, once**, in phase 1. No phase-2 setting re-maps the reads.
-- **2 custom matrices** over 23 references. The two `prior` points share each one.
-- **6 panel kernels**, one per `generic_panel` point. The benchmark batches every dir of a
-  reference set into one nested run per inference setting, and the kernel is built inside
-  that run. So a kernel costs about `panel_sim_n_per_ref` (5,000) x about 30 distinct
-  panel amplicons simulated reads mapped against SILVA, once per point, whatever the number of
-  dirs. Adding a `generic_panel` point adds a kernel; adding a `custom` inference point does
-  not add a matrix.
-- **4 taxa kernels**, the same way, but over about 90 sources (the pair's amplicons plus
+- **2 custom kernels** over 23 references. The two `prior` points share each one.
+- **2 panel kernels**, one per `generic_panel` `kernel` point; the `prior` and `steps`
+  points share them. Each is built once, whatever the number of dirs, and costs about
+  `sim_n_per_ref` (5,000) x about 30 distinct panel amplicons simulated reads mapped against
+  SILVA. Adding a `kernel` point adds a kernel; adding an inference point does not.
+- **2 taxa kernels**, the same way, but over about 90 sources (the pair's amplicons plus
   1–24 SILVA V4 groups per species in the SILVA sweep), so about three times a panel
   kernel.
+- **1 small kernel for phase 1's mapping run**, over the panel.
 - The `custom` rows map their own reads (no `mseq:`), which is cheap against 23 references.
 
 ## Output

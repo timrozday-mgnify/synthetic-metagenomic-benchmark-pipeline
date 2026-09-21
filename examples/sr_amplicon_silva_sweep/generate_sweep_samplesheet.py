@@ -2,11 +2,11 @@
 """Phase 2: the parameter sweep and the arm comparison, as a profile-only samplesheet.
 
 Emits one row per benchmark directory phase 1 generated (error-model arm x primer pair x
-subsample depth) PER PROFILING ARM. The arms are `silva` (the sweep proper, fanned over
-the whole grid), `custom` (the same reads against a collection built from the panel),
-`silva_panel` (SILVA reinterpreted through that panel) and `aap` (no superresolution at
-all). They differ only in `database:`, `profilers:` and `sr_settings:`, so all four land
-in the benchmark dir the reads are in and are scored against one truth.tsv.
+subsample depth) PER PROFILING ARM. The arms are `silva_panel` (SILVA reinterpreted
+through the panel: the sweep proper, fanned over the whole grid), `custom` (the same reads
+against a collection built from the panel) and `aap` (no superresolution at all). They
+differ only in `database:`, `profilers:` and `sr_settings:`, so all three land in the
+benchmark dir the reads are in and are scored against one truth.tsv.
 
 Each row carries:
 
@@ -21,7 +21,7 @@ Each row carries:
 
 Every superresolution row carries its arm's own `sr_settings:` list, which the pipeline
 fans that row out over. So the run is `rows x that arm's points` inference runs but only
-`distinct matrix knob combinations` mis-mapping matrices.
+`distinct kernel knob combinations` kernels.
 
     python generate_sweep_samplesheet.py [results_dir] [config.yaml]
 """
@@ -45,7 +45,7 @@ def main():
         n_dirs += 1
         # Phase 1 published the classification under the generate step's own run id.
         run_id = f"{sample}.sub{depth}" if depth else sample
-        mseq = directory / "profiling" / "sr" / f"{run_id}.obs.mseq.gz"
+        mseq = directory / "profiling" / "sr" / f"{run_id}.map.obs.mseq.gz"
         if not mseq.exists():
             missing.append(str(mseq))
         for arm in gs.ARMS:
@@ -62,7 +62,7 @@ def main():
             # `custom` maps against its own 20-reference collection, so phase 1's SILVA
             # classification is not its classification. `aap` does its own mapping too -
             # that is the baseline being measured.
-            if arm in ("silva", "silva_panel") and mseq.exists():
+            if arm == "silva_panel" and mseq.exists():
                 row["mseq"] = str(mseq)
             rows.append(row)
 
@@ -73,9 +73,10 @@ def main():
     profiles = sum(len(r.get("sr_settings", [None])) for r in rows)
     print(f"Wrote sweep_samplesheet.yaml: {n_dirs} benchmark dir(s) x "
           f"{len(gs.ARMS)} arm(s) = {profiles} profiles "
-          f"({len(settings)} grid point(s) on the 'silva' arm, the rest at "
-          f"'{gs.arm_point(cfg)['name']}'), from {gs.n_matrices(settings)} "
-          f"mis-mapping matrix/matrices over '{cfg['database']['name']}'")
+          f"({len(settings)} grid point(s) on the 'silva_panel' arm, the rest at "
+          f"'{gs.arm_point(cfg)['name']}'), from "
+          f"{gs.n_matrices(gs.arm_settings(cfg, 'silva_panel'))} panel kernel(s) over "
+          f"'{cfg['database']['name']}'")
     if missing:
         print(f"NOTE: {len(missing)} benchmark dir(s) have no phase-1 mapseq output "
               f"(e.g. {missing[0]}); those rows omit `mseq:` and the nested run will map "

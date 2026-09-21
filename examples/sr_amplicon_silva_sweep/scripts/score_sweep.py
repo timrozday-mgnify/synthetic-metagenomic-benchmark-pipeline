@@ -4,14 +4,12 @@ method.
 
     python scripts/score_sweep.py [results_dir] [config.yaml] > scores.csv
 
-Genus is the one space all four arms can be compared in - two of them report panel
-genomes, one reports SILVA V4 groups and one reports SILVA lineages - so everything is
-rolled up to it. Truth is `truth.tsv` through `panel[].taxonomy`. Predictions:
+Genus is the one space all three arms can be compared in - two of them report panel
+genomes and one reports SILVA lineages - so everything is rolled up to it. Truth is
+`truth.tsv` through `panel[].taxonomy`. Predictions:
 
-  silva        `inferred_v4_groups.csv` - each V4 group's mass goes to the genus of its
-               `lca`; a group whose `lca` stops above genus goes to `unresolved`.
-  custom,      `inferred_composition.csv` - each panel genome's mass goes to its own
-  silva_panel  lineage's genus. `silva_panel`'s `background` bucket (reads the panel
+  silva_panel, `inferred_composition.csv` - each panel genome's mass goes to its own
+  custom       lineage's genus. `silva_panel`'s `background` bucket (reads the panel
                cannot explain) goes to `unresolved`.
   aap          the amplicon-analysis-pipeline's krona table - a count per lineage,
                summed per genus; a lineage stopping above genus goes to `unresolved`.
@@ -20,9 +18,6 @@ rolled up to it. Truth is `truth.tsv` through `panel[].taxonomy`. Predictions:
   max_abs_error  the largest per-genus error, and `worst_genus` it is on
   mass_absent    predicted share on genera the community does not contain
   unresolved     predicted share that arm cannot place at genus
-
-`mapseq_only` is the first `silva` grid point's `observed_rel_abundance`: MAPseq's labels
-against SILVA with no inference, which no inference knob changes.
 
 The `error_model` column names the arm the READS came from (trained / flat / naive), so a
 method's row is only comparable with another method's at the same error model.
@@ -50,15 +45,6 @@ def truth_genera(path, lineage):
     with open(path, newline="") as fh:
         for row in csv.DictReader(fh, delimiter="\t"):
             out[ss.genus(lineage[row["genome_id"]])] += float(row["realized_rel_abundance"])
-    return dict(out)
-
-
-def predicted_genera(path, column):
-    """{genus | 'unresolved': share} from an inferred_v4_groups.csv."""
-    out = defaultdict(float)
-    with open(path, newline="") as fh:
-        for row in csv.DictReader(fh):
-            out[ss.genus(row["lca"]) or UNRESOLVED] += float(row[column])
     return dict(out)
 
 
@@ -117,7 +103,6 @@ def main():
                    else HERE.parent.parent / "results" / "sr_amplicon_silva_sweep")
     cfg = ss.load_config(sys.argv[2] if len(sys.argv) > 2 else HERE / "config.yaml")
     lineage = {m["id"]: m["taxonomy"] for m in cfg["panel"]}
-    names = [s["name"] for s in ss.settings(cfg)]
 
     writer = csv.DictWriter(sys.stdout, COLUMNS, extrasaction="ignore")
     writer.writeheader()
@@ -133,13 +118,7 @@ def main():
 
         # arm -> {method: callable() -> {genus: share}}, only for files that exist.
         methods = []
-        groups = {name: sr / f"{run_id}.{name}.inferred_v4_groups.csv" for name in names}
-        for name, path in groups.items():
-            methods.append(("silva", name, path, lambda p=path: predicted_genera(p, "inferred_mean")))
-        first = groups[names[0]]
-        methods.append(("silva", "mapseq_only", first,
-                        lambda p=first: predicted_genera(p, "observed_rel_abundance")))
-        for arm in ("custom", "silva_panel"):
+        for arm in ss.SR_ARMS:
             for entry in ss.arm_settings(cfg, arm):
                 path = sr / f"{run_id}.{entry['name']}.inferred_composition.csv"
                 methods.append((arm, entry["name"], path,
@@ -167,22 +146,15 @@ def _selfcheck():
 
     fam = "Bacteria;Bacteroidota;Bacteroidia;Bacteroidales;Bacteroidaceae"
     bac, strep = f"{fam};Bacteroides", "Bacteria;Bacillota;Bacilli;Lactobacillales;Streptococcaceae;Streptococcus"
+    esch = ("Bacteria;Pseudomonadota;Gammaproteobacteria;Enterobacterales;"
+            "Enterobacteriaceae;Escherichia-Shigella")
     with tempfile.TemporaryDirectory() as d:
-        truth_tsv, groups_csv = Path(d) / "S.truth.tsv", Path(d) / "S.p.inferred_v4_groups.csv"
+        truth_tsv = Path(d) / "S.truth.tsv"
         truth_tsv.write_text("genome_id\trealized_rel_abundance\n"
                              "bf\t0.25\nbt\t0.25\nss\t0.5\n")
-        groups_csv.write_text(
-            "sample,v4_group_id,lca,observed_rel_abundance,inferred_mean\n"
-            f"S,g1,{bac};unclassified,0.4,0.5\n"
-            f"S,g2,{fam},0.2,0.1\n"                         # stops above genus
-            f"S,g3,{strep};unclassified,0.3,0.3\n"
-            "S,g4,Bacteria;Pseudomonadota;Gammaproteobacteria;Enterobacterales;"
-            "Enterobacteriaceae;Escherichia-Shigella,0.1,0.1\n")
         truth = truth_genera(truth_tsv, {"bf": bac, "bt": bac, "ss": strep})
         assert truth == {bac: 0.5, strep: 0.5}, truth
-        pred = predicted_genera(groups_csv, "inferred_mean")
-        assert abs(pred[UNRESOLVED] - 0.1) < 1e-9 and abs(pred[bac] - 0.5) < 1e-9, pred
-        s = scores(pred, truth)
+        s = scores({bac: 0.5, UNRESOLVED: 0.1, strep: 0.3, esch: 0.1}, truth)
     # |0.5-0.5| + |0.3-0.5| + 0.1 unresolved + 0.1 absent = 0.4, halved.
     assert abs(s["tv"] - 0.2) < 1e-9, s
     assert s["worst_genus"] == "Streptococcus" and abs(s["max_abs_error"] - 0.2) < 1e-9, s

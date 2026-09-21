@@ -136,9 +136,9 @@ samples:
   sr_settings:
   - name: map
     mismapping_method: align
-    align_backend: exact-hash
     align_tau: 0
     matrix_args: --align_ambiguity_weight 0.3
+    panel: community_20hm
   subsample:
   - none
   - 100000
@@ -163,9 +163,9 @@ samples:
   sr_settings:
   - name: map
     mismapping_method: align
-    align_backend: exact-hash
     align_tau: 0
     matrix_args: --align_ambiguity_weight 0.3
+    panel: community_20hm
   subsample:
   - none
   - 100000
@@ -190,9 +190,9 @@ samples:
   sr_settings:
   - name: map
     mismapping_method: align
-    align_backend: exact-hash
     align_tau: 0
     matrix_args: --align_ambiguity_weight 0.3
+    panel: community_20hm
   subsample:
   - none
   - 100000
@@ -217,9 +217,9 @@ samples:
   sr_settings:
   - name: map
     mismapping_method: align
-    align_backend: exact-hash
     align_tau: 0
     matrix_args: --align_ambiguity_weight 0.3
+    panel: community_20hm
   subsample:
   - none
   - 100000
@@ -244,9 +244,9 @@ samples:
   sr_settings:
   - name: map
     mismapping_method: align
-    align_backend: exact-hash
     align_tau: 0
     matrix_args: --align_ambiguity_weight 0.3
+    panel: community_20hm
   subsample:
   - none
   - 100000
@@ -271,9 +271,9 @@ samples:
   sr_settings:
   - name: map
     mismapping_method: align
-    align_backend: exact-hash
     align_tau: 0
     matrix_args: --align_ambiguity_weight 0.3
+    panel: community_20hm
   subsample:
   - none
   - 100000
@@ -298,9 +298,9 @@ samples:
   sr_settings:
   - name: map
     mismapping_method: align
-    align_backend: exact-hash
     align_tau: 0
     matrix_args: --align_ambiguity_weight 0.3
+    panel: community_20hm
   subsample:
   - none
   - 100000
@@ -325,9 +325,9 @@ samples:
   sr_settings:
   - name: map
     mismapping_method: align
-    align_backend: exact-hash
     align_tau: 0
     matrix_args: --align_ambiguity_weight 0.3
+    panel: community_20hm
   subsample:
   - none
   - 100000
@@ -352,9 +352,9 @@ samples:
   sr_settings:
   - name: map
     mismapping_method: align
-    align_backend: exact-hash
     align_tau: 0
     matrix_args: --align_ambiguity_weight 0.3
+    panel: community_20hm
   subsample:
   - none
   - 100000
@@ -379,9 +379,9 @@ samples:
   sr_settings:
   - name: map
     mismapping_method: align
-    align_backend: exact-hash
     align_tau: 0
     matrix_args: --align_ambiguity_weight 0.3
+    panel: community_20hm
   subsample:
   - none
   - 100000
@@ -406,9 +406,9 @@ samples:
   sr_settings:
   - name: map
     mismapping_method: align
-    align_backend: exact-hash
     align_tau: 0
     matrix_args: --align_ambiguity_weight 0.3
+    panel: community_20hm
   subsample:
   - none
   - 100000
@@ -433,9 +433,9 @@ samples:
   sr_settings:
   - name: map
     mismapping_method: align
-    align_backend: exact-hash
     align_tau: 0
     matrix_args: --align_ambiguity_weight 0.3
+    panel: community_20hm
   subsample:
   - none
   - 100000
@@ -460,9 +460,9 @@ samples:
   sr_settings:
   - name: map
     mismapping_method: align
-    align_backend: exact-hash
     align_tau: 0
     matrix_args: --align_ambiguity_weight 0.3
+    panel: community_20hm
   subsample:
   - none
   - 100000
@@ -487,9 +487,9 @@ samples:
   sr_settings:
   - name: map
     mismapping_method: align
-    align_backend: exact-hash
     align_tau: 0
     matrix_args: --align_ambiguity_weight 0.3
+    panel: community_20hm
   subsample:
   - none
   - 100000
@@ -514,9 +514,9 @@ samples:
   sr_settings:
   - name: map
     mismapping_method: align
-    align_backend: exact-hash
     align_tau: 0
     matrix_args: --align_ambiguity_weight 0.3
+    panel: community_20hm
   subsample:
   - none
   - 100000
@@ -541,9 +541,9 @@ samples:
   sr_settings:
   - name: map
     mismapping_method: align
-    align_backend: exact-hash
     align_tau: 0
     matrix_args: --align_ambiguity_weight 0.3
+    panel: community_20hm
   subsample:
   - none
   - 100000
@@ -568,9 +568,9 @@ samples:
   sr_settings:
   - name: map
     mismapping_method: align
-    align_backend: exact-hash
     align_tau: 0
     matrix_args: --align_ambiguity_weight 0.3
+    panel: community_20hm
   subsample:
   - none
   - 100000
@@ -595,9 +595,9 @@ samples:
   sr_settings:
   - name: map
     mismapping_method: align
-    align_backend: exact-hash
     align_tau: 0
     matrix_args: --align_ambiguity_weight 0.3
+    panel: community_20hm
   subsample:
   - none
   - 100000
@@ -622,9 +622,9 @@ samples:
   sr_settings:
   - name: map
     mismapping_method: align
-    align_backend: exact-hash
     align_tau: 0
     matrix_args: --align_ambiguity_weight 0.3
+    panel: community_20hm
   subsample:
   - none
   - 100000
@@ -649,9 +649,9 @@ samples:
   sr_settings:
   - name: map
     mismapping_method: align
-    align_backend: exact-hash
     align_tau: 0
     matrix_args: --align_ambiguity_weight 0.3
+    panel: community_20hm
   subsample:
   - none
   - 100000

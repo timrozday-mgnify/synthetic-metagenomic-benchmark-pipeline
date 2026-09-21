@@ -7,7 +7,7 @@ OUTDIR="$REPO/results/sr_amplicon_panel_sweep"
 # --- Phase 1: draw the communities, generate the reads, map them against SILVA once ----
 # `--step all` trains the error model, draws the negative-binomial communities, generates
 # their V4 amplicon reads at every subsample depth, and runs superresolution-amplicon once
-# per depth against SILVA under config.yaml's `generic.map_setting` (align/exact-hash: cheap
+# per depth against SILVA under config.yaml's `generic.map_setting` (align tau 0 over the panel: cheap
 # at SILVA scale). That publishes each depth's SILVA classification to
 # <benchmark_dir>/profiling/sr/<id>.map.obs.mseq.gz, and the trained model to
 # $OUTDIR/error_models/<train_id>/.

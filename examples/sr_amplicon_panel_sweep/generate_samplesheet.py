@@ -3,7 +3,8 @@
 
 One `--step all` run off this samplesheet trains the error model, draws the
 negative-binomial communities, generates their V4 amplicon reads at every subsample
-depth, and profiles each depth ONCE against SILVA under `generic.map_setting`. It exists to
+depth, and profiles each depth ONCE against SILVA under `generic.map_setting`, over the
+panel (a panel-less run would build a kernel over all of SILVA). It exists to
 publish the two things phase 2 reuses:
 
   <benchmark_dir>/profiling/sr/<id>.<map>.obs.mseq.gz   the reads mapped against SILVA
@@ -57,7 +58,7 @@ def main():
                 "read_length_variance": reads["read_length_variance"],
                 "profilers": ["sr_amplicon"],
                 "database": generic["name"],
-                "sr_settings": [generic["map_setting"]],
+                "sr_settings": [{**generic["map_setting"], "panel": cfg["database"]["name"]}],
                 **({"subsample": reads["subsample"]} if reads.get("subsample") is not None else {}),
                 **({"primers": gm["primers"]} if gm.get("primers") else {}),
             })

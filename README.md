@@ -453,25 +453,26 @@ form for database-scale reference sets, which stores one entry per distinct ampl
 instead of per reference pair). Everything downstream, including
 `reports/scripts/mismapping_plots.py`, reads all three forms.
 
-### Benchmarking how `M` is built
+### Benchmarking how the kernel is built
 
-`superresolution-amplicon` can build `M` several ways, and which one to use is itself a
-benchmark question. The mode is fixed per benchmark run — set it, give the run its own
-`--outdir`, and compare the reports:
+`superresolution-amplicon` infers over a panel (the whole reference database when a row
+names none) through a kernel `K`: where a read from each panel source is labelled. It can
+build `K` two ways, and which one to use is itself a benchmark question. The mode is fixed
+per benchmark run — set it, give the run its own `--outdir`, and compare the reports:
 
 | param | values | meaning |
 |-------|--------|---------|
-| `--sr_amplicon_mismapping_method` | `simulate` \| `align` | Measure `M` by simulating errored reads and mapping them, or read it off reference-to-reference distances. |
-| `--sr_amplicon_align_backend` | `minimap2` \| `exact-hash` \| `kmer` | `align` only. All-vs-all alignment; byte-identical amplicon grouping; or grouping widened to `align_tau` by a pigeonhole filter. |
-| `--sr_amplicon_align_tau` | integer | Cluster radius in edit operations. `0` for `exact-hash`, `>= 1` for `kmer`. A radius above `0` needs a decay with it (below) — without one, every reference inside the radius is treated as an exact duplicate and near-identical strains come out far more confusable than the mapper actually finds them. |
-| `--sr_amplicon_align_distance_decay` | number \| `auto` | A cluster member `d` edits away takes `c**d` of a uniform share. A no-op at `align_tau 0`, and the whole story above it: set it to about the per-base error rate. At 0.5% flat error, `0.007` fits the `simulate` measurement on the two-strain *B. uniformis* set better than `exact-hash` does, where the default of `1` misses it by 2.5x on mean row L1. `auto` has the nested run measure that rate off its error model instead of taking a number on trust (0.0059 at the nested defaults). Or leave it and set `--sr_amplicon_infer_distance_decay`, which fits it per sample. |
+| `--sr_amplicon_mismapping_method` | `simulate` \| `align` | Measure `K` by simulating errored reads from each source and mapping them, or read it off source-to-label distances. |
+| `--sr_amplicon_align_tau` | integer | `align` only: label radius in edit operations. `0` is an exact hash join; `>= 1` adds neighbours found by a pigeonhole filter. A radius above `0` needs a decay with it (below) — without one, every label inside the radius is treated as an exact duplicate and near-identical strains come out far more confusable than the mapper actually finds them. |
+| `--sr_amplicon_align_distance_decay` | number \| `auto` | A cluster member `d` edits away takes `c**d` of a uniform share. A no-op at `align_tau 0`, and the whole story above it: set it to about the per-base error rate. At 0.5% flat error, `0.007` fits the `simulate` measurement on the two-strain *B. uniformis* set better than `align_tau 0` does, where the default of `1` misses it by 2.5x on mean row L1. `auto` has the nested run measure that rate off its error model instead of taking a number on trust (0.0059 at the nested defaults). Or leave it and set `--sr_amplicon_infer_distance_decay`, which fits it per sample. |
 | `--sr_amplicon_align_decay_model` | absolute path | `auto` only: a **pre-trained** skiver `model.pt` whose per-base error rate is measured, instead of the flat rates. Nothing is trained for it — `align` mode never runs the nested skiver subworkflow. |
 | `--sr_amplicon_matrix_args` | free-form flags | Anything without a named param above (`--align_ambiguity_weight`, `--max_ambiguous_bases`, `--max_postings`, `--sim_n_per_ref`, `--sim_error_model` …). A knob that *does* have a named param must not also appear here: the run refuses a flag given twice rather than letting the nested `nextflow run` silently keep the last one. |
 | `--sr_shotgun_matrix_args` | free-form flags | The same escape hatch for the shotgun sibling. |
 
-These reach the **matrix build only**: per-sample inference runs receive the finished
-matrix through `--mismapping_matrix` and never build one. Invalid combinations are
-rejected before any reads are generated.
+These reach the **kernel build only**: per-sample inference runs receive the finished
+kernel bundle through `--panel_kernel` (the shotgun sibling: its matrix through
+`--mismapping_matrix`) and never build one. Invalid combinations are rejected before any
+reads are generated.
 
 > **Nested flags must travel on `meta`, not be read from `params` in a process script.**
 > Nextflow hashes a task from its declared inputs and its *source* script, not from the
@@ -484,16 +485,16 @@ rejected before any reads are generated.
 > for any new nested knob** — the failure is silent, and it produces a plausible-looking
 > benchmark.
 
-Verified live across all four modes on the `tests/data` fixtures: each writes a distinct
-matrix and a `mismapping_provenance.json` recording what was actually built.
+Each run publishes its kernel per reference set as `mismapping/<set>/panel_kernel/`, plus a
+`mismapping_provenance.json` recording what was actually built.
 
 ```bash
-# simulate-and-map (the nested default) vs three alignment modes, one outdir each
-for mode in "simulate" "align minimap2 0" "align exact-hash 0" "align kmer 1"; do
+# simulate-and-map (the nested default) vs alignment at two radii, one outdir each
+for mode in "simulate" "align 0" "align 1"; do
   set -- $mode
-  nextflow run . -profile docker --input samplesheet.yaml --outdir "results/M_$1_${2:-none}_${3:-0}" \
-    --sr_amplicon_mismapping_method "$1" \
-    ${2:+--sr_amplicon_align_backend "$2"} ${2:+--sr_amplicon_align_tau "${3:-0}"}
+  nextflow run . -profile docker --input samplesheet.yaml --outdir "results/K_$1_${2:-none}" \
+    --sr_amplicon_mismapping_method "$1" ${2:+--sr_amplicon_align_tau "$2"} \
+    ${2:+--sr_amplicon_align_distance_decay 0.007}
 done
 ```
 
@@ -507,13 +508,13 @@ with the prefix dropped:
 ```yaml
 sr_settings:
   - {name: simulate.p01, mismapping_method: simulate, infer_presence_prior: 0.01}
-  - {name: exact.p01,    mismapping_method: align, align_backend: exact-hash, align_tau: 0,
+  - {name: exact.p01,    mismapping_method: align, align_tau: 0,
                          infer_presence_prior: 0.01}
-  - {name: exact.p001,   mismapping_method: align, align_backend: exact-hash, align_tau: 0,
+  - {name: exact.p001,   mismapping_method: align, align_tau: 0,
                          infer_presence_prior: 0.001}
-  - {name: kmer1.p01,    mismapping_method: align, align_backend: kmer, align_tau: 1,
+  - {name: kmer1.p01,    mismapping_method: align, align_tau: 1,
                          align_distance_decay: 0.007, infer_presence_prior: 0.01}
-  - {name: kmer1_latent.p01, mismapping_method: align, align_backend: kmer, align_tau: 1,
+  - {name: kmer1_latent.p01, mismapping_method: align, align_tau: 1,
                          align_distance_decay: 0.007, infer_distance_decay: true,
                          infer_presence_prior: 0.01}
 ```
@@ -524,10 +525,10 @@ back to the corresponding param, so a partial entry still works.
 
 What it costs is the point:
 
-- Entries agreeing on every **matrix** knob (`mismapping_method`, `align_backend`,
-  `align_tau`, `align_distance_decay`, `align_decay_model`, `matrix_args`) share a
-  reference set and therefore **one** mis-mapping matrix — `exact.p01` and `exact.p001`
-  above build one matrix between them and split only at the inference run, and so do
+- Entries agreeing on every **kernel** knob (`mismapping_method`, `align_tau`,
+  `align_distance_decay`, `align_decay_model`, `matrix_args`, `panel`) share a
+  reference set and therefore **one** kernel — `exact.p01` and `exact.p001`
+  above build one kernel between them and split only at the inference run, and so do
   `kmer1.p01` and `kmer1_latent.p01`, which differ only in whether the decay is fitted. The matrix mode is mixed into the reference-set key (and so
   into the `mismapping/<set>/` directory name) whenever `sr_settings` is in play.
 - Entries differing in the **inference** knobs are separate nested runs, because those
@@ -582,11 +583,11 @@ databases:
 
 The generic database is a **label space**, not a set of things to report. MAPseq labels
 the reads with its V4 groups, whose lineages come from its taxonomy, but abundances are
-reported over a panel (through the rectangular panel kernel, panel V4 sources × database
-V4 groups) or over taxa (`--infer_space v4_group` plus the `lca` column). The square
-mis-mapping matrix over the generic database is still built, for `v4_group` inference
-only. Genome-space inference over it is sequence-space inference with no biological
-reading: a SILVA "genome" is one rRNA sequence. SILVA SSU replaces GTDB here because
+reported over a panel (through the panel kernel, panel V4 sources × database V4 groups).
+Always name one against a generic database: without a `panel:` the row infers over the
+whole database, which against SILVA is sequence-space inference with no biological
+reading (a SILVA "genome" is one rRNA sequence), and costs a source per distinct V4
+group. SILVA SSU replaces GTDB here because
 nothing needs genomes any more; sylph still does, so its examples stay on GTDB.
 
 Measured in superresolution-amplicon's `dev/panel_silva_sweep.md` (20 samples, 20-genome
@@ -610,24 +611,27 @@ over the community, which the pipeline builds for you with headers
   `<name>_{genome,ssu}.sr_refs.tax` (MAPseq `.tax`, headers as in the FASTA), and every
   run against that database gets it as `--taxonomy`. A `path:` dir may hold one too; for
   a SILVA-built generic database it is superresolution-amplicon's
-  `build_mapseq_database.py --silva-fasta` `.tax`. For `sr_amplicon` a `path:` dir must
-  also hold the MAPseq database the nested run maps against, beside the FASTA as
-  `<FASTA stem>_amplicons/` (superresolution-amplicon's "Prebuilt MAPseq database"). It
-  is never rebuilt, and a run without it stops before launching anything; sets built
-  here have theirs built by the nested run. Use this to profile every sample against the *whole* panel
+  `build_mapseq_database.py --silva-fasta` `.tax`, or the `*-tax.txt` AAP ships. The
+  reference FASTA is itself the MAPseq database the nested `sr_amplicon` run maps
+  against, with its `.mscluster` when one sits beside it (clustered and cached once
+  otherwise). So the amplicon-analysis-pipeline's database directory works unmodified as
+  a `path:` entry: `SILVA-SSU.fasta`, `SILVA-SSU-tax.txt`, `SILVA-SSU.fasta.mscluster`.
+  Use this to profile every sample against the *whole* panel
   (including genomes absent from a given sample) rather than only its own genomes.
 
 There is no `params.*_databases` fallback — an unknown `database` name is an error.
 
 Output `<sample>.sr_profile.tsv` uses the same three columns as the sylph one
-(`inferred_mean`, renormalised; superresolution has no separate taxonomic abundance,
-so both abundance columns carry it). The raw `inferred_composition.csv` and inference
+(`inferred_mean`, renormalised over genomes; superresolution has no separate taxonomic
+abundance, so both abundance columns carry it). `sr_amplicon`'s `background` row, the
+reads no panel entry explains, is not a genome: it leaves the profile, and its share goes
+to `<sample>.sr_background.tsv` beside it. The raw `inferred_composition.csv` and inference
 diagnostics go under `<sample>/profiling/sr/`.
 
 Every sample sharing a *reference set* — the same collection (or the same source
 sample's own genomes), flavour and primer pair — is profiled in **one** nested
 superresolution run, the way `aap` batches by database config. That's the largest safe
-batch: the mis-mapping matrix and primer pair are per-run flags of the nested pipeline,
+batch: the kernel and primer pair are per-run flags of the nested pipeline,
 while `id`/`reads`/`platform`/`references` are per-row. A sample whose reads hit no
 reference is reported rather than fatal — its composition comes back all-zero with
 `status=no_reference_hits` in `inference_diagnostics.csv`, and the rest of the batch is

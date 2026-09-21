@@ -87,6 +87,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -109,6 +116,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -131,6 +145,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -152,6 +173,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -174,6 +202,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -196,6 +231,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -217,6 +259,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -239,6 +288,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -261,6 +317,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -282,6 +345,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -304,6 +374,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -326,6 +403,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -347,6 +431,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -369,6 +460,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -391,6 +489,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -412,6 +517,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -434,6 +546,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -456,6 +575,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -477,6 +603,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -499,6 +632,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -521,6 +661,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -542,6 +689,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -564,6 +718,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -586,6 +747,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -607,6 +775,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -629,6 +804,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -651,6 +833,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -672,6 +861,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -694,6 +890,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -716,6 +919,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -737,6 +947,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -759,6 +976,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -781,6 +1005,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -802,6 +1033,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -824,6 +1062,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -846,6 +1091,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -867,6 +1119,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -889,6 +1148,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -911,6 +1177,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -932,6 +1205,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -954,6 +1234,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -976,6 +1263,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -997,6 +1291,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -1019,6 +1320,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -1041,6 +1349,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -1062,6 +1377,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -1084,6 +1406,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -1106,6 +1435,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -1127,6 +1463,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -1149,6 +1492,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -1171,6 +1521,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -1192,6 +1549,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -1214,6 +1578,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -1236,6 +1607,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -1257,6 +1635,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -1279,6 +1664,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -1301,6 +1693,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -1322,6 +1721,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -1344,6 +1750,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000
@@ -1366,6 +1779,13 @@ samples:
   profilers:
   - sr_amplicon
   database: silva_138_2_ssu_nr99
+  sr_settings:
+  - name: map
+    mismapping_method: align
+    align_tau: 0
+    matrix_args: --align_ambiguity_weight 0.3
+    infer_presence: false
+    panel: community_panel
   subsample:
   - none
   - 100000

@@ -5,13 +5,13 @@ One `--step all` run off this samplesheet trains the error model(s), draws the
 negative-binomial communities, generates their V4 amplicon reads at every subsample
 depth, and profiles each depth with superresolution-amplicon ONCE against the pre-built
 reference set. The communities are generated once per `error_models:` arm - the reads
-themselves differ, so each arm is its own set of samples with its own train_id. No `sr_settings:` here on purpose - phase 1 exists to produce the two
-things phase 2 reuses: the reads (and their truth.tsv), and the mapseq classification of
-those reads, published to `<benchmark_dir>/profiling/sr/<id>.obs.mseq.gz`.
+themselves differ, so each arm is its own set of samples with its own train_id. Phase 1
+exists to produce the two things phase 2 reuses: the reads (and their truth.tsv), and the
+mapseq classification of those reads, published to
+`<benchmark_dir>/profiling/sr/<id>.map.obs.mseq.gz`.
 
-Phase 1's own matrix knobs come from benchmark.config, which pins them to the grid's
-cheap `exact` point - against a SILVA-sized reference set the nested pipeline's default
-(`simulate`) is not an affordable baseline.
+Its one `sr_settings:` entry, `map`, is `arm_point`'s knobs over the panel collection:
+against SILVA a run without a panel would build its kernel over every SILVA V4 group.
 
     python generate_samplesheet.py [config.yaml]
 """
@@ -89,6 +89,7 @@ def _row(cfg, gm, reads, em, sample, csv_path):
         "read_length_variance": reads["read_length_variance"],
         "profilers": gs.mode_profilers(gm),
         "database": cfg["database"]["name"],
+        "sr_settings": [gs.map_setting(cfg)],
         **({"subsample": subsample} if subsample is not None else {}),
         **({"primers": gm["primers"]} if gm.get("primers") else {}),
     }

@@ -49,34 +49,34 @@ primers:
 # The parameter grid. Each axis is a list of named knob maps; the sweep is their
 # cartesian product, and a grid point's name (axis names joined with '.') becomes part
 # of its output filename. Knob names are the pipeline's sr_settings keys:
-#   matrix : mismapping_method, align_backend, align_tau, matrix_args
+#   matrix : mismapping_method, align_tau, align_distance_decay, matrix_args
 #   infer  : infer_presence, infer_presence_prior, infer_presence_temp, inference_args
 #
 # Every `align_tau >= 1` point carries `align_distance_decay: 0.007`: without it a
 # reference one edit away shares a row equally with an exact duplicate, which on the
-# two-strain B. uniformis set is 2.5x worse than exact-hash on mean row L1. ~ the
+# two-strain B. uniformis set is 2.5x worse than align_tau 0 on mean row L1. ~ the
 # per-base error rate is the right order. No-op (and unset) at align_tau 0.
 #
 # `kmer1` and `kmer1_latent` differ only in `infer_distance_decay`: one takes the decay
-# the matrix was built with, the other fits it per sample. Their matrix knobs are
-# identical, so they share one matrix and the comparison costs one inference run. The
+# the kernel was built with, the other fits it per sample. Their kernel knobs are
+# identical, so they share one kernel and the comparison costs one inference run. The
 # latent needs `align_tau >= 1` (at tau 0 every distance is 0 and the decay cancels),
 # which is why it rides on the kmer point rather than being an axis of its own.
 
-# Cost: the mis-mapping matrix is built once per DISTINCT COMBINATION OF THE MATRIX
-# KNOBS, and the grid points sharing one reuse it. The 4x2 grid below is 8 profiles per
-# benchmark dir but only 3 matrices - which is the whole reason to sweep the inference
+# Cost: the kernel is built once per DISTINCT COMBINATION OF THE KERNEL KNOBS, and the
+# grid points sharing one reuse it. The 4x2 grid below is 8 profiles per benchmark dir
+# but only 3 kernels - which is the whole reason to sweep the inference
 # knobs in the same run rather than in eight separate ones.
 sr_sweep:
   grid:
     matrix:
       - {name: simulate, mismapping_method: simulate}
-      - {name: exact, mismapping_method: align, align_backend: exact-hash, align_tau: 0,
+      - {name: exact, mismapping_method: align, align_tau: 0,
          matrix_args: --align_ambiguity_weight 0.3}
-      - {name: kmer1, mismapping_method: align, align_backend: kmer, align_tau: 1,
+      - {name: kmer1, mismapping_method: align, align_tau: 1,
          align_distance_decay: 0.007,
          matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096}
-      - {name: kmer1_latent, mismapping_method: align, align_backend: kmer, align_tau: 1,
+      - {name: kmer1_latent, mismapping_method: align, align_tau: 1,
          align_distance_decay: 0.007, infer_distance_decay: true,
          matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096}
     infer:

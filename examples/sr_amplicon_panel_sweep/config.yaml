@@ -79,8 +79,10 @@ generic:
   path: /PATH/TO/silva_138_2_ssu_nr99          # dir holding the reference FASTA + its .tax (any release)
   # Phase 1 maps every benchmark dir against SILVA once, under this one setting, so that
   # phase 2 can hand the classification back as `mseq:`. Its composition is a by-product
-  # and is not scored. exact-hash is the matrix mode that is cheap at SILVA scale.
-  map_setting: {name: map, mismapping_method: align, align_backend: exact-hash, align_tau: 0,
+  # and is not scored. The generator gives it `panel: <database.name>`: without a panel the
+  # nested run would build a kernel over every SILVA V4 group. `align` at tau 0 is the
+  # cheap kernel mode.
+  map_setting: {name: map, mismapping_method: align, align_tau: 0,
                 matrix_args: --align_ambiguity_weight 0.3}
 
 # The parameter grids, one per arm. Each is the same shape as
@@ -88,7 +90,7 @@ generic:
 # maps, and the grid is their cartesian product. A point is named `<arm>.<axis names
 # joined by '.'>`, and that name becomes part of its output filename. Knobs are the
 # pipeline's sr_settings keys:
-#   matrix : mismapping_method, align_backend, align_tau, align_distance_decay,
+#   matrix : mismapping_method, align_tau, align_distance_decay,
 #            align_decay_model, matrix_args, panel
 #   infer  : infer_presence, infer_presence_prior, infer_presence_temp,
 #            infer_distance_decay, infer_decay_sigma, inference_args
@@ -104,7 +106,7 @@ sr_sweep:
       matrix:
         # Flat error is enough for a 23-reference set (superresolution-amplicon dev/error_rate_sensitivity.md).
         - {name: simulate, mismapping_method: simulate}
-        - {name: kmer1_latent, mismapping_method: align, align_backend: kmer, align_tau: 1,
+        - {name: kmer1_latent, mismapping_method: align, align_tau: 1,
            align_distance_decay: 0.007, infer_distance_decay: true,
            matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096}
       prior:
@@ -112,13 +114,12 @@ sr_sweep:
         - {name: nogate, infer_presence: false}
 
   # SILVA labels, reinterpreted through the panel. The kernel is measured by simulating
-  # reads from the panel's V4 amplicons and mapping them against SILVA. The nested run does
-  # that INSIDE each inference run, so unlike the custom arm, every point here pays for
-  # its own kernel: panel_sim_n_per_ref (default 5,000) reads per distinct amplicon
-  # (about 30 here), each mapped against SILVA. The reads themselves are not re-mapped.
+  # reads from the panel's V4 amplicons and mapping them against SILVA: sim_n_per_ref
+  # (default 5,000) reads per distinct amplicon (about 30 here). As in the custom arm,
+  # points agreeing on every kernel knob share one kernel, built once and handed to each
+  # inference run. The reads themselves are not re-mapped.
   #
-  # `panel:` is added to every point by the generator. infer_distance_decay is refused
-  # here, because a panel kernel records no distances.
+  # `panel:` is added to every point by the generator.
   generic_panel:
     grid:
       kernel:

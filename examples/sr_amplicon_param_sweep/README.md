@@ -23,16 +23,16 @@ runs:
   superresolution-amplicon run, and no knob in the grid changes its result. Phase 1 maps
   them; phase 2 hands the classification back with the samplesheet's `mseq:` column and
   every grid point skips straight to the parts that differ.
-- **The mis-mapping matrix is shared where it can be.** Grid points agreeing on every
-  matrix knob (`mismapping_method`, `align_backend`, `align_tau`, `align_distance_decay`,
-  `matrix_args`) belong to one reference set and build one matrix between them; they split
+- **The kernel is shared where it can be.** Grid points agreeing on every
+  kernel knob (`mismapping_method`, `align_tau`, `align_distance_decay`,
+  `matrix_args`) belong to one reference set and build one kernel between them; they split
   only at the inference run. The shipped 4x2 grid is 8 profiles per benchmark dir off
-  **3** matrices — `kmer1` and `kmer1_latent` are the fourth point pair and cost no
-  matrix at all, because they differ only in `infer_distance_decay`.
+  **3** kernels — `kmer1` and `kmer1_latent` are the fourth point pair and cost no
+  kernel at all, because they differ only in `infer_distance_decay`.
 
 `kmer1` vs `kmer1_latent` is the question "does the distance decay have to be right at
-build time?". `kmer1` uses the `0.007` the matrix was built with for every sample;
-`kmer1_latent` fits the decay per sample against that same matrix. Since the abundance
+build time?". `kmer1` uses the `0.007` the kernel was built with for every sample;
+`kmer1_latent` fits the decay per sample against that same kernel. Since the abundance
 sweep varies only the community and not the error model, the two should agree here — the
 latent earns its keep on samples whose error rates differ, and this is the control that
 says what it costs when they do not.
@@ -54,7 +54,7 @@ Python scripts. Edit:
 - `sr_sweep.grid` — the sweep itself. Each axis is a list of named knob maps and the grid
   is their cartesian product; a point's name (the axis names joined with `.`) becomes
   part of its output filename. Valid knobs are the pipeline's `sr_settings` keys:
-  `mismapping_method`, `align_backend`, `align_tau`, `matrix_args`, `infer_presence`,
+  `mismapping_method`, `align_tau`, `align_distance_decay`, `matrix_args`, `infer_presence`,
   `infer_presence_prior`, `infer_presence_temp`, `inference_args`.
 
 The scripts require **PyYAML** — run them with `python` (the same interpreter `run.sh`
@@ -95,15 +95,15 @@ results/sr_amplicon_param_sweep/
     subsample_100000/...                                <- same, per depth
   S02_a0.00.515-YF-806BR/ ...
   mismapping/
-    community_v4_sr_amplicon_515-YF-806BR-<digest>/     <- one per matrix knob combo
-      mismapping_matrix.npz
-      mismapping_provenance.json                        <- how that matrix was built
+    community_v4_sr_amplicon_515-YF-806BR-<digest>/     <- one per kernel knob combo
+      panel_kernel/                                     <- reusable as --panel_kernel
+      mismapping_provenance.json                        <- how that kernel was built
 ```
 
 The reference set does not depend on the composition, so all `n_samples` samples share
-those matrices — the abundance sweep costs inference runs, not matrices.
+those kernels — the abundance sweep costs inference runs, not kernels.
 
-The `<digest>` in a reference-set directory is of the matrix knobs; `mismapping_provenance.json`
+The `<digest>` in a reference-set directory is of the kernel knobs; `mismapping_provenance.json`
 inside it spells them out, so a grid point is attributable without re-deriving it from
 the config.
 

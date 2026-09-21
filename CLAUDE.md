@@ -97,7 +97,8 @@ null => bundled set. It's global (not per-sample) and passed as an absolute host
   CSV (`self`) or a collection's `genome`/`ssu`. `RUN_SUPERRESOLUTION` normalises the
   resulting `inferred_composition.csv` into the same three-column contract sylph emits,
   in-process (bin/ is on PATH for local tasks), so there's no separate normalize module,
-  once per batched sample. A sample whose reads hit no reference is not a failure: the
+  once per batched sample. `sr_amplicon`'s `background` row leaves the profile and its share
+  goes to `<id>.sr_background.tsv`. A sample whose reads hit no reference is not a failure: the
   nested pipelines report an all-zero composition with `status=no_reference_hits` in
   `inference_diagnostics.csv` (upstream `infer_composition.py` / `shotgun_infer.py`).
 - **`sr_settings` fans a superresolution sample out across parameter sets.** A row's
@@ -108,24 +109,27 @@ null => bundled set. It's global (not per-sample) and passed as an absolute host
   `meta.sr_opts` carrying the knobs. `srOpt` in PROFILE resolves each knob from
   `sr_opts` first, then the run-global `sr_<kind>_<knob>` param — so nothing changes for
   a samplesheet without `sr_settings`. Two levels of batching follow, because the nested
-  pipeline takes matrix settings per *run*, not per row: the matrix key joins
-  `srSetKey` only under a fan-out (one matrix per distinct matrix-knob combination), and
-  inference groups by `[reference set, inference_args]` on top of it, so settings that
-  differ only in the presence gate share the expensive matrix. `examples/sr_amplicon_param_sweep`
+  pipeline takes kernel settings per *run*, not per row: the kernel key joins
+  `srSetKey` only under a fan-out (one kernel per distinct kernel-knob combination, and
+  per `panel:`), and inference groups by `[reference set, inference_args]` on top of it,
+  so settings that differ only in the presence gate share the expensive kernel. `examples/sr_amplicon_param_sweep`
   is the worked case.
 - **The generic database (SILVA SSU) is a label space.** Reads are labelled with its V4
-  groups; abundances are reported over a `panel:` (rectangular kernel) or over taxa
-  (`v4_group` + `lca`), never over its own references. Its `.sr_refs.tax` (built from
-  `taxonomy:` on every entry, or found beside a `path:` FASTA) rides to inference runs
-  as `--taxonomy` via `meta.taxonomy` / `srTaxonomyArg`, and `ch_sr_dbs` is
-  `[ key, refs|[], tax|[], panel_taxa|[], prebuilt ]`.
-- **sr_amplicon's MAPseq database is never rebuilt for a `path:` set.** superresolution-
-  amplicon maps against a MAPseq database (extracted amplicons + `.mscluster`) and builds
-  one only under `--build_mapseq_db`. A `path:` FASTA brings its own beside it as
-  `<stem>_amplicons/` (the nested run looks beside `realpath refs`); PROFILE refuses a
-  pre-built set without one before anything launches (`srPrebuiltMapseqDb`). Sets built
-  here (`self`, collections) carry `meta.sr_build_db`, and only they get the flag
-  (`srBuildDbArgs`).
+  groups; abundances are reported over a `panel:`, never over its own references (without
+  one the whole database is the panel, which against SILVA means nothing). Its `.sr_refs.tax`
+  (built from `taxonomy:` on every entry, or found beside a `path:` FASTA, AAP's
+  `*-tax.txt` included) rides to every amplicon run as `--taxonomy` via `meta.taxonomy` /
+  `srPanelArgs`, and `ch_sr_dbs` is `[ key, refs|[], tax|[], panel_taxa|[] ]`.
+- **Every sr_amplicon reference set builds its panel kernel first.** superresolution-
+  amplicon is panel-only: BUILD_SUPERRESOLUTION_MISMAPPING runs a representative with the
+  kernel flags (`srMatrixArgs`) plus the panel flags (`srPanelArgs`: `--panel_references`,
+  `--panel_taxa`, `--taxonomy`) and lifts the nested `mismapping/panel_<key>/` bundle whole
+  as `<id>.panel_kernel/`; each inference run gets it as `--panel_kernel` with the *same*
+  panel flags, because the nested run refuses a kernel whose panel or MAPseq database
+  (compared as absolute paths) differs. The shotgun sibling still gets a matrix file via
+  `--mismapping_matrix`. The reference FASTA itself is the MAPseq database (with its
+  `.mscluster` beside `realpath refs` when there is one), so a `path:` set, AAP's
+  `SILVA-SSU/138.1` directory included, is used as shipped.
 - **Taxon panel entries.** A `databases:` sequence with `taxon:` (no `ssu`) becomes a row of
   `<name>_ssu.panel_taxa.tsv` and reaches the nested run as `--panel_taxa`, resolved against
   the row database's `.tax`. Such a collection may have no FASTA, can only be named by
@@ -183,10 +187,9 @@ null => bundled set. It's global (not per-sample) and passed as an absolute host
   won't touch them; `rm -rf <workDir>/nested` forces nested runs from scratch.
   Separate work dirs mean `-resume` cannot share work *between* nested runs, so every
   `sr_amplicon` launch also gets `--amplicon_cache <workDir>/nested/sr/amplicon_cache`
-  (`srCacheArgs`): the nested pipeline's storeDir for the in-silico PCR and the mapseq
-  `.mscluster`, keyed by reference set + primers + code. Without it each matrix and
-  inference run re-clusters a built set. A `path:` set is never extracted or clustered at
-  all: its prebuilt MAPseq database is used as is.
+  (`srCacheArgs`): the nested pipeline's storeDir for the in-silico PCR (the costly
+  per-set step) and for clustering a FASTA that ships no `.mscluster`, keyed by reference
+  set + primers + code.
 - **Stub tests run on the host** (no `--profile`, so no container engine); stub
   blocks must use only coreutils (no tool calls). Real/e2e tests use
   `--profile docker` + `--tag e2e`; stub selection is `--tag stub`.

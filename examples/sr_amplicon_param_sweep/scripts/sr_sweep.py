@@ -19,16 +19,16 @@ import yaml
 
 # Knobs an sr_settings entry may carry (mirrors srSettingKeys() in ../../main.nf).
 SETTING_KEYS = {
-    "mismapping_method", "align_backend", "align_tau", "align_distance_decay",
+    "mismapping_method", "align_tau", "align_distance_decay",
     "align_decay_model", "matrix_args", "panel",
     "infer_presence", "infer_presence_prior", "infer_presence_temp",
     "infer_distance_decay", "infer_decay_sigma", "inference_args",
 }
-# The subset that changes the mis-mapping matrix. Settings agreeing on all of these
-# share one matrix and only re-run the (cheap) inference — which is what makes a grid
+# The subset that changes the kernel. Settings agreeing on all of these
+# share one kernel and only re-run the (cheap) inference — which is what makes a grid
 # with several inference points affordable. Note which side `infer_distance_decay` is
 # on: fitting the decay per sample costs an inference run, not a matrix.
-MATRIX_KEYS = {"mismapping_method", "align_backend", "align_tau",
+MATRIX_KEYS = {"mismapping_method", "align_tau",
                "align_distance_decay", "align_decay_model", "matrix_args", "panel"}
 # Free-form flag strings. Two axes of one grid point both setting one of these add up,
 # rather than the later axis silently dropping the earlier axis's flags.
@@ -125,8 +125,8 @@ def settings(cfg):
 
 
 def n_matrices(sweep_settings):
-    """How many mis-mapping matrices the grid actually costs: settings agreeing on every
-    matrix knob share one reference set, and so one matrix."""
+    """How many kernels the grid actually costs: settings agreeing on every kernel knob
+    (panel included) share one reference set, and so one kernel."""
     return len({tuple(sorted((k, str(v)) for k, v in s.items() if k in MATRIX_KEYS))
                 for s in sweep_settings})
 
@@ -184,14 +184,14 @@ def _selfcheck():
     cfg = {"sr_sweep": {"grid": {
         "mismapping": [{"name": "sim", "mismapping_method": "simulate"},
                        {"name": "exact", "mismapping_method": "align",
-                        "align_backend": "exact-hash", "align_tau": 0}],
+                        "align_tau": 0}],
         "inference": [{"name": "p01", "infer_presence_prior": 0.01},
                       {"name": "p001", "infer_presence_prior": 0.001}],
     }}, "reads": {"subsample": ["none", 100000]}}
     s = settings(cfg)
     assert [e["name"] for e in s] == ["sim.p01", "sim.p001", "exact.p01", "exact.p001"], s
     assert s[3] == {"name": "exact.p001", "mismapping_method": "align",
-                    "align_backend": "exact-hash", "align_tau": 0,
+                    "align_tau": 0,
                     "infer_presence_prior": 0.001}, s[3]
     # Two matrix modes x two inference points = 4 runs but only 2 matrices.
     assert n_matrices(s) == 2, n_matrices(s)
