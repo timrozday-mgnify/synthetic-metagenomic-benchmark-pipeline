@@ -17,11 +17,12 @@ Status: plan, revised 2026-09-21. It was first written 2026-09-17 and now absorb
 | P.7 (tests, parity) | done (#21); test at >= 10k reads |
 | P.8 (benchmark contract) | done on `panel-only-contract` (#38); upstream #21 merged (`e29bf69`) |
 | 1.5–1.6 (AAP samplesheet, `merged:`) | done (upstream #22, `462603b`); acceptance run passed |
-| 2.1 (primer mix) | done, upstream #23, not merged |
-| 2.2 (merged-read model) | done without `Position`, upstream #24 (stacked on #23), not merged |
-| 2.3 (`pairs`) | done without `raw_reads:`, upstream #25 (stacked on #24), not merged |
+| 2.1 (primer mix) | done, upstream #23, merged (`21bc4cd`) |
+| 2.2 (merged-read model) | done without `Position`, upstream #24 |
+| 2.3 (`pairs`) | done without `raw_reads:`, upstream #25 |
 | Phase 2 acceptance | deferred, to be run later |
-| 3 (align for merged reads) | done except the 3.1 test, upstream #26 (stacked on #25), not merged; acceptance deferred |
+| 3 (align for merged reads) | done except the 3.1 test, upstream #26; acceptance deferred |
+| 2.2–3 on upstream `main` | #24–#26 were merged into their stacked base branches, not `main`; upstream #27 (`align-merged` → `main`) lands them, not merged |
 | everything else | not done |
 
 Order: R → F → P.4–P.8 → 1 → 2 → 3 → 4 → 5. See Decision 7.
