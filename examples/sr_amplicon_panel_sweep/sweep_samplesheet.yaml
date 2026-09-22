@@ -118,6 +118,13 @@ databases:
         parvula
   silva_138_2_ssu_nr99:
     path: /PATH/TO/silva_138_2_ssu_nr99
+  silva_ssu_aap:
+    profilers:
+    - aap
+    - sr_amplicon
+    path: /PATH/TO/silva-ssu/138.1
+    rfam_covariance_model: /PATH/TO/rfam_cms
+    rfam_claninfo: /PATH/TO/ribo.clan_info
 samples:
 - sample: S01.amplicon_16s.515-YF-806BR
   profilers:
@@ -256,6 +263,67 @@ samples:
     panel: community_20hm_taxa
 - sample: S01.amplicon_16s.515-YF-806BR
   profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S01.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+- sample: S01.amplicon_16s.515-YF-806BR
+  profilers:
   - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S01.amplicon_16s.515-YF-806BR/subsample_100000
   subsample: 100000
@@ -391,6 +459,68 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true
     panel: community_20hm_taxa
+- sample: S01.amplicon_16s.515-YF-806BR
+  profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S01.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
 - sample: S02.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -528,6 +658,67 @@ samples:
     panel: community_20hm_taxa
 - sample: S02.amplicon_16s.515-YF-806BR
   profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S02.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+- sample: S02.amplicon_16s.515-YF-806BR
+  profilers:
   - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S02.amplicon_16s.515-YF-806BR/subsample_100000
   subsample: 100000
@@ -663,6 +854,68 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true
     panel: community_20hm_taxa
+- sample: S02.amplicon_16s.515-YF-806BR
+  profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S02.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
 - sample: S03.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -800,6 +1053,67 @@ samples:
     panel: community_20hm_taxa
 - sample: S03.amplicon_16s.515-YF-806BR
   profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S03.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+- sample: S03.amplicon_16s.515-YF-806BR
+  profilers:
   - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S03.amplicon_16s.515-YF-806BR/subsample_100000
   subsample: 100000
@@ -935,6 +1249,68 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true
     panel: community_20hm_taxa
+- sample: S03.amplicon_16s.515-YF-806BR
+  profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S03.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
 - sample: S04.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -1072,6 +1448,67 @@ samples:
     panel: community_20hm_taxa
 - sample: S04.amplicon_16s.515-YF-806BR
   profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S04.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+- sample: S04.amplicon_16s.515-YF-806BR
+  profilers:
   - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S04.amplicon_16s.515-YF-806BR/subsample_100000
   subsample: 100000
@@ -1207,6 +1644,68 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true
     panel: community_20hm_taxa
+- sample: S04.amplicon_16s.515-YF-806BR
+  profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S04.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
 - sample: S05.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -1344,6 +1843,67 @@ samples:
     panel: community_20hm_taxa
 - sample: S05.amplicon_16s.515-YF-806BR
   profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S05.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+- sample: S05.amplicon_16s.515-YF-806BR
+  profilers:
   - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S05.amplicon_16s.515-YF-806BR/subsample_100000
   subsample: 100000
@@ -1479,6 +2039,68 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true
     panel: community_20hm_taxa
+- sample: S05.amplicon_16s.515-YF-806BR
+  profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S05.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
 - sample: S06.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -1616,6 +2238,67 @@ samples:
     panel: community_20hm_taxa
 - sample: S06.amplicon_16s.515-YF-806BR
   profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S06.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+- sample: S06.amplicon_16s.515-YF-806BR
+  profilers:
   - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S06.amplicon_16s.515-YF-806BR/subsample_100000
   subsample: 100000
@@ -1751,6 +2434,68 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true
     panel: community_20hm_taxa
+- sample: S06.amplicon_16s.515-YF-806BR
+  profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S06.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
 - sample: S07.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -1888,6 +2633,67 @@ samples:
     panel: community_20hm_taxa
 - sample: S07.amplicon_16s.515-YF-806BR
   profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S07.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+- sample: S07.amplicon_16s.515-YF-806BR
+  profilers:
   - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S07.amplicon_16s.515-YF-806BR/subsample_100000
   subsample: 100000
@@ -2023,6 +2829,68 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true
     panel: community_20hm_taxa
+- sample: S07.amplicon_16s.515-YF-806BR
+  profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S07.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
 - sample: S08.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -2160,6 +3028,67 @@ samples:
     panel: community_20hm_taxa
 - sample: S08.amplicon_16s.515-YF-806BR
   profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S08.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+- sample: S08.amplicon_16s.515-YF-806BR
+  profilers:
   - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S08.amplicon_16s.515-YF-806BR/subsample_100000
   subsample: 100000
@@ -2295,6 +3224,68 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true
     panel: community_20hm_taxa
+- sample: S08.amplicon_16s.515-YF-806BR
+  profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S08.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
 - sample: S09.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -2432,6 +3423,67 @@ samples:
     panel: community_20hm_taxa
 - sample: S09.amplicon_16s.515-YF-806BR
   profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S09.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+- sample: S09.amplicon_16s.515-YF-806BR
+  profilers:
   - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S09.amplicon_16s.515-YF-806BR/subsample_100000
   subsample: 100000
@@ -2567,6 +3619,68 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true
     panel: community_20hm_taxa
+- sample: S09.amplicon_16s.515-YF-806BR
+  profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S09.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
 - sample: S10.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -2704,6 +3818,67 @@ samples:
     panel: community_20hm_taxa
 - sample: S10.amplicon_16s.515-YF-806BR
   profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S10.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+- sample: S10.amplicon_16s.515-YF-806BR
+  profilers:
   - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S10.amplicon_16s.515-YF-806BR/subsample_100000
   subsample: 100000
@@ -2839,6 +4014,68 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true
     panel: community_20hm_taxa
+- sample: S10.amplicon_16s.515-YF-806BR
+  profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S10.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
 - sample: S11.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -2976,6 +4213,67 @@ samples:
     panel: community_20hm_taxa
 - sample: S11.amplicon_16s.515-YF-806BR
   profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S11.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+- sample: S11.amplicon_16s.515-YF-806BR
+  profilers:
   - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S11.amplicon_16s.515-YF-806BR/subsample_100000
   subsample: 100000
@@ -3111,6 +4409,68 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true
     panel: community_20hm_taxa
+- sample: S11.amplicon_16s.515-YF-806BR
+  profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S11.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
 - sample: S12.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -3248,6 +4608,67 @@ samples:
     panel: community_20hm_taxa
 - sample: S12.amplicon_16s.515-YF-806BR
   profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S12.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+- sample: S12.amplicon_16s.515-YF-806BR
+  profilers:
   - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S12.amplicon_16s.515-YF-806BR/subsample_100000
   subsample: 100000
@@ -3383,6 +4804,68 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true
     panel: community_20hm_taxa
+- sample: S12.amplicon_16s.515-YF-806BR
+  profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S12.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
 - sample: S13.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -3520,6 +5003,67 @@ samples:
     panel: community_20hm_taxa
 - sample: S13.amplicon_16s.515-YF-806BR
   profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S13.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+- sample: S13.amplicon_16s.515-YF-806BR
+  profilers:
   - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S13.amplicon_16s.515-YF-806BR/subsample_100000
   subsample: 100000
@@ -3655,6 +5199,68 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true
     panel: community_20hm_taxa
+- sample: S13.amplicon_16s.515-YF-806BR
+  profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S13.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
 - sample: S14.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -3792,6 +5398,67 @@ samples:
     panel: community_20hm_taxa
 - sample: S14.amplicon_16s.515-YF-806BR
   profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S14.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+- sample: S14.amplicon_16s.515-YF-806BR
+  profilers:
   - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S14.amplicon_16s.515-YF-806BR/subsample_100000
   subsample: 100000
@@ -3927,6 +5594,68 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true
     panel: community_20hm_taxa
+- sample: S14.amplicon_16s.515-YF-806BR
+  profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S14.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
 - sample: S15.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -4064,6 +5793,67 @@ samples:
     panel: community_20hm_taxa
 - sample: S15.amplicon_16s.515-YF-806BR
   profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S15.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+- sample: S15.amplicon_16s.515-YF-806BR
+  profilers:
   - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S15.amplicon_16s.515-YF-806BR/subsample_100000
   subsample: 100000
@@ -4199,6 +5989,68 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true
     panel: community_20hm_taxa
+- sample: S15.amplicon_16s.515-YF-806BR
+  profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S15.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
 - sample: S16.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -4336,6 +6188,67 @@ samples:
     panel: community_20hm_taxa
 - sample: S16.amplicon_16s.515-YF-806BR
   profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S16.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+- sample: S16.amplicon_16s.515-YF-806BR
+  profilers:
   - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S16.amplicon_16s.515-YF-806BR/subsample_100000
   subsample: 100000
@@ -4471,6 +6384,68 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true
     panel: community_20hm_taxa
+- sample: S16.amplicon_16s.515-YF-806BR
+  profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S16.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
 - sample: S17.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -4608,6 +6583,67 @@ samples:
     panel: community_20hm_taxa
 - sample: S17.amplicon_16s.515-YF-806BR
   profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S17.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+- sample: S17.amplicon_16s.515-YF-806BR
+  profilers:
   - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S17.amplicon_16s.515-YF-806BR/subsample_100000
   subsample: 100000
@@ -4743,6 +6779,68 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true
     panel: community_20hm_taxa
+- sample: S17.amplicon_16s.515-YF-806BR
+  profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S17.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
 - sample: S18.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -4880,6 +6978,67 @@ samples:
     panel: community_20hm_taxa
 - sample: S18.amplicon_16s.515-YF-806BR
   profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S18.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+- sample: S18.amplicon_16s.515-YF-806BR
+  profilers:
   - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S18.amplicon_16s.515-YF-806BR/subsample_100000
   subsample: 100000
@@ -5015,6 +7174,68 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true
     panel: community_20hm_taxa
+- sample: S18.amplicon_16s.515-YF-806BR
+  profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S18.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
 - sample: S19.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -5152,6 +7373,67 @@ samples:
     panel: community_20hm_taxa
 - sample: S19.amplicon_16s.515-YF-806BR
   profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S19.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+- sample: S19.amplicon_16s.515-YF-806BR
+  profilers:
   - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S19.amplicon_16s.515-YF-806BR/subsample_100000
   subsample: 100000
@@ -5287,6 +7569,68 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true
     panel: community_20hm_taxa
+- sample: S19.amplicon_16s.515-YF-806BR
+  profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S19.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
 - sample: S20.amplicon_16s.515-YF-806BR
   profilers:
   - sr_amplicon
@@ -5424,6 +7768,67 @@ samples:
     panel: community_20hm_taxa
 - sample: S20.amplicon_16s.515-YF-806BR
   profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S20.amplicon_16s.515-YF-806BR
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+- sample: S20.amplicon_16s.515-YF-806BR
+  profilers:
   - sr_amplicon
   benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S20.amplicon_16s.515-YF-806BR/subsample_100000
   subsample: 100000
@@ -5559,3 +7964,65 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true
     panel: community_20hm_taxa
+- sample: S20.amplicon_16s.515-YF-806BR
+  profilers:
+  - aap
+  - sr_amplicon
+  benchmark_dir: /Users/timrozday/Documents/synthetic-metagenomic-benchmark-pipeline/results/sr_amplicon_panel_sweep/S20.amplicon_16s.515-YF-806BR/subsample_100000
+  subsample: 100000
+  primers:
+  - pair_id: 515-YF-806BR
+    forward: GTGYCAGCMGCCGCGGTAA
+    reverse: GGACTACNVGGGTWTCTAAT
+  database: silva_ssu_aap
+  sr_settings:
+  - name: aap_panel.sim_merged.gate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_merged.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate
+      0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.gate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.sim_pairs.nogate
+    mismapping_method: simulate
+    matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.gate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_20hm
+    aap_reads: true
+  - name: aap_panel.align.nogate
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: auto
+    matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate
+      0.000004 --flat_del_rate 0.000004
+    infer_presence: false
+    panel: community_20hm
+    aap_reads: true

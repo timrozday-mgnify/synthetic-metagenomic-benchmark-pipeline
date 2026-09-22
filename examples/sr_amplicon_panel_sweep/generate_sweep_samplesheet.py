@@ -11,6 +11,10 @@ Two rows per benchmark dir phase 1 generated, each with its own row-level `sr_se
               carries `panel:` (the custom collection), so inference runs over the panel
               genomes plus `background`, not over SILVA's sequences. The `generic_taxa`
               settings ride on the same row: same database and mapping, a species panel.
+  aap         (only with the `aap_panel` arm) database: `aap_database`. Runs the
+              amplicon-analysis-pipeline, then the `aap_panel` settings on its output
+              (`aap_reads`), which the pipeline wires from that row's AAP run. It carries
+              `sr_error_model:` too, for the `sim_pairs` oracle.
 
     python generate_sweep_samplesheet.py [results_dir] [config.yaml]
 """
@@ -29,6 +33,7 @@ def main():
     cfg = ps.load_config(sys.argv[2] if len(sys.argv) > 2 else HERE / "config.yaml")
     custom, panel = ps.settings(cfg, "custom"), ps.settings(cfg, "generic_panel")
     taxa = ps.settings(cfg, "generic_taxa")
+    aap = ps.settings(cfg, "aap_panel") if "aap_panel" in ps.arms(cfg) else []
     map_name = cfg["generic"]["map_setting"]["name"]
     model = ps.trained_model(cfg, results_dir)
 
@@ -48,17 +53,22 @@ def main():
         if model:
             generic["sr_error_model"] = model
         rows.append(generic)
+        if aap:
+            rows.append({**base, "profilers": ["aap", "sr_amplicon"],
+                         "database": cfg["aap_database"]["name"], "sr_settings": aap,
+                         **({"sr_error_model": model} if model else {})})
 
     doc = {"databases": ps.databases_block(cfg), "samples": rows}
     with open(HERE / "sweep_samplesheet.yaml", "w") as fh:
         ps.dump_yaml(doc, fh)
 
-    n_dirs = len(rows) // 2
-    n_settings = len(custom) + len(panel) + len(taxa)
+    n_dirs = len(rows) // (3 if aap else 2)
+    n_settings = len(custom) + len(panel) + len(taxa) + len(aap)
     print(f"Wrote sweep_samplesheet.yaml: {n_dirs} benchmark dir(s) x ({len(custom)} custom "
-          f"+ {len(panel)} generic_panel + {len(taxa)} generic_taxa) setting(s) = "
-          f"{n_dirs * n_settings} profiles, from {ps.n_matrices(custom)} custom "
-          f"kernel(s) and {ps.n_matrices(panel) + ps.n_matrices(taxa)} panel kernel(s)")
+          f"+ {len(panel)} generic_panel + {len(taxa)} generic_taxa + {len(aap)} aap_panel) "
+          f"setting(s) = {n_dirs * n_settings} profiles, from {ps.n_matrices(custom)} custom "
+          f"kernel(s), {ps.n_matrices(panel) + ps.n_matrices(taxa)} panel kernel(s) and "
+          f"{ps.n_matrices(aap)} aap_panel kernel(s)")
     if missing:
         print(f"NOTE: {len(missing)} benchmark dir(s) have no phase-1 SILVA mapping "
               f"(e.g. {missing[0]}); their generic_panel rows omit `mseq:` and every panel "
@@ -67,7 +77,8 @@ def main():
         print(f"WARNING: no single *.model.pt under {results_dir}/error_models/"
               f"{cfg['train']['id']}/; `--sim_error_model trained` panel settings will "
               "train their own model per sample instead of using the one the reads were "
-              "generated with.", file=sys.stderr)
+              "generated with." + (" The aap_panel `sim_pairs` point will refuse to run: "
+              "it needs that model." if aap else ""), file=sys.stderr)
 
 
 if __name__ == "__main__":
