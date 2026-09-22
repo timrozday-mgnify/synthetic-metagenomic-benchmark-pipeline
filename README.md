@@ -544,7 +544,8 @@ What it costs is the point:
   its reads must be paired, and its `database` should be AAP's own directory as a
   `path:` entry so both profilers see the same MAPseq database. The entry adds
   `--trim_primers false` to its kernel build and inference run, since merged reads keep
-  their primers.
+  their primers. `examples/sr_amplicon_aap/` scores AAP's own labels against four SR arms
+  (simulate merged, simulate pairs, align, raw reads) on one truth sample.
 
 `examples/sr_amplicon_param_sweep/` is a worked two-phase version of exactly this: one
 `--step all` run to generate and map, then one `--step profile` run over the whole grid. `examples/sr_amplicon_silva_sweep/` is the same two phases against a
