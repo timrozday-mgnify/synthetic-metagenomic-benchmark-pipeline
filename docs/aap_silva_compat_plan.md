@@ -910,8 +910,9 @@ The run found four bugs, all fixed on this branch:
 Two operational problems:
 - Concurrent first use of `--amplicon_cache` races. Three kernels extracted the same
   set at once; the first `mv` won and the other two failed on "Directory not empty".
-  A resume reuses the winner's cache. Fix upstream: extract into a temp dir, then rename
-  atomically and treat an existing target as a hit.
+  A resume reuses the winner's cache. The failing `mv` was Nextflow's storeDir unstage,
+  which cannot replace a directory. Fixed upstream in #30: EXTRACT_AMPLICONS declares its
+  four files instead, and `mv -f` replaces each one atomically.
 - Docker Desktop's VM disk (94 GB) filled and torch could not create its cache dir.
   Pruning unused images fixed it.
 - The Nov2025 comparison against exact-matched DADA2 ASV profiles is descriptive only.
