@@ -69,6 +69,7 @@ databases:
   silva_138_2_ssu_mapseq:
     profilers:
     - aap
+    - sr_amplicon
     path: /PATH/TO/silva_mapseq_db
     rfam_covariance_model: /PATH/TO/rfam_cms
     rfam_claninfo: /PATH/TO/ribosomal_RNA.claninfo

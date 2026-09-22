@@ -91,7 +91,7 @@ generation_modes:
 # THEM, from the panel's sources to SILVA's labels. The inference knobs are free by
 # comparison, which is why the presence prior is swept in the same run rather than in two.
 #
-# Profiling arms. Three ways to turn ONE set of reads into abundances, all scored in the
+# Profiling arms. Four ways to turn ONE set of reads into abundances, all scored in the
 # same genus space by scripts/score_sweep.py:
 #   silva_panel  sr_amplicon against `database:` (SILVA), its labels reinterpreted
 #                through the panel collection (an sr_settings `panel:`) - the sweep
@@ -102,8 +102,12 @@ generation_modes:
 #                reads (cheap against 20 references), so it does not reuse phase 1's
 #                SILVA classification.
 #   aap          no superresolution at all: the EBI amplicon-analysis-pipeline's own
-#                MAPseq labels against `aap_database:`. The baseline the other two have
+#                MAPseq labels against `aap_database:`. The baseline the others have
 #                to beat to be worth running.
+#   aap_panel    sr_amplicon on that same AAP run's output: its fastp-merged reads and
+#                its MAPseq labels (`aap_reads`), reinterpreted through the panel and
+#                fanned over `aap_sweep.grid` below. What SR adds to a run that only has
+#                AAP's output. Delete `aap_sweep:` to run AAP alone.
 # `custom`, and phase 1's mapping run, use ONE grid point, so the arm comparison is not
 # multiplied by the sweep. Name it here; it must be a point of the grid below.
 arm_point: exact.nogate
@@ -130,6 +134,27 @@ sr_sweep:
     infer:
       - {name: p01, infer_presence: true, infer_presence_prior: 0.01, infer_presence_temp: 1.0}
       - {name: p001, infer_presence: true, infer_presence_prior: 0.001, infer_presence_temp: 1.0}
+      - {name: nogate, infer_presence: false}
+
+# The `aap_panel` arm's grid, same shape as `sr_sweep.grid`. Merged reads keep their
+# primers and have their own error profile, so the kernels are the Phase 4 truth run's
+# merged-read ones (docs/aap_silva_compat_plan.md), at AAP's measured merged-read rates
+# (superresolution-amplicon dev/aap_merge_effects.md 0.2):
+#   sim_merged : simulate merged reads at flat sub 3.4e-4, indels 4e-6. Phase 4's best
+#                non-oracle arm.
+#   align      : align tau 1, the substitution and indel decays measured separately from
+#                the same rates (indels are ~100x rarer in merged reads).
+# `sim_pairs` is left out: it needs a raw-mate model on every row, which the `naive`
+# error-model arm has none of, and Phase 4 put it within 0.001 of `sim_merged`.
+aap_sweep:
+  grid:
+    matrix:
+      - {name: sim_merged, mismapping_method: simulate,
+         matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate 0.000004}
+      - {name: align, mismapping_method: align, align_tau: 1, align_distance_decay: auto,
+         matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate 0.000004}
+    infer:
+      - {name: p01, infer_presence: true, infer_presence_prior: 0.01, infer_presence_temp: 1.0}
       - {name: nogate, infer_presence: false}
 
 # The reference set under test. `path:` is a PRE-BUILT database directory holding one
@@ -165,16 +190,20 @@ custom_database:
   name: community_panel
 
 # The `aap` arm's database. The amplicon-analysis-pipeline classifies with MAPseq, so
-# this is a mapseq database directory - NOT the superresolution reference set above.
-# A pre-built dir holds the four MAPseq files, resolved by BUILD_DATABASES:
+# this is a mapseq database directory, not the superresolution reference set above. The
+# `aap_panel` arm profiles against it too: AAP's .mseq is only valid against the FASTA
+# (and .mscluster) it was made with. A pre-built dir holds the four MAPseq files,
+# resolved by BUILD_DATABASES:
 #
 #   <path>/*.mapseq.fasta (or a lone *.fasta)   the reference sequences
 #   <path>/*.mapseq.tax   (or a lone *.tax)     one lineage per reference
 #   <path>/*.mapseq.otu   (or a lone *.otu)     mapseq's OTU table
 #   <path>/*.mscluster                          mapseq's cluster index
 #
-# Use MAPseq's own distributed SILVA database, or build one from a SILVA release with
-# `mapseq -cluster`. The two Rfam files are AAP's rRNA detection step and the pipeline
+# AAP's own SILVA-SSU directory works as shipped (SILVA-SSU.fasta, SILVA-SSU-tax.txt,
+# SILVA-SSU.otu, SILVA-SSU.fasta.mscluster). So does MAPseq's own distributed SILVA
+# database, or one built from a SILVA release with `mapseq -cluster`, as long as the
+# .mscluster is named `<fasta>.mscluster`. The two Rfam files are AAP's rRNA detection step and the pipeline
 # requires both of any `aap` collection.
 aap_database:
   name: silva_138_2_ssu_mapseq

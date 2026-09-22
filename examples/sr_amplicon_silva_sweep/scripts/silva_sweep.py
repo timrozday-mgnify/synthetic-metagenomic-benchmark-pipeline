@@ -21,8 +21,9 @@ genus space:
 
 * **profiling arms** (`arms`) — SILVA reinterpreted through the panel (an `sr_settings`
   `panel:`; the sweep itself), the same reads against a collection built from the panel
-  (`custom_database`), and no superresolution at all (the EBI amplicon-analysis-pipeline
-  against `aap_database`).
+  (`custom_database`), no superresolution at all (the EBI amplicon-analysis-pipeline
+  against `aap_database`), and superresolution on that AAP run's own output (its merged
+  reads and MAPseq labels, `aap_panel`).
 * **error-model arms** (`error_models`) — the reads are *generated* three times, once per
   error model: the AIC-selected trained model, a context-free one, and skiver's bundled
   preset with no training. Each arm needs its own `train_id`, which is what the pipeline
@@ -71,8 +72,13 @@ def genus(lineage):
 #                 reference set that *is* the community gives.
 #   aap         : no superresolution - the EBI amplicon-analysis-pipeline's own MAPseq
 #                 labels against a pre-built mapseq SILVA database.
-SR_ARMS = ("silva_panel", "custom")
-ARMS = SR_ARMS + ("aap",)
+#   aap_panel   : sr_amplicon on that AAP run's output (`aap_reads`): its fastp-merged
+#                 reads and its MAPseq labels, reinterpreted through the panel. Fanned over
+#                 `aap_sweep.grid`. It rides on the `aap` row, because `aap_reads` reads
+#                 the row's own AAP run; without `aap_sweep:` the row runs AAP alone.
+SR_ARMS = ("silva_panel", "custom", "aap_panel")
+# One samplesheet row per arm here; `aap_panel` is the `aap` row's sr_settings.
+ARMS = ("silva_panel", "custom", "aap")
 
 
 def error_models(cfg):
@@ -117,16 +123,22 @@ def arm_settings(cfg, arm):
     """The `sr_settings:` list a row of `arm` carries.
 
     `silva_panel` takes the whole grid, each point with `panel:`; `custom` takes
-    `arm_point` alone. Every name gets the arm as a prefix so the arms' profiles do not
+    `arm_point` alone; `aap_panel` takes `aap_sweep.grid` (none without it), each point
+    with `panel:` and `aap_reads: true`. Every name gets the arm as a prefix so the arms' profiles do not
     collide in the shared benchmark dir - `<id>.<setting>.sr_profile.tsv` is keyed by the
     setting name.
     """
-    points = settings(cfg) if arm == "silva_panel" else [arm_point(cfg)]
+    if arm == "aap_panel":
+        points = settings({"sr_sweep": cfg["aap_sweep"]}) if cfg.get("aap_sweep") else []
+    else:
+        points = settings(cfg) if arm == "silva_panel" else [arm_point(cfg)]
     out = []
     for point in points:
         point = {**point, "name": f"{arm}.{point['name']}"}
-        if arm == "silva_panel":
+        if arm in ("silva_panel", "aap_panel"):
             point["panel"] = cfg["custom_database"]["name"]
+        if arm == "aap_panel":
+            point["aap_reads"] = True
         out.append(point)
     return out
 
@@ -142,7 +154,8 @@ def arm_database(cfg, arm):
     """The `database:` name a row of `arm` profiles against."""
     return {"silva_panel": cfg["database"]["name"],
             "custom": cfg["custom_database"]["name"],
-            "aap": cfg["aap_database"]["name"]}[arm]
+            "aap": cfg["aap_database"]["name"],
+            "aap_panel": cfg["aap_database"]["name"]}[arm]
 
 
 def load_config(path):
@@ -151,6 +164,7 @@ def load_config(path):
     if "sr_sweep" not in cfg:
         sys.exit("config.yaml: missing required 'sr_sweep:' block")
     settings(cfg)                       # expands (and validates) the grid up front
+    arm_settings(cfg, "aap_panel")      # ... and the AAP-output grid, if any
     db = cfg["database"]
     if bool(db.get("path")) == bool(db.get("sequences_from_panel")):
         sys.exit("config.yaml: database needs either 'path:' (pre-built, e.g. SILVA) or "
@@ -203,9 +217,11 @@ def database_block(cfg):
     }
     # The mapseq database the amplicon-analysis-pipeline classifies against. Pre-built
     # out of band, like the superresolution reference set, plus the two Rfam files
-    # main.nf requires of any 'aap' collection.
+    # main.nf requires of any 'aap' collection. The `aap_panel` arm profiles AAP's output
+    # against this same directory, since AAP's .mseq is only valid against it.
     aap = cfg["aap_database"]
-    block[aap["name"]] = {"profilers": ["aap"], "path": aap["path"],
+    profilers = ["aap"] + (["sr_amplicon"] if cfg.get("aap_sweep") else [])
+    block[aap["name"]] = {"profilers": profilers, "path": aap["path"],
                           "rfam_covariance_model": aap["rfam_covariance_model"],
                           "rfam_claninfo": aap["rfam_claninfo"]}
     return block
@@ -309,6 +325,18 @@ def _selfcheck():
     mapping = map_setting(grid)
     assert mapping["name"] == "map" and mapping["panel"] == "ctl" and mapping["align_tau"] == 1
     assert arm_database(grid, "aap") == "silva_ms"
+    assert arm_database(grid, "aap_panel") == "silva_ms"
+
+    # The AAP-output arm: absent `aap_sweep:` = nothing, else its own grid, every point
+    # on the panel and reading the row's AAP output.
+    assert arm_settings(grid, "aap_panel") == []
+    grid["aap_sweep"] = {"grid": {"matrix": [{"name": "sim", "mismapping_method": "simulate"}],
+                                  "infer": [{"name": "nogate", "infer_presence": False}]}}
+    aap_pts = arm_settings(grid, "aap_panel")
+    assert [e["name"] for e in aap_pts] == ["aap_panel.sim.nogate"], aap_pts
+    assert aap_pts[0]["panel"] == "ctl" and aap_pts[0]["aap_reads"] is True, aap_pts
+    assert database_block({**cfg, "aap_sweep": grid["aap_sweep"]})["silva_ms"]["profilers"] \
+        == ["aap", "sr_amplicon"]
     assert arm_database(grid, "silva_panel") == "silva"
     print("silva_sweep selfcheck OK")
 

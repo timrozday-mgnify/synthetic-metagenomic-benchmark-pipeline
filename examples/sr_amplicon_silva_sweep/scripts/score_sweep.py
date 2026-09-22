@@ -4,13 +4,13 @@ method.
 
     python scripts/score_sweep.py [results_dir] [config.yaml] > scores.csv
 
-Genus is the one space all three arms can be compared in - two of them report panel
-genomes and one reports SILVA lineages - so everything is rolled up to it. Truth is
+Genus is the one space all the arms can be compared in - the superresolution arms report
+panel genomes and `aap` reports SILVA lineages - so everything is rolled up to it. Truth is
 `truth.tsv` through `panel[].taxonomy`. Predictions:
 
   silva_panel, `inferred_composition.csv` - each panel genome's mass goes to its own
-  custom       lineage's genus. `silva_panel`'s `background` bucket (reads the panel
-               cannot explain) goes to `unresolved`.
+  custom,      lineage's genus. A panel arm's `background` bucket (reads the panel
+  aap_panel    cannot explain) goes to `unresolved`.
   aap          the amplicon-analysis-pipeline's krona table - a count per lineage,
                summed per genus; a lineage stopping above genus goes to `unresolved`.
 

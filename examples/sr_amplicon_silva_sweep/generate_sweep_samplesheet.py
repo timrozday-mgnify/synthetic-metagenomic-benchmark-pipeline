@@ -4,9 +4,11 @@
 Emits one row per benchmark directory phase 1 generated (error-model arm x primer pair x
 subsample depth) PER PROFILING ARM. The arms are `silva_panel` (SILVA reinterpreted
 through the panel: the sweep proper, fanned over the whole grid), `custom` (the same reads
-against a collection built from the panel) and `aap` (no superresolution at all). They
-differ only in `database:`, `profilers:` and `sr_settings:`, so all three land in the
-benchmark dir the reads are in and are scored against one truth.tsv.
+against a collection built from the panel) and `aap` (the amplicon-analysis-pipeline,
+plus the `aap_panel` arm: superresolution on that AAP run's merged reads and labels,
+fanned over `aap_sweep.grid`). They differ only in `database:`, `profilers:` and
+`sr_settings:`, so all of them land in the benchmark dir the reads are in and are scored
+against one truth.tsv.
 
 Each row carries:
 
@@ -49,12 +51,14 @@ def main():
         if not mseq.exists():
             missing.append(str(mseq))
         for arm in gs.ARMS:
+            # The `aap` row also carries the `aap_panel` arm, which reads its AAP output.
+            sr = gs.arm_settings(cfg, "aap_panel" if arm == "aap" else arm)
             row = {"sample": sample,
-                   "profilers": ["aap"] if arm == "aap" else ["sr_amplicon"],
+                   "profilers": (["aap"] if arm == "aap" else []) + (["sr_amplicon"] if sr else []),
                    "benchmark_dir": str(directory),
                    "database": gs.arm_database(cfg, arm)}
-            if arm != "aap":
-                row["sr_settings"] = gs.arm_settings(cfg, arm)
+            if sr:
+                row["sr_settings"] = sr
             if depth:
                 row["subsample"] = depth
             if pair:
@@ -70,13 +74,16 @@ def main():
     with open(HERE / "sweep_samplesheet.yaml", "w") as fh:
         gs.dump_yaml(doc, fh)
 
-    profiles = sum(len(r.get("sr_settings", [None])) for r in rows)
+    profiles = sum(len(r.get("sr_settings", [])) + ("aap" in r["profilers"]) for r in rows)
     print(f"Wrote sweep_samplesheet.yaml: {n_dirs} benchmark dir(s) x "
-          f"{len(gs.ARMS)} arm(s) = {profiles} profiles "
-          f"({len(settings)} grid point(s) on the 'silva_panel' arm, the rest at "
-          f"'{gs.arm_point(cfg)['name']}'), from "
+          f"{len(gs.ARMS)} row(s) = {profiles} profiles "
+          f"({len(settings)} grid point(s) on the 'silva_panel' arm, "
+          f"{len(gs.arm_settings(cfg, 'aap_panel'))} on 'aap_panel', 'custom' at "
+          f"'{gs.arm_point(cfg)['name']}', and 'aap'), from "
           f"{gs.n_matrices(gs.arm_settings(cfg, 'silva_panel'))} panel kernel(s) over "
-          f"'{cfg['database']['name']}'")
+          f"'{cfg['database']['name']}', plus "
+          f"{gs.n_matrices(gs.arm_settings(cfg, 'aap_panel'))} 'aap_panel' kernel(s) "
+          f"over '{cfg['aap_database']['name']}'")
     if missing:
         print(f"NOTE: {len(missing)} benchmark dir(s) have no phase-1 mapseq output "
               f"(e.g. {missing[0]}); those rows omit `mseq:` and the nested run will map "

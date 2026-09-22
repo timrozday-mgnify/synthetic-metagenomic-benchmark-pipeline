@@ -8,11 +8,12 @@ be compared against one ground truth.
 
 Two comparison axes sit on top of that, and everything is scored in one genus space:
 
-- **three profiling arms** over the same reads — `silva_panel` (SILVA's labels
+- **four profiling arms** over the same reads: `silva_panel` (SILVA's labels
   reinterpreted through the community's genomes; the sweep proper), `custom` (a
-  collection built from the community itself) and `aap` (**no superresolution at all**:
-  the EBI amplicon-analysis-pipeline's own MAPseq labels). The last is the baseline the
-  other two have to beat to be worth running;
+  collection built from the community itself), `aap` (**no superresolution at all**:
+  the EBI amplicon-analysis-pipeline's own MAPseq labels) and `aap_panel` (superresolution
+  on that AAP run's own output). `aap` is the baseline the others have to beat, and
+  `aap_panel` asks what SR adds when AAP's output is all there is;
 - **three error-model arms** — the reads are *generated* three times, from the trained
   model, from a context-free one and from skiver's untrained preset, so any conclusion
   can be checked against how much of it the error model is responsible for.
@@ -43,25 +44,37 @@ absent from every sample, and a setting is only usable if it says so. The NB
 community's own absent genomes (about 7 of 20 per sample, differing per sample) give the
 same measurement inside the panel, where the truth is unambiguous.
 
-## The three profiling arms
+## The four profiling arms
 
-All three turn the same reads into abundances, and `scripts/score_sweep.py` scores them in
-the same genus space — the only space they share, since two report panel genomes and one
-reports SILVA lineages.
+All four turn the same reads into abundances, and `scripts/score_sweep.py` scores them in
+the same genus space — the only space they share, since the superresolution arms report
+panel genomes and `aap` reports SILVA lineages.
 
 | Arm | Database | What it is | Scored from |
 |---|---|---|---|
 | `silva_panel` | `database` (SILVA) | SILVA's labels reinterpreted through the panel collection (an `sr_settings` `panel:`), **fanned over the whole grid** — what knowing the community buys when the reads can only be mapped to SILVA | `inferred_composition.csv`, plus a `background` bucket |
 | `custom` | `custom_database` | superresolution against that panel collection itself — the upper bound a reference set that *is* the community gives | `inferred_composition.csv`, panel genomes |
 | `aap` | `aap_database` | no superresolution: the amplicon-analysis-pipeline classifies with MAPseq against a pre-built mapseq SILVA DB | its krona table, a count per lineage |
+| `aap_panel` | `aap_database` | superresolution on the `aap` run's output (`aap_reads`): its fastp-merged reads and its MAPseq labels, reinterpreted through the panel, **fanned over `aap_sweep.grid`** | `inferred_composition.csv`, plus a `background` bucket |
 
-Only `silva_panel` runs the grid. `custom` runs at **one** point, `arm_point:` in
+`silva_panel` runs `sr_sweep.grid` and `aap_panel` runs its own `aap_sweep.grid`. `custom` runs at **one** point, `arm_point:` in
 `config.yaml` (shipped as `exact.nogate`), so the arm comparison is not multiplied by the
 sweep. `custom` maps its own reads — cheap against 20 references, and phase 1's SILVA
 classification is not its classification — while `silva_panel` reuses it.
 
-Both superresolution arms name their settings `<arm>.<point>`, because a profile file is
-`<id>.<setting>.sr_profile.tsv` and all three arms publish into the one benchmark dir.
+`aap_panel` is not a row of its own: it is the `aap` row's `sr_settings`, because
+`aap_reads` reads the row's own AAP run. It takes that run's
+`qc/<id>.merged.fastq.gz` (`merged: true`, with fastp's merge rate) and
+`taxonomy-summary/<database>/<id>.mseq.gz` (as `mseq:`, so nothing is mapped again), and
+adds `--trim_primers false`, since merged reads keep their primers. It profiles against
+`aap_database` for the same reason: AAP's `.mseq` is valid only against the FASTA it was
+made with. So `silva_panel` against `aap_panel` compares SR's own read preparation and
+database with AAP's. Its grid holds the Phase 4 truth run's merged-read kernels:
+`sim_merged` at AAP's measured merged-read rates, and `align` with separate substitution
+and indel decays. Delete `aap_sweep:` to run AAP alone.
+
+Every superresolution arm names its settings `<arm>.<point>`, because a profile file is
+`<id>.<setting>.sr_profile.tsv` and all the arms publish into the one benchmark dir.
 There is no panel-less SILVA arm: without a `panel:` the nested run infers over every
 SILVA V4 group, which names sequences rather than genomes and builds a kernel over the
 whole database.
@@ -156,10 +169,12 @@ Python scripts. Edit:
 - `database.path` — the pre-built reference set directory (AAP's `SILVA-SSU/138.1` works
   as is), and `database.name` to name it (see
   [The database](#the-database-path-no-build-step)).
-- `aap_database` — the `aap` arm's **mapseq** database (a different thing from the
-  superresolution reference set): a directory holding the four MAPseq files, plus the two
-  Rfam paths the pipeline requires of any `aap` collection. MAPseq's own distributed
-  SILVA database works as-is.
+- `aap_database` — the `aap` and `aap_panel` arms' **mapseq** database (a different
+  thing from the superresolution reference set): a directory holding the four MAPseq
+  files, plus the two Rfam paths the pipeline requires of any `aap` collection. AAP's own
+  SILVA-SSU directory and MAPseq's distributed SILVA database both work as-is.
+- `aap_sweep.grid` — the `aap_panel` arm's grid, same shape as `sr_sweep.grid`. Omit it
+  and the `aap` row runs AAP alone.
 - `custom_database.name` — nothing to fill in: it is built from `panel[]` and publishes
   to `<outdir>/databases/<name>/`, ready to be another run's `path:`.
 - `error_models` — the three read-generation arms. Cut it to one entry for one set of reads.
@@ -193,16 +208,17 @@ Two runs, back to back:
    reference set under a `map` setting (`arm_point`'s knobs, over the panel). This is the
    run that publishes each depth's `profiling/sr/<id>.map.obs.mseq.gz`.
 2. `generate_sweep_samplesheet.py` → `sweep_samplesheet.yaml`, then `--step profile`.
-   Three rows per benchmark dir, one per profiling arm, each with its own `database:`,
-   `profilers:` and `sr_settings:`. The `silva_panel` row carries that dir's `mseq:`;
-   `custom` and `aap` map their own reads.
+   Three rows per benchmark dir, each with its own `database:`, `profilers:` and
+   `sr_settings:`. The `silva_panel` row carries that dir's `mseq:`; `custom` and `aap`
+   map their own reads. The `aap` row runs `aap` and `sr_amplicon`: its `aap_panel`
+   entries wait for its AAP run and profile what that produced.
 3. `scripts/score_sweep.py` → `results/sr_amplicon_silva_sweep/silva_sweep_scores.csv`.
 
 ## What it costs
 
 **The shipped config is large.** 20 communities × 3 error-model arms × 2 depths = **120
-benchmark dirs**; each runs 15 `silva_panel` grid points + 1 `custom` + 1 `aap` =
-**2040 profiles**. Three knobs cut it, in descending order of effect, and each is one
+benchmark dirs**; each runs 15 `silva_panel` grid points + 1 `custom` + 1 `aap` + 4
+`aap_panel` grid points = **2520 profiles**. Three knobs cut it, in descending order of effect, and each is one
 edit: drop `error_models:` to one entry (÷3, and it also cuts read generation and SILVA
 mapping by the same factor — that is the expensive third), shrink `sr_sweep.grid`, or
 drop a `reads.subsample` depth.
@@ -232,6 +248,10 @@ that comparison costs inference runs only. What keeps that affordable:
   `simulate` runs at a flat 3.1e-3, SC2200627's calibrated rate, so it is not an oracle.
   It was the Phase 4 truth run's best kernel against SILVA, about 2× better than align
   (`docs/aap_silva_compat_plan.md`).
+- **`aap_panel` adds 2 kernels, not a mapping pass.** Its reads come mapped: AAP's own
+  MAPseq labels are the `mseq:`. Its kernels (`sim_merged`, `align`) run over the same
+  panel against `aap_database`, split from `silva_panel`'s by database and by
+  `--trim_primers false`. Each `aap_panel` inference waits for its row's AAP run.
 
 ## Output
 
