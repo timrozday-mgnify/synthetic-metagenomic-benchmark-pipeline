@@ -122,7 +122,11 @@ sr_sweep:
       - {name: kmer2, mismapping_method: align, align_tau: 2,
          align_distance_decay: 0.007,
          matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096}
-      # - {name: simulate, mismapping_method: simulate}   # ~30 panel sources x 5,000 reads
+      # Simulate-and-map at SC2200627's calibrated raw substitution rate (superresolution-
+      # amplicon dev/error_rate_calibration.md): ~30 panel sources x 5,000 reads against
+      # SILVA. Flat, so no oracle. The method the Phase 4 truth run scored best
+      # (docs/aap_silva_compat_plan.md), so the align points are read against it.
+      - {name: simulate, mismapping_method: simulate, matrix_args: --flat_sub_rate 0.0031}
     infer:
       - {name: p01, infer_presence: true, infer_presence_prior: 0.01, infer_presence_temp: 1.0}
       - {name: p001, infer_presence: true, infer_presence_prior: 0.001, infer_presence_temp: 1.0}

@@ -203,6 +203,35 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
   - name: generic_taxa.trained.nogate
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
@@ -311,6 +340,35 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
   - name: generic_taxa.trained.nogate
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
@@ -414,6 +472,35 @@ samples:
   - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
@@ -525,6 +612,35 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
   - name: generic_taxa.trained.nogate
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
@@ -628,6 +744,35 @@ samples:
   - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
@@ -739,6 +884,35 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
   - name: generic_taxa.trained.nogate
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
@@ -842,6 +1016,35 @@ samples:
   - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
@@ -953,6 +1156,35 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
   - name: generic_taxa.trained.nogate
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
@@ -1056,6 +1288,35 @@ samples:
   - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
@@ -1167,6 +1428,35 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
   - name: generic_taxa.trained.nogate
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
@@ -1270,6 +1560,35 @@ samples:
   - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
@@ -1381,6 +1700,35 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
   - name: generic_taxa.trained.nogate
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
@@ -1484,6 +1832,35 @@ samples:
   - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
@@ -1595,6 +1972,35 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
   - name: generic_taxa.trained.nogate
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
@@ -1698,6 +2104,35 @@ samples:
   - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
@@ -1809,6 +2244,35 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
   - name: generic_taxa.trained.nogate
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
@@ -1912,6 +2376,35 @@ samples:
   - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
@@ -2023,6 +2516,35 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
   - name: generic_taxa.trained.nogate
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
@@ -2126,6 +2648,35 @@ samples:
   - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
@@ -2237,6 +2788,35 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
   - name: generic_taxa.trained.nogate
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
@@ -2340,6 +2920,35 @@ samples:
   - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
@@ -2451,6 +3060,35 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
   - name: generic_taxa.trained.nogate
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
@@ -2554,6 +3192,35 @@ samples:
   - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
@@ -2665,6 +3332,35 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
   - name: generic_taxa.trained.nogate
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
@@ -2768,6 +3464,35 @@ samples:
   - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
@@ -2879,6 +3604,35 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
   - name: generic_taxa.trained.nogate
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
@@ -2982,6 +3736,35 @@ samples:
   - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
@@ -3093,6 +3876,35 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
   - name: generic_taxa.trained.nogate
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
@@ -3196,6 +4008,35 @@ samples:
   - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
@@ -3307,6 +4148,35 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
   - name: generic_taxa.trained.nogate
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
@@ -3410,6 +4280,35 @@ samples:
   - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
@@ -3521,6 +4420,35 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
   - name: generic_taxa.trained.nogate
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
@@ -3624,6 +4552,35 @@ samples:
   - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
@@ -3735,6 +4692,35 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
   - name: generic_taxa.trained.nogate
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
@@ -3838,6 +4824,35 @@ samples:
   - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
@@ -3949,6 +4964,35 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
   - name: generic_taxa.trained.nogate
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
@@ -4052,6 +5096,35 @@ samples:
   - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
@@ -4163,6 +5236,35 @@ samples:
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
   - name: generic_taxa.trained.nogate
     mismapping_method: simulate
     matrix_args: --sim_error_model trained
@@ -4266,6 +5368,35 @@ samples:
   - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm
@@ -4374,6 +5505,35 @@ samples:
   - name: generic_panel.flat.horseshoe.s3k
     mismapping_method: simulate
     matrix_args: --sim_error_model flat
+    infer_presence: false
+    inference_args: --infer_horseshoe true --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.gate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.nogate.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    inference_args: --infer_steps 3000
+    panel: community_20hm
+  - name: generic_panel.kmer1_latent.horseshoe.s3k
+    mismapping_method: align
+    align_tau: 1
+    align_distance_decay: 0.007
+    infer_distance_decay: true
+    matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
     infer_presence: false
     inference_args: --infer_horseshoe true --infer_steps 3000
     panel: community_20hm

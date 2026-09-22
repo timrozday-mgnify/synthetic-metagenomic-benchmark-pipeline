@@ -41,7 +41,7 @@ shipped grids:
 |---|---|---|
 | `custom` | `matrix` | `simulate` (flat error), `kmer1_latent` (align τ=1, decay fitted per sample) |
 | | `prior` | `gate` (presence prior 0.01), `nogate` |
-| `generic_panel` | `kernel` | `trained` (simulates with the model the reads were made with), `flat` |
+| `generic_panel` | `kernel` | `trained` (simulates with the model the reads were made with), `flat`, `kmer1_latent` (as in `custom`) |
 | | `prior` | `gate`, `nogate`, `horseshoe` |
 | | `steps` | `s3k` (`s10k` commented out) |
 | `generic_taxa` | `kernel` | `trained`, `flat` |
@@ -126,17 +126,17 @@ and scoring without touching the pipeline.
 ## What it costs
 
 The shipped config is 20 communities x 2 depths = 40 benchmark dirs. Across them run
-4 `custom` + 6 `generic_panel` + 4 `generic_taxa` points, which is **560 profiles**. The
+4 `custom` + 9 `generic_panel` + 4 `generic_taxa` points, which is **680 profiles**. The
 depth axis doubles all of that, and only earns it below the nested run's
 `obs_max_reads` (100,000 fragments) — see `reads.subsample` in config.yaml. The
 expensive parts:
 
 - **SILVA read mapping, once**, in phase 1. No phase-2 setting re-maps the reads.
 - **2 custom kernels** over 23 references. The two `prior` points share each one.
-- **2 panel kernels**, one per `generic_panel` `kernel` point; the `prior` and `steps`
-  points share them. Each is built once, whatever the number of dirs, and costs about
-  `sim_n_per_ref` (5,000) x about 30 distinct panel amplicons simulated reads mapped against
-  SILVA. Adding a `kernel` point adds a kernel; adding an inference point does not.
+- **3 panel kernels**, one per `generic_panel` `kernel` point; the `prior` and `steps`
+  points share them. Each is built once, whatever the number of dirs. A simulate kernel
+  costs about `sim_n_per_ref` (5,000) x about 30 distinct panel amplicons simulated reads
+  mapped against SILVA; the align one takes seconds (superresolution-amplicon#28). Adding a `kernel` point adds a kernel; adding an inference point does not.
 - **2 taxa kernels**, the same way, but over about 90 sources (the pair's amplicons plus
   1–24 SILVA V4 groups per species in the SILVA sweep), so about three times a panel
   kernel.

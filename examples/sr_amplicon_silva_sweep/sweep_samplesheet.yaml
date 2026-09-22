@@ -70,7 +70,7 @@ databases:
     profilers:
     - aap
     path: /PATH/TO/silva_mapseq_db
-    rfam_covariance_model: /PATH/TO/ribosomal_RNA.cm
+    rfam_covariance_model: /PATH/TO/rfam_cms
     rfam_claninfo: /PATH/TO/ribosomal_RNA.claninfo
 samples:
 - sample: S01.trained.amplicon_16s.515-YF-806BR
@@ -177,6 +177,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -311,6 +330,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -448,6 +486,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -582,6 +639,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -719,6 +795,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -853,6 +948,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -990,6 +1104,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -1124,6 +1257,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -1261,6 +1413,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -1395,6 +1566,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -1532,6 +1722,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -1666,6 +1875,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -1803,6 +2031,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -1937,6 +2184,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -2074,6 +2340,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -2208,6 +2493,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -2345,6 +2649,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -2479,6 +2802,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -2616,6 +2958,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -2750,6 +3111,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -2887,6 +3267,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -3021,6 +3420,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -3158,6 +3576,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -3292,6 +3729,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -3429,6 +3885,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -3563,6 +4038,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -3700,6 +4194,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -3834,6 +4347,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -3971,6 +4503,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -4105,6 +4656,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -4242,6 +4812,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -4376,6 +4965,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -4513,6 +5121,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -4647,6 +5274,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -4784,6 +5430,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -4918,6 +5583,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -5055,6 +5739,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -5189,6 +5892,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -5326,6 +6048,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -5460,6 +6201,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -5597,6 +6357,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -5731,6 +6510,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -5868,6 +6666,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -6002,6 +6819,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -6139,6 +6975,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -6273,6 +7128,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -6410,6 +7284,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -6544,6 +7437,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -6681,6 +7593,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -6815,6 +7746,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -6952,6 +7902,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -7086,6 +8055,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -7223,6 +8211,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -7357,6 +8364,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -7494,6 +8520,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -7628,6 +8673,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -7765,6 +8829,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -7899,6 +8982,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -8036,6 +9138,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -8170,6 +9291,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -8307,6 +9447,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -8441,6 +9600,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -8578,6 +9756,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -8712,6 +9909,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -8849,6 +10065,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -8983,6 +10218,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -9120,6 +10374,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -9254,6 +10527,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -9391,6 +10683,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -9525,6 +10836,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -9662,6 +10992,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -9796,6 +11145,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -9933,6 +11301,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -10067,6 +11454,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -10204,6 +11610,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -10338,6 +11763,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -10475,6 +11919,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -10609,6 +12072,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -10746,6 +12228,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -10880,6 +12381,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -11017,6 +12537,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -11151,6 +12690,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -11288,6 +12846,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -11422,6 +12999,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -11559,6 +13155,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -11693,6 +13308,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -11830,6 +13464,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -11964,6 +13617,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -12101,6 +13773,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -12235,6 +13926,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -12372,6 +14082,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -12506,6 +14235,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -12643,6 +14391,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -12777,6 +14544,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -12914,6 +14700,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -13048,6 +14853,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -13185,6 +15009,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -13319,6 +15162,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -13456,6 +15318,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -13590,6 +15471,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -13727,6 +15627,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -13861,6 +15780,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -13998,6 +15936,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -14132,6 +16089,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -14269,6 +16245,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -14403,6 +16398,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -14540,6 +16554,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -14674,6 +16707,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -14811,6 +16863,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -14945,6 +17016,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -15082,6 +17172,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -15216,6 +17325,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -15353,6 +17481,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -15487,6 +17634,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -15624,6 +17790,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -15758,6 +17943,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -15895,6 +18099,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -16029,6 +18252,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000
@@ -16166,6 +18408,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   primers:
@@ -16300,6 +18561,25 @@ samples:
     align_tau: 2
     align_distance_decay: 0.007
     matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096
+    infer_presence: false
+    panel: community_panel
+  - name: silva_panel.simulate.p01
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.01
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.p001
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
+    infer_presence: true
+    infer_presence_prior: 0.001
+    infer_presence_temp: 1.0
+    panel: community_panel
+  - name: silva_panel.simulate.nogate
+    mismapping_method: simulate
+    matrix_args: --flat_sub_rate 0.0031
     infer_presence: false
     panel: community_panel
   subsample: 100000

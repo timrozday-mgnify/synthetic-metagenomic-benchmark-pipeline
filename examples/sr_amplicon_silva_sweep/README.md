@@ -201,8 +201,8 @@ Two runs, back to back:
 ## What it costs
 
 **The shipped config is large.** 20 communities × 3 error-model arms × 2 depths = **120
-benchmark dirs**; each runs 12 `silva_panel` grid points + 1 `custom` + 1 `aap` =
-**1680 profiles**. Three knobs cut it, in descending order of effect, and each is one
+benchmark dirs**; each runs 15 `silva_panel` grid points + 1 `custom` + 1 `aap` =
+**2040 profiles**. Three knobs cut it, in descending order of effect, and each is one
 edit: drop `error_models:` to one entry (÷3, and it also cuts read generation and SILVA
 mapping by the same factor — that is the expensive third), shrink `sr_sweep.grid`, or
 drop a `reads.subsample` depth.
@@ -212,8 +212,8 @@ separate generation *and* a separate SILVA mapping pass per arm. Each also costs
 `skiver dump` + train, even though `flat` and `trained` dump the same FASTQs; that is one
 extra dump, not one extra sweep.
 
-Within one error-model arm, the sweep proper is 40 benchmark dirs × 12 grid points = 480
-profiles, off **3** panel kernels — `kmer1` and `kmer1_latent` differ only in whether the
+Within one error-model arm, the sweep proper is 40 benchmark dirs × 15 grid points = 600
+profiles, off **4** panel kernels — `kmer1` and `kmer1_latent` differ only in whether the
 distance decay is fitted per sample (`infer_distance_decay`), so they share the kernel and
 that comparison costs inference runs only. What keeps that affordable:
 
@@ -226,9 +226,12 @@ that comparison costs inference runs only. What keeps that affordable:
   kernel knob (`mismapping_method`, `align_tau`, `align_distance_decay`, `matrix_args`,
   `panel`) build one kernel between them and split only at the inference run. A kernel
   runs from the panel's ~20 V4 sources to SILVA's labels, not over SILVA.
-- **`mismapping_method: simulate` is commented out of the grid.** Over this panel it
-  would simulate and map 5,000 reads per source against SILVA per kernel: affordable, but
-  the grid sweeps the alignment modes (τ=0, 1, 2) instead.
+- **Every kernel is cheap.** `simulate` simulates and maps 5,000 reads per panel source
+  against SILVA, once. The align points (τ=0, 1, 2) take seconds from
+  superresolution-amplicon#28 on; before it, one took about an hour against SILVA.
+  `simulate` runs at a flat 3.1e-3, SC2200627's calibrated rate, so it is not an oracle.
+  It was the Phase 4 truth run's best kernel against SILVA, about 2× better than align
+  (`docs/aap_silva_compat_plan.md`).
 
 ## Output
 

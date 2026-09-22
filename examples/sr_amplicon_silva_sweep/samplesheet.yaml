@@ -70,7 +70,7 @@ databases:
     profilers:
     - aap
     path: /PATH/TO/silva_mapseq_db
-    rfam_covariance_model: /PATH/TO/ribosomal_RNA.cm
+    rfam_covariance_model: /PATH/TO/rfam_cms
     rfam_claninfo: /PATH/TO/ribosomal_RNA.claninfo
 samples:
 - sample: S01.trained.amplicon_16s

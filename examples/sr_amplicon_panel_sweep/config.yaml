@@ -128,6 +128,11 @@ sr_sweep:
         - {name: trained, mismapping_method: simulate, matrix_args: --sim_error_model trained}
         # `flat` uses no trained model, so it is the honest number when there is none.
         - {name: flat, mismapping_method: simulate, matrix_args: --sim_error_model flat}
+        # The custom arm's align point, so simulate and align are compared on SILVA labels
+        # too. No oracle either: the decay is fitted per sample.
+        - {name: kmer1_latent, mismapping_method: align, align_tau: 1,
+           align_distance_decay: 0.007, infer_distance_decay: true,
+           matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096}
       prior:
         - {name: gate, infer_presence: true, infer_presence_prior: 0.01, infer_presence_temp: 1.0}
         - {name: nogate, infer_presence: false}
