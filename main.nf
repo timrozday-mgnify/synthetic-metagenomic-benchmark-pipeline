@@ -96,8 +96,8 @@ def parseErrorModel(row) {
     v
 }
 
-// Knobs a superresolution `sr_settings:` entry may set. The first seven reach the matrix
-// build, the rest the inference run; a key absent from an entry falls back to the
+// Knobs a superresolution `sr_settings:` entry may set. Up to `panel` they reach the
+// matrix build, the rest the inference run; a key absent from an entry falls back to the
 // matching sr_<amplicon|shotgun>_<key> param (`panel` has none). Kept as a method, not a
 // top-level `def`: a script-level variable is local to the run body and invisible in here.
 //
@@ -105,13 +105,16 @@ def parseErrorModel(row) {
 // one mis-mapping matrix and split only at the (cheap) inference run, so an inference
 // knob swept alongside a matrix knob costs nothing extra.
 //
+// `aap_reads` (sr_amplicon only) profiles the row's AAP output (merged reads + .mseq)
+// instead of its raw reads; the row must also run `aap`.
+//
 // `panel` (sr_amplicon only) names a `databases:` collection to reinterpret the row's own
 // database labels with: superresolution-amplicon's panel_references, plus panel_taxa for the
 // collection's `taxon:` entries (tested at species level only). Its kernel runs from that
 // panel's sources, so a panel entry is a reference set, and a kernel, of its own.
 def srSettingKeys() {
     ['mismapping_method', 'align_tau', 'align_distance_decay',
-     'align_decay_model', 'matrix_args', 'panel',
+     'align_decay_model', 'matrix_args', 'panel', 'aap_reads',
      'infer_presence', 'infer_presence_prior', 'infer_presence_temp',
      'infer_distance_decay', 'infer_decay_sigma', 'inference_args']
 }
@@ -212,6 +215,18 @@ workflow {
         def unknown = parseProfilers(row, defaultProfilers).findAll { !(it in knownProfilers) }
         if (unknown) {
             error "Sample ${row.sample ?: row.id}: unknown profiler(s) ${unknown} (expected ${knownProfilers})"
+        }
+    }
+    // aap_reads needs the row's own AAP run to read from. Checked now, not when the AAP
+    // run is found missing hours later.
+    rows.each { row ->
+        def profs = parseProfilers(row, defaultProfilers)
+        if (!('sr_amplicon' in profs) || 'aap' in profs) return
+        def wants = parseSrSettings(row, defaultSrSettings).any { st ->
+            (st.opts.containsKey('aap_reads') ? st.opts.aap_reads : params.sr_amplicon_aap_reads)?.toString() == 'true'
+        }
+        if (wants) {
+            error "Sample ${row.sample ?: row.id}: sr_amplicon aap_reads reads the row's AAP output, so 'aap' must be among its profilers"
         }
     }
     def dbProfilers = [:]

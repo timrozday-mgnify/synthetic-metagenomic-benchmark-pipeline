@@ -526,7 +526,7 @@ back to the corresponding param, so a partial entry still works.
 What it costs is the point:
 
 - Entries agreeing on every **kernel** knob (`mismapping_method`, `align_tau`,
-  `align_distance_decay`, `align_decay_model`, `matrix_args`, `panel`) share a
+  `align_distance_decay`, `align_decay_model`, `matrix_args`, `panel`, `aap_reads`) share a
   reference set and therefore **one** kernel — `exact.p01` and `exact.p001`
   above build one kernel between them and split only at the inference run, and so do
   `kmer1.p01` and `kmer1_latent.p01`, which differ only in whether the decay is fitted. The matrix mode is mixed into the reference-set key (and so
@@ -537,6 +537,14 @@ What it costs is the point:
   `mseq:` column a previous run's `profiling/sr/<id>.obs.mseq.gz` and no entry re-maps
   anything. It must be a classification of those reads against that same reference set,
   and it carries the read-prep settings it was made with.
+- `aap_reads: true` (`sr_amplicon` only; param `sr_amplicon_aap_reads`) profiles what
+  the row's own `aap` run produced instead of the raw reads: AAP's fastp-merged
+  `qc/<id>.merged.fastq.gz` as a `merged: true` row, its fastp merge rate, and its
+  `taxonomy-summary/<database>/<id>.mseq.gz` as `mseq:`. The row must also run `aap`,
+  its reads must be paired, and its `database` should be AAP's own directory as a
+  `path:` entry so both profilers see the same MAPseq database. The entry adds
+  `--trim_primers false` to its kernel build and inference run, since merged reads keep
+  their primers.
 
 `examples/sr_amplicon_param_sweep/` is a worked two-phase version of exactly this: one
 `--step all` run to generate and map, then one `--step profile` run over the whole grid. `examples/sr_amplicon_silva_sweep/` is the same two phases against a

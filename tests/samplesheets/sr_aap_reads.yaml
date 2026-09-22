@@ -1,0 +1,30 @@
+# sr_amplicon profiling AAP's output (stub-only; plan Phase 4.2).
+#
+# S2 runs aap against the prebuilt silvaAap directory (AAP's own layout), and sr_amplicon
+# twice against the same directory: `raw` from the generated reads, `aap` from the AAP
+# run's qc/<id>.merged.fastq.gz with `merged: true`, its fastp merge rate, and its
+# taxonomy-summary/silvaAap/<id>.mseq.gz as `mseq:`. The `aap` arm adds --trim_primers
+# false, which keys it onto a kernel of its own.
+databases:
+  silvaAap:
+    path: tests/data/prebuilt_db/silvaAap
+    # rfam DBs required for aap; the stub run never reads them.
+    rfam_covariance_model: tests/data
+    rfam_claninfo: tests/data
+
+samples:
+  - sample: S2
+    train_id: natA
+    train_fastq_1: tests/data/natural_R1.fastq.gz
+    train_fastq_2: tests/data/natural_R2.fastq.gz
+    platform: hq-illumina
+    genomes_csv: tests/data/genomes_S2_ssu.csv
+    num_reads: 2000
+    mode: amplicon
+    paired_end: true
+    read_length_mean: 200
+    profilers: [aap, sr_amplicon]
+    database: silvaAap
+    sr_settings:
+      - {name: raw}
+      - {name: aap, aap_reads: true}

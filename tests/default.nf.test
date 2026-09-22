@@ -226,6 +226,37 @@ nextflow_pipeline {
         }
     }
 
+    test("sr_amplicon reads AAP output - stub") {
+        tag "stub"
+        options "-stub"
+        when {
+            params {
+                input  = "${projectDir}/tests/samplesheets/sr_aap_reads.yaml"
+                outdir = "$outputDir"
+            }
+        }
+        then {
+            def sr = "${params.outdir}/S2/profiling/sr"
+            def aapSheet = path("${sr}/S2.aap.nested_samplesheet.yml").text
+            def rawSheet = path("${sr}/S2.raw.nested_samplesheet.yml").text
+            assertAll(
+                { assert workflow.success },
+                { assert path("${params.outdir}/S2/S2.aap.sr_profile.tsv").exists() },
+                { assert path("${params.outdir}/S2/S2.raw.sr_profile.tsv").exists() },
+                // The aap arm reads AAP's merged reads and reuses its .mseq; the raw arm
+                // reads the generated reads and maps them itself.
+                { assert aapSheet.contains("/aap_out/S2/qc/S2.merged.fastq.gz") },
+                { assert aapSheet.contains("merged: true") && aapSheet.contains("merge_rate: 0.95") },
+                { assert aapSheet.contains("/aap_out/S2/taxonomy-summary/silvaAap/S2.mseq.gz") },
+                { assert !rawSheet.contains("merged:") && !rawSheet.contains("mseq:") },
+                { assert path("${sr}/S2.aap.nested_args.txt").text.contains("--trim_primers false") },
+                { assert !path("${sr}/S2.raw.nested_args.txt").text.contains("--trim_primers") },
+                // --trim_primers false changes the simulated reads, so a kernel each.
+                { assert workflow.trace.succeeded().findAll { it.name.contains("BUILD_SUPERRESOLUTION_MISMAPPING") }.size() == 2 },
+            )
+        }
+    }
+
     test("sr_settings panel reinterpretation - stub") {
         tag "stub"
         options "-stub"
@@ -253,6 +284,8 @@ nextflow_pipeline {
                 { assert workflow.trace.succeeded().findAll { it.name.contains("RUN_SUPERRESOLUTION") }.size() == 5 },
                 { assert builds.size() == 5 && builds.every { path("${it}/panel_kernel").exists() } },
                 { assert trainedBuild.contains("--mismapping_method simulate --sim_error_model trained") },
+                // The kernel build gets the row's model too: pairs refuses to run without it.
+                { assert trainedBuild.contains("natA.model.pt") },
                 { assert !trained.contains("--mismapping_method") },
 
                 // panelA is named only by `panel:`, and is built all the same. The build

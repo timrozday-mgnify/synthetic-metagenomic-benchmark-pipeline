@@ -144,6 +144,13 @@ null => bundled set. It's global (not per-sample) and passed as an absolute host
   the run's dominant cost and no swept knob changes it, which is what makes a settings
   sweep affordable — but the file is only valid against the reference set and read-prep
   settings it was made with.
+- **`aap_reads` chains sr_amplicon onto RUN_AAP.** An sr_amplicon entry with the
+  `aap_reads` knob (or `params.sr_amplicon_aap_reads`) waits for the row's AAP run and
+  swaps its reads for AAP's `qc/<id>.merged.fastq.gz` (`merged: true`, `merge_rate` from
+  fastp.json) plus `taxonomy-summary/<database>/<id>.mseq.gz` as `mseq:`, keyed by the
+  entry's id minus its sr_settings suffix. The swap is before the kernel build, so the
+  representative trains on merged reads too. It adds `--trim_primers false` as a matrix
+  flag, so under a fan-out a raw and an AAP arm get separate kernels. Plan Phase 4.2.
 - **`profilers` fans a sample out across profilers.** `parseProfilers` (main.nf)
   normalises the row's `profilers` list (or params.profilers) into
   `meta.profilers`; the top workflow `flatMap`s one entry per profiler into PROFILE,

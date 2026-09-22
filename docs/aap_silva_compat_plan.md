@@ -16,7 +16,15 @@ Status: plan, revised 2026-09-21. It was first written 2026-09-17 and now absorb
 | P.6 (delete square-only code) | done (#21) |
 | P.7 (tests, parity) | done (#21); test at >= 10k reads |
 | P.8 (benchmark contract) | done on `panel-only-contract` (#38); upstream #21 merged (`e29bf69`) |
-| 1.5–1.6 (AAP samplesheet, `merged:`) | built (upstream #22); acceptance run not done |
+| 1.5–1.6 (AAP samplesheet, `merged:`) | done (upstream #22, `462603b`); acceptance run passed |
+| 2.1 (primer mix) | done, upstream #23, merged (`21bc4cd`) |
+| 2.2 (merged-read model) | done without `Position`, upstream #24 |
+| 2.3 (`pairs`) | done without `raw_reads:`, upstream #25 |
+| Phase 2 acceptance | deferred, to be run later |
+| 3 (align for merged reads) | done except the 3.1 test, upstream #26; acceptance deferred |
+| 2.2–3 on upstream `main` | #24–#26 were merged into their stacked base branches, not `main`; upstream #27 landed them (`941db22`) |
+| 4.2 (sr_amplicon reads RUN_AAP's output) | done on `aap-phase1-plan`, stub-tested |
+| 4.1, 4.3 (truth sample, arms, scoring) | built as `examples/sr_amplicon_aap/`; run 2026-09-22, acceptance passed |
 | everything else | not done |
 
 Order: R → F → P.4–P.8 → 1 → 2 → 3 → 4 → 5. See Decision 7.
@@ -637,7 +645,29 @@ As built (upstream #22, `34effd7`), three changes from the above:
   the row but not read yet (3.4 will).
 
 All 20 Nov2025 runs pass the script. Stub nf-tests (21) and pytest (43) pass.
-The acceptance run below has not been done.
+
+Acceptance run (2026-09-21, upstream `main` at `462603b`, in upstream
+`work/phase1_acceptance/`). It passed.
+- **Input.** Sample `SC2189280-SC3-1-26s000344`. The rendered AAP results have no `.mseq`, so
+  a one-run AAP outdir was staged with Phase 0.4's `work/aap_clip/clipped.mseq` as
+  `taxonomy-summary/SILVA-SSU/<id>.mseq`. That file is AAP's MAPseq build and arguments on
+  the cmsearch-clipped reads against SILVA-SSU/138.1, i.e. what AAP would write. The panel was
+  the 20HM `community_20hm_ssu.sr_refs.fasta` (95 SSU copies, 22 genomes).
+- **Run.** `-profile docker`, `--references` AAP's `SILVA-SSU.fasta` unmodified,
+  `--trim_primers false`, flat model at 0.2's rates (sub 3.4×10⁻⁴, ins/del 4×10⁻⁶),
+  `--amplicon_cache`.
+  - It needs `process.resourceLimits = [memory: 18.GB]` on a 24 GB machine, because
+    EXTRACT_AMPLICONS asks for 36 GB.
+  - EXTRACT_AMPLICONS took 1 min 21 s on the 2.1M sequences, not hours. Its peak RSS was
+    24.6 GB, summed over its worker processes.
+  - The whole run took 5 min 24 s.
+- **Result.** READS_TO_FASTA and MAPSEQ_OBS did not run, so AAP's `.mseq` was reused without
+  re-mapping. Inference used 514,626 reads with fit `ok` and 16 of 22 genomes present.
+  - `obs_max_reads` does not cap a supplied `.mseq`: all of its reads were used.
+  - `background` is 0.79 of the profile. 225 of 295 observed labels are reached by no
+    panel source. This sample is mostly reads outside the 20HM panel (Phase 0.4's top
+    label changes are within Clostridiaceae). It is a property of the sample, not of the
+    Phase 1 plumbing, and Phase 2's fit check is the place to judge it.
 
 **Acceptance:** on one Nov2025 sample, an SR run from `aap_samplesheet.py` output with a
 20HM genome panel completes, and it reuses AAP's `.mseq` without re-mapping.
@@ -649,6 +679,18 @@ The acceptance run below has not been done.
     position from the 0.3 frequencies, sampling the joint `ends.tsv` for the reverse end.
   - Without the file it draws uniformly over the code's options, never the first option.
   - For `merged: true` samples the primers are not trimmed after errors are applied.
+  - As built (upstream `50b86e6`):
+    - Before this, untrimmed simulated reads were bare amplicons: no primers at all, while
+      the observed merged reads keep both.
+    - The table is `--primer_mix` (`fwd rev reads`, concrete oligos, rev on its own
+      strand), not `ends.tsv`. `assets/primer_mix_emp_v4.tsv` is `ends.tsv`'s pooled
+      rows summed over spacer and overhang, which keeps the joint reverse triple. The
+      0.15% of reads with an off-code base were dropped: the error model supplies those.
+    - Each oligo must be an instance of `--fwd_primer`/`--rev_primer`, else refused.
+    - Spacers and the overhang are not simulated. The clip removes most of both (0.4).
+    - Without a table, untrimmed reads draw uniformly over each code, with a warning.
+      Trimmed runs are unchanged unless a table is given.
+    - `primer_mix` joins the kernel key as a path.
 - **2.2 Merged-read error model** (default for `merged: true`).
   - `--sim_error_model trained` trains on the merged reads.
   - Add `AdditiveContext(7)+Position(2)` and `AdditiveContext(9)+Position(2)` to the
@@ -656,6 +698,21 @@ The acceptance run below has not been done.
   - Default to `--trained_error_model_scope pooled` for AAP batches.
   - Under `flat`, the README gives 0.2's pooled sub/ins/del rates as the AAP starting
     point, marked as per-run numbers.
+  - As built (upstream #24):
+    - Training on merged reads needed no change: `merged: true` rows reach
+      TRAIN_ERROR_MODEL like any single-end reads.
+    - `--trained_error_model_scope` defaults to null. `main.nf` resolves it to `pooled`
+      when any row is `merged: true`, else `per-sample`.
+    - `--sim_error_model` stays `flat` by default. The acceptance comparison below decides
+      whether `trained` should be the default for merged rows.
+    - **The `Position(2)` candidates were not added.** skiver's `Position(N)` is not a
+      per-base term: training sums `read_pos`/`dist_to_end` per context and fits
+      `mean_pos(context) @ position_weights`. The pinned `apply_batch` also refuses any
+      model carrying `position_weights`, so an AIC win would crash SIMULATE_PANEL_READS.
+      0.2 put interior variation at ≤ 2.1× (under 3.3's 3× trigger), and the end pile-ups
+      were primer degeneracy (2.1) and overhang (clipped). Add a per-base generative
+      position term to skiver only if the fit check or 2.3's `merged`-vs-`pairs`
+      comparison shows a 3′ bias.
 - **2.3 `--sim_read_structure merged|pairs`,** with `pairs` for validation and for runs
   where yield binds.
   - A new `bin/simulate_amplicon_pairs.py`:
@@ -674,6 +731,26 @@ The acceptance run below has not been done.
     key.
   - SR's own `--paired` merge stays for non-AAP inputs. Its divergence from fastp is
     documented, not fixed.
+  - As built (upstream #25):
+    - `simulate_amplicon_reads.py --mate-len` instead of a new script: it already holds the
+      flank, the primer mix and both samplers. R2 is read off rc(fragment) with
+      `is_forward=False`, and each mate runs into its TruSeq adapter, as in
+      `dev/aap_merge_effects.py`. Flat mates are Q38 throughout.
+    - FASTP_MERGE writes the merged reads as FASTA named by their first token, which drops
+      the ` merged_x_y` suffix, so `iter_mseq` sees the source name. It also writes
+      `yield.tsv` (`source simulated merged yield`), which PANEL_KERNEL copies into the
+      bundle. Nothing reads it yet (3.4).
+    - `pairs` needs `--trim_primers false`. Under `trained`, every row needs `error_model`,
+      because a model trained on merged reads is not a mate model. **`raw_reads:` was not
+      added**, and the plan's mate model can't have `Position` (2.2).
+    - No cmsearch clip: the mates carry no spacer or overhang (2.1), so a merged read
+      already spans primer to primer.
+    - Without skiver's Phred calibration, trained qualities come from the context error
+      rate, so fastp's Q ≤ 14 against Q ≥ 30 correction rarely fires. It was 9×10⁻⁵ per
+      base in the real run.
+    - The read structure and mate length join the kernel key and `provenance.json`.
+    - A docker run on the upstream AAP fixture completes. At the default flat rates,
+      90–94% of simulated pairs merge.
 - **2.4 Labels outside the amplifiable set.** Not needed: 0.6 is below its 1% trigger.
   - Under F such hits are dropped as off-target.
   - If a later batch exceeds 1%, each such reference becomes its own `nonamp_<acc>` label
@@ -685,7 +762,11 @@ The acceptance run below has not been done.
     sources, i.e. the MAPseq work of 1–5 AAP samples.
   - One kernel serves every sample on the same panel, database and model.
 
-**Acceptance** (Nov2025 batch plus the Phase 4 truth sample):
+**Acceptance** (Nov2025 batch plus the Phase 4 truth sample). *Deferred 2026-09-21: not run
+yet, to be done later. Phase 3 went ahead without it. It needs the full SILVA-SSU database,
+a trained mate model per run for `pairs` (supplied as `error_model:`, since `raw_reads:` does
+not exist), and the Phase 4 truth sample. Until it runs, `merged` is unvalidated against
+`pairs` and `--sim_error_model` stays `flat` by default.*
 - `merged` against `pairs` on the same panel: median row L1 of `K` ≤ 0.05. If not,
   `pairs` becomes the default and 2.2 is documented as insufficient.
 - Predicted mass on labels that drew no observed reads ≤ 0.3% (GTDB calibration reached
@@ -720,8 +801,25 @@ The acceptance run below has not been done.
 - **3.5 `--infer_distance_decay`** fits `c_sub` only; `c_indel` stays at its built value.
   Document it.
 
-**Acceptance:** on the Phase 2 panel, align (tau 1, merged-read `auto` decay, indel decay)
-against simulate `merged`:
+As built (upstream #26):
+- **3.1:** only the README note was added. The test that `auto` on the 2.2 model lands within
+  2× of 0.2's rate needs a trained merged-read model. It is deferred with Phase 2's
+  acceptance.
+- **3.2:** `--align_indel_decay` (`--indel-decay`), null by default, which keeps the old
+  kernel.
+  - The sub/indel split comes from one optimal Edlib path (`kernel_align.indel_count`). Where
+    paths tie, Edlib's pick decides the split.
+  - `auto` measures the indel rate over 2,000 reads (10× the substitution sample), because
+    indels are ~100× rarer. With the split, `--align_distance_decay auto` measures
+    substitutions only.
+- **3.5:** with the split, the stored strata are the substitution count, so `DecayKernel`
+  refits `c_sub` unchanged and `c_indel` stays baked into the weights. It needed no
+  inference change.
+- **3.4:** `main.nf` refuses `align` on a `merged: true` row with `merge_rate < 0.8`.
+
+**Acceptance** (*deferred 2026-09-21 with Phase 2's: it needs the same trained merged-read
+model and the Nov2025 batch*): on the Phase 2 panel, align (tau 1, merged-read `auto` decay,
+indel decay) against simulate `merged`:
 - mean row L1 of `K` ≤ 0.08;
 - panel-entry TV ≤ 0.02 on every sample.
 
@@ -737,6 +835,17 @@ against simulate `merged`:
   - The DB is a `databases:` `path:` entry pointing at the unpacked AAP SILVA directory,
     unmodified.
   - Worked example: `examples/sr_amplicon_aap/`.
+  - As built: an `sr_settings` knob, `aap_reads: true` (param `sr_amplicon_aap_reads`),
+    so the arms that read AAP's output (2–4) and the raw-read arm (5) can run in one run.
+    - PROFILE waits for the row's RUN_AAP and swaps in `qc/<id>.merged.fastq.gz`,
+      `merge_rate` from `qc/<id>.fastp.json`, and `taxonomy-summary/<database>/<id>.mseq.gz`
+      when there is exactly one. This happens before the kernel build, so a trained
+      model's representative trains on the merged reads too.
+    - The entry adds `--trim_primers false` as a matrix flag. Under a fan-out that gives
+      it its own kernel, apart from arm 5's.
+    - `main.nf` refuses `aap_reads` on a row that doesn't also run `aap`.
+    - A `path:` mapseq DB now also finds AAP's `SILVA-SSU-tax.txt`. The benchmark's aap
+      branch still needs an `.otu` beside it, which AAP's directory ships.
 - **4.3 Score** panel-entry (genome and species) TV to truth, one arm each:
   1. raw AAP labels;
   2. simulate `merged`;
@@ -745,9 +854,66 @@ against simulate `merged`:
   5. SR from raw reads with its own merge and read prep, against the same full-length
      database. This measures what Decision 3 buys.
 
+As built (`examples/sr_amplicon_aap/`, stub-run only):
+- **4.1:** 16 of the 22 20HM genomes present, abundances 400 down to 1. The other 6 are in
+  the panel only. 200k pairs, 2x310.
+  - The model is trained on raw SC2200627 lane C1, not a Nov2025 run: no raw Nov2025
+    FASTQs were at hand, and SC2200627 is the same Finn 2x310 set-up.
+  - No chimeras: genome-blender doesn't make them.
+  - The primers on the reads are the template's bases (AmpliconHunter keeps the primer
+    site), not the oligo mix.
+- **Arms:** arm 3 simulates with the generating model, so it is an oracle. Arms 2 and 4 are
+  flat at 0.2's rates. Arm 5 is flat at SC2200627's calibrated 3.1e-3.
+- **Score:** 6 of the 22 species have no SILVA 138.1 species label, among them *R. gnavus*,
+  *E. rectale*, *B. vulgatus* and *C. bolteae* (`species.tsv`). Arm 1 cannot reach them.
+  Every genome is its own species, so genome and species TV coincide.
+- AMPLICONHUNTER asks for 36 GB too, so the example caps outer tasks at 18 GB as well as
+  nested ones.
+
 **Acceptance:**
 - Arm 2 beats arm 1 on species TV.
 - Arm 3 is not better than arm 2 by more than 0.01; otherwise `pairs` becomes the default.
+
+Acceptance run (2026-09-22, `examples/sr_amplicon_aap/`, docker on arm64 under emulation,
+sr `941db22`, AAP v6.1.5). **It passed.**
+
+| arm | species TV | background | mass on absent |
+|---|---|---|---|
+| 1 `aap` | 0.742 | 0.954 | 0 |
+| 2 `sim_merged` | 0.0083 | 0.0005 | 0.0001 |
+| 3 `sim_pairs` | 0.0074 | 0.0003 | 0.0001 |
+| 4 `align` | 0.0188 | 0.0011 | 0.0005 |
+| 5 `raw` | 0.0099 | 0.0002 | 0.0002 |
+
+- Arm 2 beats arm 1 by 0.73. Arm 3 beats arm 2 by 0.0009, under the 0.01 margin, so
+  `merged` stays the default.
+- Arm 1's number is mostly about resolution, not error. MAPseq assigns only 4.6% of
+  AAP's reads to a species; 94% stop at genus. The one big species call is
+  *B. thetaiotaomicron*.
+- Every SR fit is `ok`. Arms 2–4 use all 199,635 AAP-merged reads. Arm 5 uses 99,995,
+  because `obs_max_reads` caps the reads it maps itself.
+- `align` is about 2× worse than simulate, but still 40× better than arm 1. Its kernel
+  took about 2 h on one emulated CPU, verifying 71.9M candidate pairs.
+- Every genome here is its own species, so these numbers can't test a strain split.
+
+The run found four bugs, all fixed on this branch:
+- AAP v6.1.5 validates `rrnas_rfam_covariance_model` as a directory of `*.cm` files, not a
+  file (`7a3fb6f`).
+- AAP's `docker` profile sets no registry, so bare `biocontainers/...` images failed to
+  pull. `nested.config` sets `docker.registry = 'quay.io'` (`559ed6a`).
+- RUN_AAP staged the `.mscluster` as `mapseq_db.mscluster`, where mapseq never looks. AAP
+  then re-clustered SILVA itself, which took hours and gave labels from a different
+  clustering than SR's. It is now `<fasta>.mscluster` (`f6b29aa`).
+- The kernel build never received the row's `sr_error_model`, so `pairs` with a trained
+  model refused to run (`1de26e3`).
+
+Two operational problems:
+- Concurrent first use of `--amplicon_cache` races. Three kernels extracted the same
+  set at once; the first `mv` won and the other two failed on "Directory not empty".
+  A resume reuses the winner's cache. Fix upstream: extract into a temp dir, then rename
+  atomically and treat an existing target as a hit.
+- Docker Desktop's VM disk (94 GB) filled and torch could not create its cache dir.
+  Pruning unused images fixed it.
 - The Nov2025 comparison against exact-matched DADA2 ASV profiles is descriptive only.
 
 ### Phase 5 — documentation

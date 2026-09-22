@@ -32,7 +32,10 @@ process RUN_AAP {
     // correct because those paths embed the upstream workdir hash.
     // Optional path slots are stageAs'd to distinct fixed names so the shared NO_FILE
     // placeholder doesn't collide across slots. `use_built` selects the DB source.
-    tuple val(metas), val(layout), val(use_built), path(aap_config, stageAs: 'aap_config_in'), path(mapseq_fasta, stageAs: 'mapseq_db.fasta'), path(mapseq_tax, stageAs: 'mapseq_db.tax'), path(mapseq_otu, stageAs: 'mapseq_db.otu'), path(mapseq_mscluster, stageAs: 'mapseq_db.mscluster'), val(rfam_cm), val(rfam_claninfo)
+    // The .mscluster must be named <fasta>.mscluster: mapseq finds it only beside the
+    // FASTA under that name, and otherwise re-clusters the whole database itself (hours
+    // on SILVA) and labels with that clustering instead of the shipped one.
+    tuple val(metas), val(layout), val(use_built), path(aap_config, stageAs: 'aap_config_in'), path(mapseq_fasta, stageAs: 'mapseq_db.fasta'), path(mapseq_tax, stageAs: 'mapseq_db.tax'), path(mapseq_otu, stageAs: 'mapseq_db.otu'), path(mapseq_mscluster, stageAs: 'mapseq_db.fasta.mscluster'), val(rfam_cm), val(rfam_claninfo)
 
     output:
     // Glob (not the bare dir) so publishDir's saveAs sees each file as aap_out/<id>/...
@@ -106,10 +109,14 @@ process RUN_AAP {
     """
 
     stub:
-    // Mirror AAP's per-sample namespacing (aap_out/<id>/...) for every batched sample.
+    // Mirror AAP's per-sample namespacing (aap_out/<id>/...) for every batched sample,
+    // with the merged reads, fastp report and .mseq that sr_amplicon aap_reads picks up.
     def stub_cmds = metas.collect { m ->
-        "mkdir -p aap_out/${m.id}/taxonomy-summary && touch aap_out/${m.id}/taxonomy-summary/${m.id}.krona.txt"
-    }.join('\n    ')
+        def label = m.database ?: 'community'
+        ["mkdir -p aap_out/${m.id}/taxonomy-summary/${label} aap_out/${m.id}/qc",
+         "touch aap_out/${m.id}/taxonomy-summary/${m.id}.krona.txt aap_out/${m.id}/qc/${m.id}.merged.fastq.gz aap_out/${m.id}/taxonomy-summary/${label}/${m.id}.mseq.gz",
+         "printf '{\"read1_before_filtering\": {\"total_reads\": 100}, \"merged_and_filtered\": {\"total_reads\": 95}}\\n' > aap_out/${m.id}/qc/${m.id}.fastp.json"]
+    }.flatten().join('\n    ')
     """
     ${stub_cmds}
 

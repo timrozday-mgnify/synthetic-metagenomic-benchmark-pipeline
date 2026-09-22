@@ -89,7 +89,7 @@ workflow BUILD_DATABASES {
         .map { spec ->
             [ spec.name,
               globOne(spec.prebuilt_dir, ['*.mapseq.fasta', '*.{fasta,fa,fna}'], spec.name),
-              globOne(spec.prebuilt_dir, ['*.mapseq.tax', '*.tax'],              spec.name),
+              globOne(spec.prebuilt_dir, ['*.mapseq.tax', '*.tax', '*-tax.txt'], spec.name),
               globOne(spec.prebuilt_dir, ['*.mapseq.otu', '*.otu'],              spec.name),
               globOne(spec.prebuilt_dir, '*.mscluster',                          spec.name) ]
         }
