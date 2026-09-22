@@ -12,7 +12,9 @@ What is new is that the same reads are profiled three ways, each under a grid of
 ``custom`` maps them against a collection built from the panel, ``generic_panel`` maps
 them against SILVA and reinterprets the labels through that same collection (the
 ``panel`` sr_settings knob), and ``generic_taxa`` reinterprets them through a panel whose
-entries are SILVA species, apart from the strain pair.
+entries are SILVA species, apart from the strain pair. The optional ``aap_panel`` arm runs
+the amplicon-analysis-pipeline and reinterprets *its* output (merged reads and MAPseq
+labels, ``aap_reads``) through the same collection.
 
     python scripts/panel_sweep.py --selfcheck
 """
@@ -34,6 +36,13 @@ depths = sw.depths
 n_matrices = sw.n_matrices
 
 ARMS = ("custom", "generic_panel", "generic_taxa")
+# Present only when config.yaml's sr_sweep has it; needs `aap_database:` too.
+OPTIONAL_ARMS = ("aap_panel",)
+
+
+def arms(cfg):
+    """The arms this config runs: every required one, plus the optional ones it has."""
+    return ARMS + tuple(a for a in OPTIONAL_ARMS if a in (cfg.get("sr_sweep") or {}))
 
 
 def load_config(path):
@@ -47,8 +56,15 @@ def load_config(path):
     if generic["name"] == cfg["database"]["name"]:
         sys.exit("config.yaml: generic.name and database.name must differ")
     generic["path"] = str(Path(str(generic["path"])).expanduser())
-    if sorted(cfg.get("sr_sweep") or {}) != sorted(ARMS):
-        sys.exit(f"config.yaml: sr_sweep needs exactly the arms {list(ARMS)}")
+    if sorted(cfg.get("sr_sweep") or {}) != sorted(arms(cfg)):
+        sys.exit(f"config.yaml: sr_sweep needs exactly the arms {list(ARMS)}, "
+                 f"optionally plus {list(OPTIONAL_ARMS)}")
+    if "aap_panel" in arms(cfg):
+        aap = cfg.get("aap_database") or {}
+        for key in ("name", "path", "rfam_covariance_model", "rfam_claninfo"):
+            if not aap.get(key):
+                sys.exit(f"config.yaml: the aap_panel arm needs aap_database '{key}:'")
+        aap["path"] = str(Path(str(aap["path"])).expanduser())
     ids = {m["id"] for m in cfg["panel"]}
     pair = (cfg.get("score") or {}).get("strain_pair") or []
     if len(pair) != 2 or not set(pair) <= ids:
@@ -56,8 +72,8 @@ def load_config(path):
     untaxed = [m["id"] for m in cfg["panel"] if m["id"] not in pair and not m.get("silva_taxon")]
     if untaxed:
         sys.exit(f"config.yaml: generic_taxa needs panel[].silva_taxon on {untaxed}")
-    for arm in ARMS:
-        settings(cfg, arm)              # expands (and validates) both grids up front
+    for arm in arms(cfg):
+        settings(cfg, arm)              # expands (and validates) every grid up front
     return cfg
 
 
@@ -70,13 +86,17 @@ def settings(cfg, arm):
     """One arm's grid as `sr_settings:` entries named `<arm>.<point>`, so every arm's
     profiles can sit in one benchmark dir. Every `generic_panel` point reinterprets SILVA's
     labels through the custom database's collection, every `generic_taxa` point through the
-    taxa collection."""
+    taxa collection. `aap_panel` points reinterpret the row's AAP output (`aap_reads`)
+    through the custom collection."""
     out = sw.settings({"sr_sweep": cfg["sr_sweep"][arm]})
-    panel = {"generic_panel": cfg["database"]["name"], "generic_taxa": taxa_name(cfg)}.get(arm)
+    panel = {"generic_panel": cfg["database"]["name"], "generic_taxa": taxa_name(cfg),
+             "aap_panel": cfg["database"]["name"]}.get(arm)
     for s in out:
         s["name"] = f"{arm}.{s['name']}"
         if panel:
             s["panel"] = panel
+        if arm == "aap_panel":
+            s["aap_reads"] = True
     return out
 
 
@@ -88,8 +108,14 @@ def databases_block(cfg):
     pair = cfg["score"]["strain_pair"]
     taxa = [{"id": m["id"], "ssu": m["ssu"]} if m["id"] in pair
             else {"id": m["id"], "taxon": m["silva_taxon"]} for m in cfg["panel"]]
-    return {**nc.database_block(cfg), taxa_name(cfg): {"sequences": taxa},
-            cfg["generic"]["name"]: {"path": cfg["generic"]["path"]}}
+    block = {**nc.database_block(cfg), taxa_name(cfg): {"sequences": taxa},
+             cfg["generic"]["name"]: {"path": cfg["generic"]["path"]}}
+    if "aap_panel" in arms(cfg):
+        aap = cfg["aap_database"]
+        block[aap["name"]] = {"profilers": ["aap", "sr_amplicon"], "path": aap["path"],
+                              "rfam_covariance_model": aap["rfam_covariance_model"],
+                              "rfam_claninfo": aap["rfam_claninfo"]}
+    return block
 
 
 def benchmark_dirs(cfg, results_dir):
@@ -152,6 +178,17 @@ def _selfcheck():
     assert block["custom_taxa"] == {"sequences": [
         {"id": "a", "taxon": "Bacteria;A;A a"},
         {"id": "bu", "ssu": "/x/bu.fa"}, {"id": "bu2", "ssu": "/x/bu2.fa"}]}, block
+
+    # The optional AAP arm: absent = three arms and no AAP database.
+    assert arms(cfg) == ARMS and "aap" not in str(databases_block(cfg))
+    cfg["sr_sweep"]["aap_panel"] = {"grid": {"kernel": [{"name": "sim", "mismapping_method": "simulate"}]}}
+    cfg["aap_database"] = {"name": "aapdb", "path": "/x/aap", "rfam_covariance_model": "/x/cm",
+                           "rfam_claninfo": "/x/clan"}
+    assert arms(cfg) == ARMS + ("aap_panel",)
+    aap_pts = settings(cfg, "aap_panel")
+    assert aap_pts == [{"name": "aap_panel.sim", "mismapping_method": "simulate",
+                        "panel": "custom", "aap_reads": True}], aap_pts
+    assert databases_block(cfg)["aapdb"]["profilers"] == ["aap", "sr_amplicon"]
 
     dirs = list(benchmark_dirs(cfg, Path("/r")))
     assert len(dirs) == 4, dirs

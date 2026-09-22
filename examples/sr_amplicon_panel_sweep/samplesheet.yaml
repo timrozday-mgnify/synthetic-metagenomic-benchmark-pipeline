@@ -118,6 +118,13 @@ databases:
         parvula
   silva_138_2_ssu_nr99:
     path: /PATH/TO/silva_138_2_ssu_nr99
+  silva_ssu_aap:
+    profilers:
+    - aap
+    - sr_amplicon
+    path: /PATH/TO/silva-ssu/138.1
+    rfam_covariance_model: /PATH/TO/rfam_cms
+    rfam_claninfo: /PATH/TO/ribo.clan_info
 samples:
 - sample: S01.amplicon_16s
   train_id: sc2200627

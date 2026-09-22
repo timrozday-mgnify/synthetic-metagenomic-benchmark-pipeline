@@ -2,7 +2,7 @@
 
 Asks how much is lost when amplicon reads **cannot be re-mapped against the community**.
 The reads were classified against SILVA, and the community is known to come from a panel:
-the 20HM mock plus a second *B. uniformis* strain (23 genomes). There are three ways to get
+the 20HM mock plus a second *B. uniformis* strain (23 genomes). There are four ways to get
 panel-genome abundances:
 
 - **`custom`**: map the reads against a database built from the panel itself, and infer
@@ -15,6 +15,11 @@ panel-genome abundances:
   other genome is a **species** taxon entry (`panel[].silva_taxon`), whose sources are all
   SILVA V4 groups of that species, each fitted freely. It asks what knowing the genome buys
   over knowing the species. Entries are named after the genomes, so it scores the same way.
+- **`aap_panel`** (optional): run the amplicon-analysis-pipeline (AAP) on the raw reads,
+  then reinterpret *its* output through the panel (`aap_reads`). That output is AAP's
+  fastp-merged reads, with its MAPseq labels as `mseq:`, against `aap_database`. It asks
+  how close SR gets when AAP's output is all there is. The comparison is with
+  `generic_panel`, which prepares the reads itself.
 
 Each arm runs under its **own parameter grid** over the same reads, and everything is
 scored against one ground truth.
@@ -32,7 +37,7 @@ copy them:
 
 ## The grids
 
-Both live under `sr_sweep:` in `config.yaml`, one block per arm. Each axis is a list of
+They all live under `sr_sweep:` in `config.yaml`, one block per arm. Each axis is a list of
 named knob maps, and the grid is their cartesian product. A point is named
 `<arm>.<axis names joined by '.'>`, and that name is part of its output filename. The
 shipped grids:
@@ -41,11 +46,13 @@ shipped grids:
 |---|---|---|
 | `custom` | `matrix` | `simulate` (flat error), `kmer1_latent` (align τ=1, decay fitted per sample) |
 | | `prior` | `gate` (presence prior 0.01), `nogate` |
-| `generic_panel` | `kernel` | `trained` (simulates with the model the reads were made with), `flat` |
+| `generic_panel` | `kernel` | `trained` (simulates with the model the reads were made with), `flat`, `kmer1_latent` (as in `custom`) |
 | | `prior` | `gate`, `nogate`, `horseshoe` |
 | | `steps` | `s3k` (`s10k` commented out) |
 | `generic_taxa` | `kernel` | `trained`, `flat` |
 | | `prior` | `nogate`, `horseshoe` (the gate misfit on half the samples in the SILVA sweep) |
+| `aap_panel` | `kernel` | `sim_merged` (flat, at AAP's measured merged-read rates), `sim_pairs` (raw mates simulated with the reads' model, then merged by AAP's fastp: an oracle), `align` (τ=1, separate substitution and indel decays) |
+| | `prior` | `gate`, `nogate` |
 
 Add an axis or a point by editing `config.yaml`. Knobs are the pipeline's `sr_settings`
 keys. Any other superresolution-amplicon param goes through `matrix_args` or
@@ -98,6 +105,11 @@ Two samplesheet features exist for it:
   later), and is required for `generic_taxa`. The sequences must
   still carry the primer sites, because superresolution-amplicon cuts its amplicons by
   in-silico PCR.
+- `config.yaml` → `aap_database` (only with the `aap_panel` arm): the database AAP
+  classifies against *and* the one its SR entries reinterpret, since AAP's `.mseq` is only
+  valid against the FASTA it was made with. AAP's own SILVA-SSU directory works as shipped.
+  It also takes the two Rfam paths the pipeline requires of any `aap` database. Delete
+  `sr_sweep.aap_panel` and this block to skip AAP.
 - `benchmark.config` pins `sr_revision` to the superresolution-amplicon commit this
   pipeline's `--panel_kernel` wiring was tested against. A local checkout goes in
   `sr_amplicon_repo` instead, and then the revision is ignored.
@@ -118,29 +130,37 @@ and scoring without touching the pipeline.
    panel, cheap at SILVA scale). It publishes `profiling/sr/<id>.map.obs.mseq.gz` per dir, and
    `error_models/<train_id>/<train_id>.model.pt`.
 2. `generate_sweep_samplesheet.py` → `sweep_samplesheet.yaml`, then `--step profile`. There
-   are two rows per benchmark dir. The `custom` row has `database: community_20hm` and the
+   are two rows per benchmark dir, or three with `aap_panel`. The `custom` row has `database: community_20hm` and the
    custom grid. The `generic_panel` row has `database: silva_138_2_ssu_nr99`, phase 1's `mseq:`,
-   `sr_error_model:`, and the `generic_panel` and `generic_taxa` grids.
+   `sr_error_model:`, and the `generic_panel` and `generic_taxa` grids. With the
+   `aap_panel` arm, a third row runs `aap` and `sr_amplicon` against `aap_database`, with
+   `sr_error_model:` and the `aap_panel` grid. Its SR entries wait for that row's AAP run
+   and profile what it produced.
 3. `scripts/score_sweep.py` → `results/sr_amplicon_panel_sweep/panel_sweep_scores.csv`.
 
 ## What it costs
 
 The shipped config is 20 communities x 2 depths = 40 benchmark dirs. Across them run
-4 `custom` + 6 `generic_panel` + 4 `generic_taxa` points, which is **560 profiles**. The
+4 `custom` + 9 `generic_panel` + 4 `generic_taxa` + 6 `aap_panel` points, which is
+**920 profiles**. The
 depth axis doubles all of that, and only earns it below the nested run's
 `obs_max_reads` (100,000 fragments) — see `reads.subsample` in config.yaml. The
 expensive parts:
 
 - **SILVA read mapping, once**, in phase 1. No phase-2 setting re-maps the reads.
 - **2 custom kernels** over 23 references. The two `prior` points share each one.
-- **2 panel kernels**, one per `generic_panel` `kernel` point; the `prior` and `steps`
-  points share them. Each is built once, whatever the number of dirs, and costs about
-  `sim_n_per_ref` (5,000) x about 30 distinct panel amplicons simulated reads mapped against
-  SILVA. Adding a `kernel` point adds a kernel; adding an inference point does not.
+- **3 panel kernels**, one per `generic_panel` `kernel` point; the `prior` and `steps`
+  points share them. Each is built once, whatever the number of dirs. A simulate kernel
+  costs about `sim_n_per_ref` (5,000) x about 30 distinct panel amplicons simulated reads
+  mapped against SILVA; the align one takes seconds (superresolution-amplicon#28). Adding a `kernel` point adds a kernel; adding an inference point does not.
 - **2 taxa kernels**, the same way, but over about 90 sources (the pair's amplicons plus
   1–24 SILVA V4 groups per species in the SILVA sweep), so about three times a panel
   kernel.
 - **1 small kernel for phase 1's mapping run**, over the panel.
+- **AAP, once per dir**, with the `aap_panel` arm: its own read QC, merge and MAPseq
+  pass against `aap_database`. Then **3 aap_panel kernels** over the panel, against that
+  database. They are split from `generic_panel`'s by database and by `--trim_primers
+  false`. The AAP labels are its `mseq:`, so its reads are not mapped again.
 - The `custom` rows map their own reads (no `mseq:`), which is cheap against 23 references.
 
 ## Output

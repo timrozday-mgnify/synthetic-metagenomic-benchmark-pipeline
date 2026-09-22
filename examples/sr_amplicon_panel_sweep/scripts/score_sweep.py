@@ -61,7 +61,7 @@ def main():
                    else HERE.parent.parent / "results" / "sr_amplicon_panel_sweep")
     cfg = ps.load_config(sys.argv[2] if len(sys.argv) > 2 else HERE / "config.yaml")
     pair = cfg["score"]["strain_pair"]
-    names = [s["name"] for arm in ps.ARMS for s in ps.settings(cfg, arm)]
+    names = [s["name"] for arm in ps.arms(cfg) for s in ps.settings(cfg, arm)]
     first_custom = ps.settings(cfg, "custom")[0]["name"]
 
     writer = csv.DictWriter(sys.stdout, COLUMNS, extrasaction="ignore")

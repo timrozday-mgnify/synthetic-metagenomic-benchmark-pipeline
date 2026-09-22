@@ -128,6 +128,11 @@ sr_sweep:
         - {name: trained, mismapping_method: simulate, matrix_args: --sim_error_model trained}
         # `flat` uses no trained model, so it is the honest number when there is none.
         - {name: flat, mismapping_method: simulate, matrix_args: --sim_error_model flat}
+        # The custom arm's align point, so simulate and align are compared on SILVA labels
+        # too. No oracle either: the decay is fitted per sample.
+        - {name: kmer1_latent, mismapping_method: align, align_tau: 1,
+           align_distance_decay: 0.007, infer_distance_decay: true,
+           matrix_args: --align_ambiguity_weight 0.3 --max_postings 4096}
       prior:
         - {name: gate, infer_presence: true, infer_presence_prior: 0.01, infer_presence_temp: 1.0}
         - {name: nogate, infer_presence: false}
@@ -157,6 +162,42 @@ sr_sweep:
       prior:
         - {name: nogate, infer_presence: false}
         - {name: horseshoe, infer_presence: false, inference_args: --infer_horseshoe true}
+
+  # Optional. The amplicon-analysis-pipeline's output, reinterpreted through the panel:
+  # a third row per dir runs AAP against `aap_database:` and then sr_amplicon on what it
+  # produced (`aap_reads`: its fastp-merged reads, and its MAPseq labels as `mseq:`), so
+  # nothing is mapped again. It asks how close SR gets when AAP's output is all there is,
+  # against generic_panel's own read preparation. The kernels are the Phase 4 truth run's
+  # merged-read ones (docs/aap_silva_compat_plan.md), at AAP's measured merged-read rates:
+  #   sim_merged : simulate merged reads, flat sub 3.4e-4, indels 4e-6. No oracle.
+  #   sim_pairs  : simulate raw mates with the model phase 1 generated the reads with and
+  #                merge them with AAP's fastp. An oracle, like generic_panel's `trained`.
+  #   align      : align tau 1, substitution and indel decays measured separately.
+  # The generator adds `panel:` and `aap_reads: true` to every point. Delete this arm (and
+  # `aap_database:`) to skip AAP.
+  aap_panel:
+    grid:
+      kernel:
+        - {name: sim_merged, mismapping_method: simulate,
+           matrix_args: --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate 0.000004}
+        - {name: sim_pairs, mismapping_method: simulate,
+           matrix_args: --sim_read_structure pairs --sim_mate_len 300 --sim_error_model trained}
+        - {name: align, mismapping_method: align, align_tau: 1, align_distance_decay: auto,
+           matrix_args: --align_indel_decay auto --flat_sub_rate 0.00034 --flat_ins_rate 0.000004 --flat_del_rate 0.000004}
+      prior:
+        - {name: gate, infer_presence: true, infer_presence_prior: 0.01, infer_presence_temp: 1.0}
+        - {name: nogate, infer_presence: false}
+
+# The aap_panel arm's database, for AAP and for SR on its output alike: AAP's .mseq is only
+# valid against the FASTA (and .mscluster) it was made with. AAP's own SILVA-SSU directory
+# works as shipped (SILVA-SSU.fasta, SILVA-SSU-tax.txt, SILVA-SSU.otu,
+# SILVA-SSU.fasta.mscluster), as does MAPseq's distributed SILVA database. The two Rfam
+# paths are AAP's rRNA detection step, which the pipeline requires of any `aap` database.
+aap_database:
+  name: silva_ssu_aap
+  path: /PATH/TO/silva-ssu/138.1
+  rfam_covariance_model: /PATH/TO/rfam_cms   # a DIRECTORY of *.cm; AAP globs it
+  rfam_claninfo: /PATH/TO/ribo.clan_info
 
 # Scoring (scripts/score_sweep.py): the strain pair whose split `strain_split_error`
 # reports, as [major, minor].

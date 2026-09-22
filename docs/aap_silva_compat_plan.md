@@ -910,8 +910,9 @@ The run found four bugs, all fixed on this branch:
 Two operational problems:
 - Concurrent first use of `--amplicon_cache` races. Three kernels extracted the same
   set at once; the first `mv` won and the other two failed on "Directory not empty".
-  A resume reuses the winner's cache. Fix upstream: extract into a temp dir, then rename
-  atomically and treat an existing target as a hit.
+  A resume reuses the winner's cache. The failing `mv` was Nextflow's storeDir unstage,
+  which cannot replace a directory. Fixed upstream in #30: EXTRACT_AMPLICONS declares its
+  four files instead, and `mv -f` replaces each one atomically.
 - Docker Desktop's VM disk (94 GB) filled and torch could not create its cache dir.
   Pruning unused images fixed it.
 - The Nov2025 comparison against exact-matched DADA2 ASV profiles is descriptive only.
@@ -924,6 +925,16 @@ Two operational problems:
 - Upstream `docs/alignment_mismapping_plan.md` §7: merged reads satisfy the spanning
   assumption, subject to 3.4.
 - This repo's `CLAUDE.md`: one line under Key implementation notes.
+
+As built (2026-09-22):
+- Upstream `aap-inputs-docs` adds the README section and the §7 note. The section carries
+  the Phase 4 scores.
+- This repo's `CLAUDE.md` already had the line (the `aap_reads` note, from 4.2). The README
+  now points at `examples/sr_amplicon_aap/`.
+- The three SR sweeps now pin `0c7d95d` (#28), as the AAP example does. The SILVA sweep
+  runs `simulate` again, at SC2200627's flat 3.1e-3, because Phase 4 scored it best against
+  SILVA. The panel sweep's `generic_panel` arm gets an align point. So both SILVA arms
+  compare the two kernel methods. Every example stub-runs through all its phases.
 
 ## Risks and open questions
 
