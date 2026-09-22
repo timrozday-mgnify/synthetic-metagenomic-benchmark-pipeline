@@ -24,7 +24,7 @@ Status: plan, revised 2026-09-21. It was first written 2026-09-17 and now absorb
 | 3 (align for merged reads) | done except the 3.1 test, upstream #26; acceptance deferred |
 | 2.2–3 on upstream `main` | #24–#26 were merged into their stacked base branches, not `main`; upstream #27 landed them (`941db22`) |
 | 4.2 (sr_amplicon reads RUN_AAP's output) | done on `aap-phase1-plan`, stub-tested |
-| 4.1, 4.3 (truth sample, arms, scoring) | built as `examples/sr_amplicon_aap/`, stub-run; not run for real |
+| 4.1, 4.3 (truth sample, arms, scoring) | built as `examples/sr_amplicon_aap/`; run 2026-09-22, acceptance passed |
 | everything else | not done |
 
 Order: R → F → P.4–P.8 → 1 → 2 → 3 → 4 → 5. See Decision 7.
@@ -873,6 +873,47 @@ As built (`examples/sr_amplicon_aap/`, stub-run only):
 **Acceptance:**
 - Arm 2 beats arm 1 on species TV.
 - Arm 3 is not better than arm 2 by more than 0.01; otherwise `pairs` becomes the default.
+
+Acceptance run (2026-09-22, `examples/sr_amplicon_aap/`, docker on arm64 under emulation,
+sr `941db22`, AAP v6.1.5). **It passed.**
+
+| arm | species TV | background | mass on absent |
+|---|---|---|---|
+| 1 `aap` | 0.742 | 0.954 | 0 |
+| 2 `sim_merged` | 0.0083 | 0.0005 | 0.0001 |
+| 3 `sim_pairs` | 0.0074 | 0.0003 | 0.0001 |
+| 4 `align` | 0.0188 | 0.0011 | 0.0005 |
+| 5 `raw` | 0.0099 | 0.0002 | 0.0002 |
+
+- Arm 2 beats arm 1 by 0.73. Arm 3 beats arm 2 by 0.0009, under the 0.01 margin, so
+  `merged` stays the default.
+- Arm 1's number is mostly about resolution, not error. MAPseq assigns only 4.6% of
+  AAP's reads to a species; 94% stop at genus. The one big species call is
+  *B. thetaiotaomicron*.
+- Every SR fit is `ok`. Arms 2–4 use all 199,635 AAP-merged reads. Arm 5 uses 99,995,
+  because `obs_max_reads` caps the reads it maps itself.
+- `align` is about 2× worse than simulate, but still 40× better than arm 1. Its kernel
+  took about 2 h on one emulated CPU, verifying 71.9M candidate pairs.
+- Every genome here is its own species, so these numbers can't test a strain split.
+
+The run found four bugs, all fixed on this branch:
+- AAP v6.1.5 validates `rrnas_rfam_covariance_model` as a directory of `*.cm` files, not a
+  file (`7a3fb6f`).
+- AAP's `docker` profile sets no registry, so bare `biocontainers/...` images failed to
+  pull. `nested.config` sets `docker.registry = 'quay.io'` (`559ed6a`).
+- RUN_AAP staged the `.mscluster` as `mapseq_db.mscluster`, where mapseq never looks. AAP
+  then re-clustered SILVA itself, which took hours and gave labels from a different
+  clustering than SR's. It is now `<fasta>.mscluster` (`f6b29aa`).
+- The kernel build never received the row's `sr_error_model`, so `pairs` with a trained
+  model refused to run (`1de26e3`).
+
+Two operational problems:
+- Concurrent first use of `--amplicon_cache` races. Three kernels extracted the same
+  set at once; the first `mv` won and the other two failed on "Directory not empty".
+  A resume reuses the winner's cache. Fix upstream: extract into a temp dir, then rename
+  atomically and treat an existing target as a hit.
+- Docker Desktop's VM disk (94 GB) filled and torch could not create its cache dir.
+  Pruning unused images fixed it.
 - The Nov2025 comparison against exact-matched DADA2 ASV profiles is descriptive only.
 
 ### Phase 5 — documentation
